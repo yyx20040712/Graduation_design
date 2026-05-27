@@ -95,6 +95,23 @@ def _get_formulas() -> Dict[str, str]:
 
 
 class MainWindow(tk.Tk):
+    # ── 输入校验: 验证 Entry 内容是否为合法浮点数 ──
+    @staticmethod
+    def _validate_float_entry(value: str) -> bool:
+        """Entry validatecommand: 允许空/部分输入 (如 '-', '1.', '1e')"""
+        if value == "" or value == "-":
+            return True
+        try:
+            float(value)
+            return True
+        except ValueError:
+            return False
+
+    @staticmethod
+    def _set_entry_valid(entry: tk.Entry, valid: bool):
+        """无效输入: 红底; 有效输入: 恢复默认"""
+        entry.configure(bg="#3a1a1a" if not valid else "#1a1a1a")
+
     def __init__(self):
         super().__init__()
         self.title("排水工程设计工具 v3")
@@ -887,6 +904,9 @@ class MainWindow(tk.Tk):
                     justify=tk.RIGHT,
                 )
                 entry.pack(side=tk.RIGHT, padx=2)
+                # 输入校验: 阻止非数字输入
+                vcmd = (self.register(self._validate_float_entry), "%P")
+                entry.configure(validate="key", validatecommand=vcmd)
 
                 def _sync_entry_to_scale(k=pd.key, sv=str_var, dv=var):
                     """Entry → Scale: parse text, update DoubleVar + params"""
@@ -894,8 +914,9 @@ class MainWindow(tk.Tk):
                         val = float(sv.get())
                         dv.set(val)
                         self._on_param_changed(k, val)
+                        self._set_entry_valid(entry, True)
                     except (ValueError, tk.TclError):
-                        pass  # ignore invalid partial input
+                        self._set_entry_valid(entry, False)
 
                 def _sync_scale_to_entry(k=pd.key, sv=str_var, dv=var):
                     """Scale → Entry: update display + params"""

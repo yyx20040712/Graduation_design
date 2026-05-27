@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "graduation-design"
-version = "5.2.0"
-description = "毕业设计项目 - 管道计算与工程分析"
+version = "5.3.0"
+description = "毕业设计 — 城镇污水处理厂全流程工艺设计一体化工具"
 authors = [
-    {name = "学生姓名", email = "student@example.com"}
+    {name = "yyx", email = "yyx@hit.edu.cn"},
 ]
 readme = "README.md"
 license = {text = "MIT"}
@@ -54,9 +54,9 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-username/graduation-design"
-Repository = "https://github.com/your-username/graduation-design.git"
-"Issue Tracker" = "https://github.com/your-username/graduation-design/issues"
+Homepage = "https://github.com/yyx/graduation-design"
+Repository = "https://github.com/yyx/graduation-design.git"
+"Issue Tracker" = "https://github.com/yyx/graduation-design/issues"
 
 [tool.black]
 line-length = 88

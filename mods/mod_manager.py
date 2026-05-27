@@ -10,10 +10,7 @@ mod_manager.py — 模组管理器
 
 """
 
-
-
 from __future__ import annotations
-
 
 
 import json
@@ -21,8 +18,6 @@ import json
 import importlib
 
 import logging
-
-import os
 
 import sys
 
@@ -33,12 +28,7 @@ from pathlib import Path
 
 from typing import Any, Dict, List, Optional, Type, Tuple
 
-
-
 log = logging.getLogger("ModManager")
-
-
-
 
 
 # ═════════════════════════════════════════════════════════════════════
@@ -48,16 +38,9 @@ log = logging.getLogger("ModManager")
 # ═════════════════════════════════════════════════════════════════════
 
 
-
-
-
 @dataclass
-
 class ModParameter:
-
     """模组参数定义"""
-
-
 
     key: str
 
@@ -77,69 +60,39 @@ class ModParameter:
 
     description: str = ""
 
-
-
     @classmethod
-
     def from_dict(cls, d: dict) -> "ModParameter":
 
         return cls(
-
             key=d["key"],
-
             symbol=d.get("symbol", d["key"]),
-
             name=d.get("name", d["key"]),
-
             unit=d.get("unit", ""),
-
             default=d.get("default", 0.0),
-
             min=d.get("min", 0.0),
-
             max=d.get("max", 100.0),
-
             step=d.get("step", 0.1),
-
             description=d.get("description", ""),
-
         )
 
 
-
-
-
 @dataclass
-
 class ModPort:
-
     """模组端口定义"""
-
-
 
     type: str  # "WATER" | "QUALITY" | "MIXED"
 
     name: str
 
-
-
     @classmethod
-
     def from_dict(cls, d: dict) -> "ModPort":
 
         return cls(type=d["type"], name=d["name"])
 
 
-
-
-
 @dataclass
-
 class ModInfo:
-
     """模组元数据信息"""
-
-
 
     id: str
 
@@ -193,12 +146,8 @@ class ModInfo:
 
     mod_dir: str = ""
 
-
-
     @classmethod
-
     def from_json(cls, path: str, mod_dir: str = "") -> "ModInfo":
-
         """从 mod.json 加载"""
 
         with open(path, "r", encoding="utf-8") as f:
@@ -206,57 +155,30 @@ class ModInfo:
             data = json.load(f)
 
         return cls(
-
             id=data["id"],
-
             name=data["name"],
-
             version=data.get("version", "1.0.0"),
-
             author=data.get("author", "Unknown"),
-
             description=data.get("description", ""),
-
             category=data.get("category", "未分类"),
-
             process_stage=data.get("process_stage", ""),
-
             icon=data.get("icon", "📦"),
-
             node_type=data.get("node_type", data["id"]),
-
             node_class=data.get("node_class", ""),
-
             module_path=data.get("module_path", ""),
-
             inputs=[ModPort.from_dict(p) for p in data.get("inputs", [])],
-
             outputs=[ModPort.from_dict(p) for p in data.get("outputs", [])],
-
             parameters=[ModParameter.from_dict(p) for p in data.get("parameters", [])],
-
             removal_rates=data.get("removal_rates", {}),
-
             formula=data.get("formula", ""),
-
             formula_detail=data.get("formula_detail", ""),
-
             elevation_formula=data.get("elevation_formula", ""),
-
             elevation_loss=data.get("elevation_loss", {}),
-
             dependencies=data.get("dependencies", []),
-
             tags=data.get("tags", []),
-
             references=data.get("references", []),
-
             mod_dir=mod_dir,
-
         )
-
-
-
 
 
 # ═════════════════════════════════════════════════════════════════════
@@ -266,11 +188,7 @@ class ModInfo:
 # ═════════════════════════════════════════════════════════════════════
 
 
-
-
-
 class ModManager:
-
     """模组管理器 — 单例
 
 
@@ -288,8 +206,6 @@ class ModManager:
     5. 提供分类菜单数据
 
     """
-
-
 
     _instance: Optional["ModManager"] = None
     _lock: "threading.Lock" = threading.Lock()  # 线程安全锁
@@ -315,11 +231,11 @@ class ModManager:
                 return
             self._initialized = True
 
-
-
         self._mods: Dict[str, ModInfo] = {}  # mod_id → ModInfo
 
-        self._node_registry: Dict[str, Tuple[Type, str]] = {}  # node_type → (class, display_name)
+        self._node_registry: Dict[str, Tuple[Type, str]] = (
+            {}
+        )  # node_type → (class, display_name)
 
         self._formulas: Dict[str, str] = {}  # node_type → formula_string
 
@@ -329,16 +245,10 @@ class ModManager:
 
         self._loaded = False
 
-
-
     # ── 公共属性 ──
 
-
-
     @property
-
     def node_registry(self) -> Dict[str, Tuple[Type, str]]:
-
         """返回 NODE_REGISTRY 兼容格式"""
 
         if not self._node_registry:
@@ -347,12 +257,8 @@ class ModManager:
 
         return self._node_registry
 
-
-
     @property
-
     def formulas(self) -> Dict[str, str]:
-
         """返回 FORMULAS 兼容格式"""
 
         if not self._formulas:
@@ -361,12 +267,8 @@ class ModManager:
 
         return self._formulas
 
-
-
     @property
-
     def categories(self) -> Dict[str, List[str]]:
-
         """返回分类菜单数据 {category: [node_type, ...]}"""
 
         if not self._categories:
@@ -375,12 +277,8 @@ class ModManager:
 
         return self._categories
 
-
-
     @property
-
     def mods(self) -> Dict[str, ModInfo]:
-
         """返回所有已发现的模组"""
 
         if not self._mods:
@@ -389,152 +287,67 @@ class ModManager:
 
         return self._mods
 
-
-
-    # ── 模组发现 ──
-
-
+    # ── 模组发现 (v5.4: 委托给 mod_discovery) ──
 
     def discover_all(self, force_rescan: bool = False) -> None:
-
-        """扫描并加载所有模组.community/ 始终重新扫描(支持热添加)."""
-
+        """扫描并加载所有模组."""
         from _paths import get_mods_dir
-
-        mods_root = Path(get_mods_dir())
-
+        from . import mod_discovery
 
         with self._lock:
-            # core/ 仅首次扫描
-
-            if not self._loaded or force_rescan:
-
-                core_dir = mods_root / "core"
-
-                if core_dir.exists():
-
-                    self._scan_directory(core_dir)
-
-
-
-            # community/ 始终扫描(支持运行时放入新模组)
-
-            community_dir = mods_root / "community"
-
-            if community_dir.exists():
-
-                self._scan_directory(community_dir)
-
-
-
-            self._loaded = True
-
-        log.info("ModManager: discovered %d mods, registered %d node types",
-
-                 len(self._mods), len(self._node_registry))
-
-
+            self._loaded = mod_discovery.discover_mods(
+                mods_root=Path(get_mods_dir()),
+                mods=self._mods,
+                errors=self._load_errors,
+                validate_fn=_validate_mod_json,
+                schema_validate_fn=_validate_with_schema,
+                force_rescan=force_rescan,
+                already_loaded=self._loaded,
+            )
+        log.info(
+            "ModManager: discovered %d mods, registered %d node types",
+            len(self._mods),
+            len(self._node_registry),
+        )
 
     def _scan_directory(self, directory: Path) -> None:
+        """[DEPRECATED] 使用 mod_discovery.scan_directory 替代."""
+        from . import mod_discovery
 
-        """扫描目录中的所有模组子文件夹"""
-
-        for item in directory.iterdir():
-
-            if not item.is_dir():
-
-                continue
-
-            mod_json = item / "mod.json"
-
-            if mod_json.exists():
-
-                # ── 验证 mod.json ──
-
-                errors = _validate_mod_json(mod_json)
-
-                # JSON Schema 验证 (jsonschema 库)
-                schema_errors = _validate_with_schema(mod_json)
-                if schema_errors:
-                    errors.extend(schema_errors)
-
-                if errors:
-
-                    log.error("Mod [%s] INVALID:\n  %s", item.name, "\n  ".join(errors))
-
-                    self._load_errors.append({
-
-                        "mod_id": item.name,
-
-                        "severity": "error",
-
-                        "errors": errors,
-
-                    })
-
-                    continue
-
-                try:
-
-                    mod_info = ModInfo.from_json(str(mod_json), str(item))
-
-                    self._mods[mod_info.id] = mod_info
-
-                    log.debug("ModManager: found mod [%s] %s", mod_info.id, mod_info.name)
-
-                except Exception as e:
-
-                    log.warning("ModManager: failed to load %s: %s", mod_json, e)
-
-                    self._load_errors.append({
-
-                        "mod_id": item.name,
-
-                        "severity": "error",
-
-                        "errors": [str(e)],
-
-                    })
-
-
+        mod_discovery.scan_directory(
+            directory,
+            self._mods,
+            self._load_errors,
+            _validate_mod_json,
+            _validate_with_schema,
+        )
 
     # ── 模组加载 ──
 
-
-
     def load_mod(self, mod_id: str) -> Optional[Type]:
-
-        """加载指定模组的节点类
-
-
-
-        Args:
-
-            mod_id: 模组 ID
-
-
+        """加载指定模组的节点类 (v5.4: delegate to mod_discovery).
 
         Returns:
-
             节点类(NodeBase 子类),失败返回 None
-
         """
-
         mod_info = self._mods.get(mod_id)
-
         if not mod_info:
-
             log.warning("ModManager: mod [%s] not found", mod_id)
-
             return None
 
+        if mod_info.loaded and mod_info.node_cls:
+            return mod_info.node_cls
 
+        from . import mod_discovery
+
+        node_cls = mod_discovery.load_mod_module(mod_info)
+        if node_cls:
+            self._register_node(mod_info)
+        return node_cls
 
         if mod_info.loaded and mod_info.node_cls:
 
             return mod_info.node_cls
-
-
 
         try:
 
@@ -548,13 +361,9 @@ class ModManager:
 
                 mod_name = mod_dir.name
 
-
-
                 if parent_dir not in sys.path:
 
                     sys.path.insert(0, parent_dir)
-
-
 
                 try:
 
@@ -570,15 +379,15 @@ class ModManager:
 
                         self._register_node(mod_info)
 
-                        log.info("ModManager: loaded mod [%s] (from __init__.py)", mod_id)
+                        log.info(
+                            "ModManager: loaded mod [%s] (from __init__.py)", mod_id
+                        )
 
                         return node_cls
 
                 except ImportError:
 
                     pass  # __init__.py 加载失败,回退到 module_path
-
-
 
             # 备选方案: 从 module_path 导入(兼容旧式 models/ 分离模组)
 
@@ -596,28 +405,27 @@ class ModManager:
 
                     self._register_node(mod_info)
 
-                    log.info("ModManager: loaded mod [%s] (from %s)", mod_id, mod_info.module_path)
+                    log.info(
+                        "ModManager: loaded mod [%s] (from %s)",
+                        mod_id,
+                        mod_info.module_path,
+                    )
 
                     return node_cls
 
-
-
-            log.warning("ModManager: cannot find node class %s for mod [%s]", 
-
-                       mod_info.node_class, mod_id)
+            log.warning(
+                "ModManager: cannot find node class %s for mod [%s]",
+                mod_info.node_class,
+                mod_id,
+            )
 
         except Exception as e:
 
             log.error("ModManager: failed to load mod [%s]: %s", mod_id, e)
 
-
-
         return None
 
-
-
     def load_all(self) -> None:
-
         """加载所有模组并注册"""
 
         if not self._mods:
@@ -636,13 +444,14 @@ class ModManager:
 
             get_registry().register_from_mod_manager(self)
 
-            log.debug("Node registry synchronized: %d types", len(get_registry().get_all_types()))
+            log.debug(
+                "Node registry synchronized: %d types",
+                len(get_registry().get_all_types()),
+            )
 
         except Exception as e:
 
             log.warning("Failed to sync node registry: %s", e)
-
-
 
         # ── 延迟验证向量化输出 (避免递归) ──
 
@@ -650,31 +459,20 @@ class ModManager:
 
             self._validate_vectorized_output(self._mods[mod_id])
 
-
-
     # ── 注册 ──
 
-
-
     def _register_node(self, mod_info: ModInfo) -> None:
-
         """将模组注册到 NODE_REGISTRY 和 FORMULAS,并验证向量化计算输出"""
 
         if not mod_info.node_cls:
 
             return
 
-
-
         node_type = mod_info.node_type
-
-
 
         # NODE_REGISTRY 格式: {node_type: (NodeClass, display_name)}
 
         self._node_registry[node_type] = (mod_info.node_cls, mod_info.name)
-
-
 
         # ── 触发生命周期: 通知监听器新模组已注册 ──
 
@@ -685,9 +483,9 @@ class ModManager:
             _fire_register(mod_info.id, node_type, mod_info.node_cls)
 
         except Exception:
-            log.warning("ModManager: _fire_register failed for %s", mod_info.id, exc_info=True)
-
-
+            log.warning(
+                "ModManager: _fire_register failed for %s", mod_info.id, exc_info=True
+            )
 
         # FORMULAS 格式: {node_type: formula_string}
 
@@ -701,8 +499,6 @@ class ModManager:
 
             self._formulas[node_type] = formula_text
 
-
-
         # 分类
 
         category = mod_info.category
@@ -715,8 +511,6 @@ class ModManager:
 
             self._categories[category].append(node_type)
 
-
-
     def _validate_param_consistency(self, mod_info: ModInfo) -> None:
         """Validate mod.json parameters against _build_param_defs()."""
         if not mod_info.node_cls or not mod_info.parameters:
@@ -727,16 +521,17 @@ class ModManager:
             for mp in mod_info.parameters:
                 pd = param_defs.get(mp.key)
                 if pd is None:
-                    self._load_errors.append({
-                        "mod_id": mod_info.id,
-                        "severity": "warning",
-                        "errors": [f"mod.json param '{mp.key}' not in ParamDef"],
-                    })
+                    self._load_errors.append(
+                        {
+                            "mod_id": mod_info.id,
+                            "severity": "warning",
+                            "errors": [f"mod.json param '{mp.key}' not in ParamDef"],
+                        }
+                    )
         except Exception:
             pass
 
     def _validate_vectorized_output(self, mod_info: ModInfo) -> None:
-
         """验证 _vectorized_compute 输出字段与离散化配置一致.
 
 
@@ -753,21 +548,17 @@ class ModManager:
 
         # 防止递归: 验证过程中不触发新的加载
 
-        if getattr(self, '_validating', False):
+        if getattr(self, "_validating", False):
 
             return
-
-
 
         node_type = mod_info.node_type
 
         node_cls = mod_info.node_cls
 
-        if not node_cls or not hasattr(node_cls, '_vectorized_compute'):
+        if not node_cls or not hasattr(node_cls, "_vectorized_compute"):
 
             return
-
-
 
         # 直接读取 DISCRETE_CONFIGS(不触发 ModManager 加载链)
 
@@ -785,15 +576,11 @@ class ModManager:
 
             return
 
-
-
         constraint_keys = cfg.get("constraint_keys", [])
 
         if not constraint_keys:
 
             return
-
-
 
         # 用默认参数试运行一次向量化计算以获取 dtype
 
@@ -817,7 +604,12 @@ class ModManager:
 
             from models.base import WaterFlow, WaterQuality
 
-            result = node_cls._vectorized_compute(grid, WaterFlow(), WaterQuality(), {k: v for k, v in cfg.get("fixed", {}).items()})
+            result = node_cls._vectorized_compute(
+                grid,
+                WaterFlow(),
+                WaterQuality(),
+                {k: v for k, v in cfg.get("fixed", {}).items()},
+            )
 
             dtype_names = set(result.dtype.names)
 
@@ -828,8 +620,6 @@ class ModManager:
         finally:
 
             self._validating = False
-
-
 
         # 检查 ok_* + val_* 字段
 
@@ -849,170 +639,109 @@ class ModManager:
 
                 errors.append(f"missing val_{ck} — robustness will be 0")
 
-
-
         # 检查 concrete_m3
 
         if "concrete_m3" not in dtype_names:
 
             errors.append("missing concrete_m3 — cost will be 0")
 
-
-
         if errors:
 
-            self._load_errors.append({
+            self._load_errors.append(
+                {
+                    "mod_id": mod_info.id,
+                    "severity": "warning",
+                    "errors": errors,
+                }
+            )
 
-                "mod_id": mod_info.id,
+            log.warning(
+                "Mod [%s] vectorized validation: %s", mod_info.id, "; ".join(errors)
+            )
 
-                "severity": "warning",
-
-                "errors": errors,
-
-            })
-
-            log.warning("Mod [%s] vectorized validation: %s", mod_info.id, "; ".join(errors))
-
-
-
-    # ── 配置文件加载 ──
-
-
+    # ── 配置文件加载 (v5.4: 委托给 mod_config 模块) ──
 
     def _load_json_config(self, mod_id: str, filename: str) -> Optional[dict]:
-
-        """Load a JSON config file from a mod's directory. Returns None if not found."""
-
+        """[DEPRECATED] Use mod_config._load_json(mod_info.mod_dir, filename) instead."""
         mod_info = self._mods.get(mod_id)
-
         if not mod_info or not mod_info.mod_dir:
-
             return None
+        from . import mod_config
 
-        path = os.path.join(mod_info.mod_dir, filename)
-
-        if not os.path.exists(path):
-
-            return None
-
-        try:
-
-            with open(path, 'r', encoding='utf-8') as f:
-
-                return json.load(f)
-
-        except Exception as e:
-
-            log.warning("ModManager: failed to load %s from %s: %s", filename, mod_id, e)
-
-            return None
-
-
+        return mod_config._load_json(mod_info.mod_dir, filename)
 
     def load_discretization(self, mod_id: str) -> Optional[dict]:
+        mod_info = self._mods.get(mod_id)
+        if not mod_info or not mod_info.mod_dir:
+            return None
+        from . import mod_config
 
-        """Load discretization config from mod's discretization.json"""
-
-        return self._load_json_config(mod_id, "discretization.json")
-
-
+        return mod_config.load_discretization(mod_info.mod_dir)
 
     def load_labels(self, mod_id: str) -> Optional[dict]:
+        mod_info = self._mods.get(mod_id)
+        if not mod_info or not mod_info.mod_dir:
+            return None
+        from . import mod_config
 
-        """Load label config from mod's labels.json"""
-
-        return self._load_json_config(mod_id, "labels.json")
-
-
+        return mod_config.load_labels(mod_info.mod_dir)
 
     def load_equipment(self, mod_id: str) -> Optional[dict]:
+        mod_info = self._mods.get(mod_id)
+        if not mod_info or not mod_info.mod_dir:
+            return None
+        from . import mod_config
 
-        """Load equipment/unit_prices from mod's unit_prices.json"""
-
-        return self._load_json_config(mod_id, "unit_prices.json")
-
-
+        return mod_config.load_equipment(mod_info.mod_dir)
 
     def get_all_discretizations(self) -> Dict[str, dict]:
+        from . import mod_config
 
-        """Get merged discretization configs from all mods. Returns {node_type: config}."""
-
-        if not self._mods:
-
-            self.discover_all(force_rescan=True)
-
-        result = {}
-
-        for mod_id, mod_info in self._mods.items():
-
-            cfg = self.load_discretization(mod_id)
-
-            if cfg:
-
-                result[mod_info.node_type] = cfg
-
-        return result
-
-
+        return mod_config.get_all_discretizations(
+            self._mods, lambda: self.discover_all(force_rescan=True)
+        )
 
     def get_all_labels(self) -> Dict[str, dict]:
+        from . import mod_config
 
-        """Get merged labels from all mods. Returns {node_type: {params: {}, dimensions: {}}}."""
-
-        if not self._mods:
-
-            self.discover_all(force_rescan=True)
-
-        result = {}
-
-        for mod_id, mod_info in self._mods.items():
-
-            labels = self.load_labels(mod_id)
-
-            if labels:
-
-                result[mod_info.node_type] = labels
-
-        return result
-
-
+        return mod_config.get_all_labels(
+            self._mods, lambda: self.discover_all(force_rescan=True)
+        )
 
     def get_all_equipment(self) -> Dict[str, dict]:
+        from . import mod_config
 
-        """Get merged equipment configs from all mods."""
+        return mod_config.get_all_equipment(
+            self._mods, lambda: self.discover_all(force_rescan=True)
+        )
 
-        if not self._mods:
+    def save_discretization(self, mod_id: str, config: dict) -> bool:
+        mod_info = self._mods.get(mod_id)
+        if not mod_info or not mod_info.mod_dir:
+            return False
+        from _paths import get_mods_dir
+        import os as _os
+        from . import mod_config
 
-            self.discover_all(force_rescan=True)
-
-        result = {}
-
-        for mod_id, mod_info in self._mods.items():
-
-            equip = self.load_equipment(mod_id)
-
-            if equip:
-
-                result[mod_info.node_type] = equip
-
-        return result
-
-
+        mod_name = _os.path.basename(mod_info.mod_dir)
+        runtime_dir = _os.path.join(get_mods_dir(), "core", mod_name)
+        app_root = _os.path.abspath(_os.path.join(get_mods_dir(), ".."))
+        test_dir = _os.path.join(app_root, "mods", "core", mod_name)
+        test_dirs = [runtime_dir]
+        if _os.path.isdir(test_dir):
+            test_dirs.append(test_dir)
+        return mod_config.save_discretization(
+            mod_info.mod_dir, mod_id, config, test_dirs
+        )
 
     # ── 查询 ──
 
-
-
     def get_mod(self, mod_id: str) -> Optional[ModInfo]:
-
         """获取模组信息"""
 
         return self._mods.get(mod_id)
 
-
-
     def get_node_class(self, node_type: str) -> Optional[Type]:
-
         """根据 node_type 获取节点类"""
 
         for mod_info in self._mods.values():
@@ -1023,50 +752,34 @@ class ModManager:
 
         return None
 
-
-
     def get_category_mods(self, category: str) -> List[ModInfo]:
-
         """获取指定分类的所有模组"""
 
         return [m for m in self._mods.values() if m.category == category]
 
-
-
     def list_mods(self) -> List[Dict[str, Any]]:
-
         """列出所有模组的摘要信息"""
 
         result = []
 
         for mod_info in self._mods.values():
 
-            result.append({
-
-                "id": mod_info.id,
-
-                "name": mod_info.name,
-
-                "version": mod_info.version,
-
-                "author": mod_info.author,
-
-                "category": mod_info.category,
-
-                "process_stage": mod_info.process_stage,
-
-                "loaded": mod_info.loaded,
-
-                "tags": mod_info.tags,
-
-            })
+            result.append(
+                {
+                    "id": mod_info.id,
+                    "name": mod_info.name,
+                    "version": mod_info.version,
+                    "author": mod_info.author,
+                    "category": mod_info.category,
+                    "process_stage": mod_info.process_stage,
+                    "loaded": mod_info.loaded,
+                    "tags": mod_info.tags,
+                }
+            )
 
         return result
 
-
-
     def get_mod_by_node_type(self, node_type: str) -> Optional["ModInfo"]:
-
         """Find mod by its node_type string (reverse lookup)."""
 
         if not self._mods:
@@ -1080,8 +793,6 @@ class ModManager:
                 return mod_info
 
         return None
-
-
 
     def register_infra_node(
         self,
@@ -1114,38 +825,7 @@ class ModManager:
             node_cls=node_class,
         )
 
-    def save_discretization(self, mod_id: str, config: dict) -> bool:
-        """Save discretization config to mod directory (runtime + testing)."""
-        import json
-        import os as _os
-        mod_info = self._mods.get(mod_id)
-        if not mod_info or not mod_info.mod_dir:
-            return False
-        mod_name = _os.path.basename(mod_info.mod_dir)
-        json_text = json.dumps(config, ensure_ascii=False, indent=2) + "\n"
-        success = False
-        from _paths import get_mods_dir
-        targets = []
-        runtime_dir = _os.path.join(get_mods_dir(), "core", mod_name)
-        targets.append(_os.path.join(runtime_dir, "discretization.json"))
-        app_root = _os.path.abspath(_os.path.join(get_mods_dir(), ".."))
-        test_dir = _os.path.join(app_root, "mods", "core", mod_name)
-        if _os.path.isdir(test_dir):
-            targets.append(_os.path.join(test_dir, "discretization.json"))
-        for target_path in targets:
-            try:
-                _os.makedirs(_os.path.dirname(target_path), exist_ok=True)
-                tmp_path = target_path + ".tmp"
-                with open(tmp_path, "w", encoding="utf-8") as f:
-                    f.write(json_text)
-                _os.replace(tmp_path, target_path)
-                success = True
-            except Exception:
-                pass
-        return success
-
     def get_ui_behavior(self, node_type: str) -> Dict[str, bool]:
-
         """Get UI behavior flags for a node_type.
 
 
@@ -1165,28 +845,24 @@ class ModManager:
         """
 
         defaults = {
-
             "is_io_node": False,
-
             "skip_solution_browser": False,
-
             "show_water_quality_card": False,
-
             "skip_cost_estimation": False,
-
             "skip_output_writer": False,
-
         }
-
-
 
         # ── 无 mod.json 的 legacy 基础设施节点 ──
 
-        legacy_io = {"water_quality", "pipe_network", "combiner", "input_node", "kw_input"}
+        legacy_io = {
+            "water_quality",
+            "pipe_network",
+            "combiner",
+            "input_node",
+            "kw_input",
+        }
 
         legacy_wq = {"water_quality", "input_node", "kw_input"}
-
-
 
         if node_type in legacy_io:
 
@@ -1202,15 +878,11 @@ class ModManager:
 
             defaults["show_water_quality_card"] = True
 
-
-
         mod_info = self.get_mod_by_node_type(node_type)
 
         if not mod_info:
 
             return defaults
-
-
 
         # Derive defaults from process_stage
 
@@ -1222,21 +894,22 @@ class ModManager:
 
         defaults["skip_output_writer"] = is_io
 
-
-
         # ── 方案浏览器: 仅水处理阶段 + 污泥处理阶段节点支持 ──
 
         # 输入/输出(io)以及未来新增的非计算阶段自动跳过方案浏览器.
 
-        solution_stages = {"primary", "secondary", "tertiary", "mine_water", "sludge", "collection"}
+        solution_stages = {
+            "primary",
+            "secondary",
+            "tertiary",
+            "mine_water",
+            "sludge",
+            "collection",
+        }
 
         defaults["skip_solution_browser"] = (
-
             mod_info.process_stage not in solution_stages
-
         )
-
-
 
         # Water quality card nodes
 
@@ -1244,22 +917,14 @@ class ModManager:
 
         defaults["show_water_quality_card"] = node_type in wq_card_types
 
-
-
         return defaults
 
-
-
     def is_io_node(self, node_type: str) -> bool:
-
         """Check if a node type is an IO/infrastructure node."""
 
         return self.get_ui_behavior(node_type).get("is_io_node", False)
 
-
-
     def get_flow_order(self) -> List[Tuple[str, str]]:
-
         """Auto-derive flow order from process_stage grouping.
 
         Returns sorted list of (node_type, display_name) tuples.
@@ -1270,7 +935,15 @@ class ModManager:
 
             self.discover_all(force_rescan=True)
 
-        stage_order = {"io": 0, "primary": 1, "secondary": 2, "tertiary": 3, "sludge": 4, "collection": 5, "mine_water": 10}
+        stage_order = {
+            "io": 0,
+            "primary": 1,
+            "secondary": 2,
+            "tertiary": 3,
+            "sludge": 4,
+            "collection": 5,
+            "mine_water": 10,
+        }
 
         mods_by_stage = {s: [] for s in stage_order}
 
@@ -1282,13 +955,18 @@ class ModManager:
 
                 mods_by_stage[stage].append((mod_info.node_type, mod_info.name))
 
-
-
         order = []
 
-        for stage in ["io", "primary", "secondary", "tertiary", "sludge",
-
-                     "collection", "mine_water", "elevation"]:
+        for stage in [
+            "io",
+            "primary",
+            "secondary",
+            "tertiary",
+            "sludge",
+            "collection",
+            "mine_water",
+            "elevation",
+        ]:
 
             for nt, name in sorted(mods_by_stage.get(stage, []), key=lambda x: x[0]):
 
@@ -1296,10 +974,7 @@ class ModManager:
 
         return order
 
-
-
     def get_node_class_for_type(self, node_type: str) -> Optional[type]:
-
         """Get the Python class for a node_type via mod.json resolution.
 
         Uses module_path + node_class from mod.json to import.
@@ -1320,17 +995,12 @@ class ModManager:
 
         return self.load_mod(mod_info.id)
 
-
-
     # ── UI 菜单生成 ──
 
-
-
     def get_category_menu(self) -> Dict[str, List[Tuple[str, str]]]:
-
         """Auto-generate UI category menu structure by process_stage.
 
-        
+
 
         Returns:
 
@@ -1342,51 +1012,30 @@ class ModManager:
 
             self.discover_all(force_rescan=True)
 
-        
-
         # Stage display name mapping
 
         stage_names = {
-
             "io": "输入/输出",
-
             "primary": "一级处理",
-
             "secondary": "二级处理",
-
             "tertiary": "深度处理",
-
             "sludge": "污泥处理",
-
             "collection": "集配水模组",
-
             "elevation": "高程模组",
-
             "mine_water": "矿井水处理",
-
         }
-
-        
 
         # Legacy nodes without mod.json — inferred stage
 
         legacy = [
-
             ("管网输入", "pipe_network", "io"),
-
             ("进水水质", "water_quality", "io"),
-
             ("合并", "combiner", "io"),
-
         ]
-
-        
 
         # Group by process_stage
 
         menu: Dict[str, List[Tuple[str, str]]] = {}
-
-        
 
         # Add legacy nodes first
 
@@ -1399,8 +1048,6 @@ class ModManager:
                 menu[display_stage] = []
 
             menu[display_stage].append((name, node_type))
-
-        
 
         # Add discovered mods
 
@@ -1416,64 +1063,49 @@ class ModManager:
 
             menu[display_stage].append((mod_info.name, mod_info.node_type))
 
-        
-
         # Sort within each stage
 
         for stage in menu:
 
             menu[stage].sort(key=lambda x: x[1])
 
-        
-
         # Ensure consistent stage order
 
         ordered = {}
 
-        for stage_name in ["输入/输出", "一级处理", "二级处理", "深度处理",
-
-                          "污泥处理", "集配水模组", "矿井水处理", "高程模组"]:
+        for stage_name in [
+            "输入/输出",
+            "一级处理",
+            "二级处理",
+            "深度处理",
+            "污泥处理",
+            "集配水模组",
+            "矿井水处理",
+            "高程模组",
+        ]:
 
             if stage_name in menu:
 
                 ordered[stage_name] = menu[stage_name]
 
-        
-
         return ordered
 
-
-
     # ── 处理阶段 ──
-
-
 
     # 阶段排序权重(用于自动连线和流程检查)
 
     STAGE_ORDER: Dict[str, int] = {
-
         "io": 0,
-
         "primary": 1,
-
         "secondary": 2,
-
         "tertiary": 3,
-
         "sludge": 4,
-
         "collection": 5,
-
         "mine_water": 10,
-
         "elevation": 20,
-
     }
 
-
-
     def get_mods_by_stage(self, stage: str) -> List[ModInfo]:
-
         """获取指定处理阶段的所有模组"""
 
         if not self._mods:
@@ -1482,46 +1114,28 @@ class ModManager:
 
         return [m for m in self._mods.values() if m.process_stage == stage]
 
-
-
     def get_stage_order(self, stage: str) -> int:
-
         """获取阶段的排序权重"""
 
         return self.STAGE_ORDER.get(stage, 999)
 
-
-
     def get_stage_name(self, stage: str) -> str:
-
         """获取阶段的中文名称"""
 
         names = {
-
             "io": "输入/输出",
-
             "primary": "一级处理",
-
             "secondary": "二级处理",
-
             "tertiary": "深度处理",
-
             "sludge": "污泥处理",
-
             "collection": "集配水模组",
-
             "elevation": "高程模组",
-
             "mine_water": "矿井水处理",
-
         }
 
         return names.get(stage, stage)
 
-
-
     def get_pipeline_order(self, mod_ids: List[str]) -> List[str]:
-
         """按处理阶段排序模组 ID 列表"""
 
         if not self._mods:
@@ -1529,21 +1143,13 @@ class ModManager:
             self.discover_all(force_rescan=True)
 
         return sorted(
-
             mod_ids,
-
             key=lambda mid: self.get_stage_order(
-
                 self._mods.get(mid, ModInfo(id=mid)).process_stage
-
             ),
-
         )
 
-
-
     def reload(self) -> None:
-
         """重新扫描并加载所有模组(用于热更新)"""
 
         self._mods.clear()
@@ -1562,22 +1168,14 @@ class ModManager:
 
         self.load_all()
 
-
-
     # ── 错误报告 ──
 
-
-
     def get_load_errors(self) -> list:
-
         """获取所有加载错误 [{mod_id, severity, errors}]"""
 
         return list(self._load_errors)
 
-
-
     def get_load_summary(self) -> str:
-
         """人类可读的加载摘要"""
 
         total = len(self._mods)
@@ -1589,29 +1187,40 @@ class ModManager:
         return f"{loaded}/{total} mods loaded, {errors} with errors"
 
 
+# ═════════════════════════════════════════════════════════════════════
 
-
+# mod.json 验证 (v5.4: 委托给 mod_validation 模块)
 
 # ═════════════════════════════════════════════════════════════════════
 
-# mod.json 验证
+# 向后兼容重导出
+from .mod_validation import validate_mod_json as _validate_mod_json  # noqa: F401
+from .mod_validation import validate_all_mods  # noqa: F401
 
 # ═════════════════════════════════════════════════════════════════════
 
+# 全局实例
+
+# ═════════════════════════════════════════════════════════════════════
 
 
 _MOD_REQUIRED_FIELDS = ["id", "name", "node_type", "node_class"]
 
-_MOD_VALID_STAGES = {"io", "primary", "secondary", "tertiary", "sludge", "mine_water", "collection", "elevation"}
+_MOD_VALID_STAGES = {
+    "io",
+    "primary",
+    "secondary",
+    "tertiary",
+    "sludge",
+    "mine_water",
+    "collection",
+    "elevation",
+}
 
 _MOD_VALID_PORT_TYPES = {"WATER", "QUALITY", "MIXED", "SLUDGE"}
 
 
-
-
-
 def _validate_mod_json(path: Path) -> list:
-
     """验证 mod.json 文件.返回错误列表;空列表 = 通过."""
 
     errors = []
@@ -1630,13 +1239,9 @@ def _validate_mod_json(path: Path) -> list:
 
         return [f"无法读取文件: {e}"]
 
-
-
     if not isinstance(data, dict):
 
         return ["mod.json 必须是 JSON 对象"]
-
-
 
     # 必填字段
 
@@ -1646,8 +1251,6 @@ def _validate_mod_json(path: Path) -> list:
 
             errors.append(f"缺少必填字段: '{field}'")
 
-
-
     # ID 格式
 
     mod_id = data.get("id", "")
@@ -1656,8 +1259,6 @@ def _validate_mod_json(path: Path) -> list:
 
         errors.append(f"id '{mod_id}' 应为全小写")
 
-
-
     # process_stage 合法性
 
     stage = data.get("process_stage", "")
@@ -1665,8 +1266,6 @@ def _validate_mod_json(path: Path) -> list:
     if stage and stage not in _MOD_VALID_STAGES:
 
         errors.append(f"process_stage '{stage}' 不合法,有效值: {_MOD_VALID_STAGES}")
-
-
 
     # 端口类型
 
@@ -1689,8 +1288,6 @@ def _validate_mod_json(path: Path) -> list:
             if "name" not in port:
 
                 errors.append(f"{port_type}[{i}] 缺少 'name'")
-
-
 
     return errors
 
@@ -1732,7 +1329,11 @@ def _validate_with_schema(mod_json_path: Path) -> list:
     try:
         validator = jsonschema.Draft202012Validator(_schema_cache)
         for err in validator.iter_errors(data):
-            path_str = " → ".join(str(p) for p in err.absolute_path) if err.absolute_path else "root"
+            path_str = (
+                " → ".join(str(p) for p in err.absolute_path)
+                if err.absolute_path
+                else "root"
+            )
             errors.append(f"Schema: {err.message} (at {path_str})")
     except Exception as e:
         errors.append(f"Schema validation error: {e}")
@@ -1741,7 +1342,6 @@ def _validate_with_schema(mod_json_path: Path) -> list:
 
 
 def validate_all_mods() -> dict:
-
     """验证所有已安装模组的 mod.json.返回 {mod_id: errors}."""
 
     from _paths import get_mods_dir
@@ -1777,9 +1377,6 @@ def validate_all_mods() -> dict:
     return results
 
 
-
-
-
 # ═════════════════════════════════════════════════════════════════════
 
 # 全局实例
@@ -1787,10 +1384,7 @@ def validate_all_mods() -> dict:
 # ═════════════════════════════════════════════════════════════════════
 
 
-
 def get_mod_manager() -> ModManager:
-
     """获取全局 ModManager 实例"""
 
     return ModManager()
-

@@ -219,9 +219,15 @@ class WuniTishengNode(NodeBase):
         Q_single = Q / n_work
 
         # 固定常数
-        eta_pump = 0.75; t_sump_min = 5.0; h_outlet = 1.5
-        h_super = 0.5; h_sump_eff = 2.5; k_local = 1.2
-        n_rough = 0.014; L_suction = fixed.get("L_suction", 10.0); L_discharge = fixed.get("L_discharge", 50.0)
+        eta_pump = 0.75
+        t_sump_min = 5.0
+        h_outlet = 1.5
+        h_super = 0.5
+        h_sump_eff = 2.5
+        k_local = 1.2
+        n_rough = 0.014
+        L_suction = fixed.get("L_suction", 10.0)
+        L_discharge = fixed.get("L_discharge", 50.0)
 
         # 管径
         D_suction = np.sqrt(4.0 * Q_single / (PI * v_suction))
@@ -277,8 +283,10 @@ class WuniTishengNode(NodeBase):
         arr = np.zeros(N, dtype=dt)
         arr["D_suction"] = D_suction
         arr["D_discharge"] = D_discharge
-        arr["i_suction"] = i_suction; arr["i_discharge"] = i_discharge
-        arr["h_f_suction"] = h_f_suction; arr["h_f_discharge"] = h_f_discharge
+        arr["i_suction"] = i_suction
+        arr["i_discharge"] = i_discharge
+        arr["h_f_suction"] = h_f_suction
+        arr["h_f_discharge"] = h_f_discharge
         arr["h_loss_suction"] = h_loss_suction
         arr["h_loss_discharge"] = h_loss_discharge
         arr["H_total"] = H_total
@@ -289,7 +297,9 @@ class WuniTishengNode(NodeBase):
         arr["V_sump_actual"] = V_sump_actual
         arr["n_standby"] = n_standby
         arr["concrete_m3"] = concrete
-        arr["L"] = arr["L_sump"]; arr["B"] = arr["B_sump"]; arr["H"] = arr["H_sump_total"]
+        arr["L"] = arr["L_sump"]
+        arr["B"] = arr["B_sump"]
+        arr["H"] = arr["H_sump_total"]
         arr["ok_v_suction"] = ok_v_suction
         arr["val_v_suction"] = v_suction
         arr["ok_v_discharge"] = ok_v_discharge

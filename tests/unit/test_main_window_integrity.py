@@ -56,7 +56,7 @@ class TestMainWindowIntegrity:
             "pack", "grid", "place", "destroy", "quit",
             "get", "set", "insert", "delete", "focus", "selection",
             "configure", "cget", "winfo", "event_generate",
-            "focus_get", "unbind_all", "focus_set",
+            "focus_get", "unbind_all", "focus_set", "register",
         }
 
         missing = called_methods - defined_methods - exempt
