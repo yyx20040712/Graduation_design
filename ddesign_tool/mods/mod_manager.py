@@ -1746,8 +1746,6 @@ def validate_all_mods() -> dict:
 
     from _paths import get_mods_dir
 
-    import os as _os
-
     mods_root = Path(get_mods_dir())
 
     results = {}

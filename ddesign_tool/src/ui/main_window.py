@@ -11,7 +11,7 @@ from tkinter import filedialog, messagebox, ttk
 from typing import Dict, List, Optional
 
 try:
-    from _paths import get_data_dir, get_output_dir, setup_import_paths
+    from _paths import get_data_dir, setup_import_paths
 except ImportError:
     from src._paths import get_data_dir, setup_import_paths  # type: ignore
 setup_import_paths()
@@ -38,7 +38,7 @@ from ui.export_handlers import (
 )
 from ui.file_manager import FileManager
 from ui.logger import log
-from ui.quality_panel import QualityPanel, get_effluent_std
+from ui.quality_panel import QualityPanel
 from ui.solution_browser import SolutionBrowser
 from ui.validator_dialog import run_validator_dialog
 
@@ -2418,7 +2418,6 @@ class MainWindow(tk.Tk):
             self.result_check_text.configure(state=tk.DISABLED)
             return
 
-        from models.dimension_formulas import get_param_category
         from ui.dimension_labels import (
             format_dimension_row,
             format_param_value,

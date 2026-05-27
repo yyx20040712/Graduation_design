@@ -46,5 +46,6 @@ per-file-ignores =
     ddesign_tool/src/task_manager.py: E402, C901
     ddesign_tool/src/bootstrap.py: E402, C901
     ddesign_tool/*/__init__.py: F401
+    mods/*/__init__.py: F401
     ddesign_tool/main.py: E402, F401
 

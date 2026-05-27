@@ -7,8 +7,6 @@ mod_tools.py — 模组开发工具 CLI
     python -m ddesign_tool.mods.mod_tools list
 """
 
-import json
-import os
 import sys
 from pathlib import Path
 

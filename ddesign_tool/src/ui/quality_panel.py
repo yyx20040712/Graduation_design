@@ -9,8 +9,6 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Callable, Dict, Optional
 
-from models.base import WaterFlow, WaterQuality
-
 # 污染物颜色 & 标签 (模块级复用)
 WQ_COLORS = {
     "BOD5": "#5599ff", "COD": "#ff9955", "SS": "#55cc55",

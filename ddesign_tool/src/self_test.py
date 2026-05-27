@@ -22,7 +22,6 @@ import sys
 import time
 import traceback
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Callable, List
 
 # 兼容直接运行和模块导入
@@ -354,7 +353,7 @@ class SelfTestRunner:
         errors = []
         # QualityPanel 可导入
         try:
-            from ui.quality_panel import QualityPanel, WQ_COLORS, WQ_INDICATORS
+            from ui.quality_panel import WQ_COLORS, WQ_INDICATORS
             if len(WQ_COLORS) != 6:
                 errors.append(f"WQ_COLORS: {len(WQ_COLORS)} != 6")
             if len(WQ_INDICATORS) != 6:

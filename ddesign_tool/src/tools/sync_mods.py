@@ -38,9 +38,9 @@ def sync_mods(
     Returns:
         已同步的文件相对路径列表
     """
-    from _paths import get_project_root
+    from _paths import get_app_root
 
-    root = Path(get_project_root()) if src_dir is None else Path(src_dir).parent.parent
+    root = Path(get_app_root()).parent if src_dir is None else Path(src_dir).parent.parent
 
     if src_dir is None:
         src_dir = root / "ddesign_tool" / "mods"
@@ -111,8 +111,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if reverse:
         # 反向: mods/ → ddesign_tool/mods/
-        from _paths import get_project_root
-        root = Path(get_project_root())
+        from _paths import get_app_root
+        root = Path(get_app_root()).parent
         src = root / "mods"
         dst = root / "ddesign_tool" / "mods"
     else:

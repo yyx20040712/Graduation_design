@@ -26,6 +26,7 @@ import os
 
 import sys
 
+import threading
 from dataclasses import dataclass, field
 
 from pathlib import Path
@@ -291,20 +292,17 @@ class ModManager:
 
 
     _instance: Optional["ModManager"] = None
-
-
+    _lock: "threading.Lock" = threading.Lock()  # 线程安全锁
 
     def __new__(cls) -> "ModManager":
 
         if cls._instance is None:
-
-            cls._instance = super().__new__(cls)
-
-            cls._instance._initialized = False
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._instance._initialized = False
 
         return cls._instance
-
-
 
     def __init__(self):
 
@@ -312,7 +310,10 @@ class ModManager:
 
             return
 
-        self._initialized = True
+        with self._lock:
+            if self._initialized:
+                return
+            self._initialized = True
 
 
 
@@ -403,30 +404,30 @@ class ModManager:
         mods_root = Path(get_mods_dir())
 
 
+        with self._lock:
+            # core/ 仅首次扫描
 
-        # core/ 仅首次扫描
+            if not self._loaded or force_rescan:
 
-        if not self._loaded or force_rescan:
+                core_dir = mods_root / "core"
 
-            core_dir = mods_root / "core"
+                if core_dir.exists():
 
-            if core_dir.exists():
-
-                self._scan_directory(core_dir)
-
-
-
-        # community/ 始终扫描(支持运行时放入新模组)
-
-        community_dir = mods_root / "community"
-
-        if community_dir.exists():
-
-            self._scan_directory(community_dir)
+                    self._scan_directory(core_dir)
 
 
 
-        self._loaded = True
+            # community/ 始终扫描(支持运行时放入新模组)
+
+            community_dir = mods_root / "community"
+
+            if community_dir.exists():
+
+                self._scan_directory(community_dir)
+
+
+
+            self._loaded = True
 
         log.info("ModManager: discovered %d mods, registered %d node types",
 
@@ -451,6 +452,11 @@ class ModManager:
                 # ── 验证 mod.json ──
 
                 errors = _validate_mod_json(mod_json)
+
+                # JSON Schema 验证 (jsonschema 库)
+                schema_errors = _validate_with_schema(mod_json)
+                if schema_errors:
+                    errors.extend(schema_errors)
 
                 if errors:
 
@@ -679,8 +685,7 @@ class ModManager:
             _fire_register(mod_info.id, node_type, mod_info.node_cls)
 
         except Exception:
-
-            pass
+            log.warning("ModManager: _fire_register failed for %s", mod_info.id, exc_info=True)
 
 
 
@@ -1690,7 +1695,49 @@ def _validate_mod_json(path: Path) -> list:
     return errors
 
 
+# 模块级缓存: JSON Schema (懒加载)
+_schema_cache: dict | None = None
 
+
+def _validate_with_schema(mod_json_path: Path) -> list:
+    """使用 JSON Schema 验证 mod.json 文件.
+
+    返回错误列表;空列表 = 通过.若 jsonschema 未安装则跳过并返回空列表.
+    """
+    global _schema_cache
+    try:
+        import jsonschema
+    except ImportError:
+        return []  # jsonschema 未安装,静默跳过
+
+    errors = []
+
+    # 加载 schema (仅首次)
+    if _schema_cache is None:
+        try:
+            schema_path = mod_json_path.parent.parent / "mod_schema.json"
+            with open(schema_path, "r", encoding="utf-8") as f:
+                _schema_cache = json.load(f)
+        except Exception:
+            return []  # schema 文件不可用,静默跳过
+
+    # 加载 data
+    try:
+        with open(mod_json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return []  # JSON 解析错误已在 _validate_mod_json 中报告
+
+    # 验证
+    try:
+        validator = jsonschema.Draft202012Validator(_schema_cache)
+        for err in validator.iter_errors(data):
+            path_str = " → ".join(str(p) for p in err.absolute_path) if err.absolute_path else "root"
+            errors.append(f"Schema: {err.message} (at {path_str})")
+    except Exception as e:
+        errors.append(f"Schema validation error: {e}")
+
+    return errors
 
 
 def validate_all_mods() -> dict:
@@ -1698,8 +1745,6 @@ def validate_all_mods() -> dict:
     """验证所有已安装模组的 mod.json.返回 {mod_id: errors}."""
 
     from _paths import get_mods_dir
-
-    import os as _os
 
     mods_root = Path(get_mods_dir())
 
