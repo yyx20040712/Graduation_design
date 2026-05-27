@@ -1,125 +1,41 @@
-# 预提交钩子配置
-# 安装: pip install pre-commit
-# 设置: pre-commit install
+# 预提交钩子配置 (离线环境 — 仅本地钩子)
+# 安装: pre-commit install
 # 手动运行: pre-commit run --all-files
 
 repos:
-  # 通用代码质量检查
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: trailing-whitespace        # 删除行尾空格
-      - id: end-of-file-fixer          # 确保文件以换行符结束
-      - id: check-yaml                 # 检查YAML语法
-      - id: check-toml                 # 检查TOML语法
-      - id: check-json                 # 检查JSON语法
-      - id: check-added-large-files    # 防止添加大文件
-        args: ['--maxkb=1024']
-      - id: check-ast                  # 检查Python语法
-      - id: check-case-conflict        # 检查文件名大小写冲突
-      - id: check-merge-conflict       # 检查合并冲突标记
-      - id: detect-private-key         # 检测私钥文件
-
-  # Python代码格式化 (Black)
-  - repo: https://github.com/psf/black
-    rev: 24.1.1
+  - repo: local
     hooks:
       - id: black
-        language_version: python3
-        args: ['--line-length=88']
-
-  # Python导入排序 (isort)
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
+        name: black (formatter)
+        entry: .venv/Scripts/python.exe -m black
+        language: system
+        types: [python]
+        args: ['--check', '--diff']
       - id: isort
-        args: ["--profile", "black", "--line-length=88"]
-
-  # Python代码风格检查 (flake8)
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.0.0
-    hooks:
+        name: isort (import sorter)
+        entry: .venv/Scripts/python.exe -m isort
+        language: system
+        types: [python]
+        args: ['--check-only', '--diff']
       - id: flake8
-        additional_dependencies:
-          - flake8-docstrings
-          - flake8-import-order
-          - flake8-builtins
-          - flake8-comprehensions
-        args: ['--max-line-length=88', '--extend-ignore=E203,W503']
+        name: flake8 (linter)
+        entry: .venv/Scripts/python.exe -m flake8
+        language: system
+        types: [python]
+      - id: sync-mods
+        name: mod directory sync check
+        entry: .venv/Scripts/python.exe -c "import sys; sys.path.insert(0,'ddesign_tool/src'); from tools.sync_mods import main; sys.exit(main(['--check']))"
+        language: system
+        pass_filenames: false
+        always_run: true
 
-  # Python类型检查 (mypy)
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
-    hooks:
-      - id: mypy
-        args: ['--ignore-missing-imports', '--disallow-untyped-defs']
-        additional_dependencies: ['types-all']
-
-  # Markdown检查
-  - repo: https://github.com/igorshubovych/markdownlint-cli2
-    rev: v0.9.0
-    hooks:
-      - id: markdownlint-cli2
-        args: ['--fix']
-
-  # 安全漏洞扫描
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.7
-    hooks:
-      - id: bandit
-        args: ['-c', 'pyproject.toml']
-        files: \.py$
-
-  # 依赖检查
-  - repo: https://github.com/pyupio/safety
-    rev: 2.3.5
-    hooks:
-      - id: safety
-        args: ['check', '--file=requirements.txt']
-
-  # Jupyter Notebook清理
-  - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.7.4
-    hooks:
-      - id: nbqa-black
-        args: ['--line-length=88']
-      - id: nbqa-isort
-        args: ['--profile=black']
-
-# 全局配置
 default_language_version:
   python: python3.10
 
-default_stages: [commit, push]
-
-# 跳过检查的文件
 exclude: |
   (?x)^(
-    .*\.min\.js|
-    .*\.min\.css|
-    .*\.min\.html|
-    .*\.min\.xml|
-    .*\.min\.json|
-    .*\.min\.txt|
-    ^tests/__pycache__/|
-    ^\.venv/|
-    ^venv/|
-    ^env/|
-    ^dist/|
-    ^build/|
-    ^\.git/|
-    ^\.tox/|
-    ^\.mypy_cache/|
-    ^\.pytest_cache/
+    .*\.min\.js|.*\.min\.css|.*\.min\.html|
+    ^\.venv/|^venv/|^env/|^dist/|^build/|
+    ^\.git/|^\.tox/|^\.mypy_cache/|^\.pytest_cache/|
+    ^ddesign_tool.exe_extracted/
   )$
-
-# 自定义钩子（可选）
-# - repo: local
-#   hooks:
-#     - id: pytest-check
-#       name: Run tests
-#       entry: python -m pytest tests/ -v
-#       language: system
-#       pass_filenames: false
-#       always_run: true
-#       stages: [push]

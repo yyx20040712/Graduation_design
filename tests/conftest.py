@@ -8,25 +8,29 @@ conftest.py — pytest 共享 fixtures
 from __future__ import annotations
 
 import sys
-import os
 from pathlib import Path
 
 # 确保 src 目录在 sys.path 中
 SRC_DIR = Path(__file__).parent.parent / "ddesign_tool" / "src"
 sys.path.insert(0, str(SRC_DIR))
 
-import pytest  # noqa: E402
 import numpy as np  # noqa: E402
+import pytest  # noqa: E402
 from models.base import (  # noqa: E402
-    WaterFlow, WaterQuality, SludgeFlow, NodeResult, ParamDef,
-    Port, PortType, NodeBase, NodeState,
-    round_to, GRAVITY,
+    NodeBase,
+    NodeResult,
+    ParamDef,
+    Port,
+    PortType,
+    SludgeFlow,
+    WaterFlow,
+    WaterQuality,
 )
-
 
 # ═══════════════════════════════════════════════════════════════════
 # WaterFlow fixtures
 # ═══════════════════════════════════════════════════════════════════
+
 
 @pytest.fixture
 def sample_flow() -> WaterFlow:
@@ -56,12 +60,18 @@ def large_flow() -> WaterFlow:
 # WaterQuality fixtures
 # ═══════════════════════════════════════════════════════════════════
 
+
 @pytest.fixture
 def sample_quality() -> WaterQuality:
     """标准进水水质 — 来自中期报告表3-1"""
     return WaterQuality(
-        BOD5=200.0, COD=400.0, SS=220.0,
-        NH3N=35.0, TN=45.0, TP=5.0, pH=7.0,
+        BOD5=200.0,
+        COD=400.0,
+        SS=220.0,
+        NH3N=35.0,
+        TN=45.0,
+        TP=5.0,
+        pH=7.0,
     )
 
 
@@ -69,8 +79,13 @@ def sample_quality() -> WaterQuality:
 def clean_quality() -> WaterQuality:
     """达标出水水质"""
     return WaterQuality(
-        BOD5=8.0, COD=40.0, SS=8.0,
-        NH3N=3.0, TN=12.0, TP=0.3, pH=7.0,
+        BOD5=8.0,
+        COD=40.0,
+        SS=8.0,
+        NH3N=3.0,
+        TN=12.0,
+        TP=0.3,
+        pH=7.0,
     )
 
 
@@ -78,8 +93,13 @@ def clean_quality() -> WaterQuality:
 def polluted_quality() -> WaterQuality:
     """高浓度进水"""
     return WaterQuality(
-        BOD5=400.0, COD=800.0, SS=500.0,
-        NH3N=50.0, TN=70.0, TP=10.0, pH=6.5,
+        BOD5=400.0,
+        COD=800.0,
+        SS=500.0,
+        NH3N=50.0,
+        TN=70.0,
+        TP=10.0,
+        pH=6.5,
     )
 
 
@@ -87,14 +107,20 @@ def polluted_quality() -> WaterQuality:
 def zero_quality() -> WaterQuality:
     """全零浓度水质 — 测试除零保护"""
     return WaterQuality(
-        BOD5=0.0, COD=0.0, SS=0.0,
-        NH3N=0.0, TN=0.0, TP=0.0, pH=7.0,
+        BOD5=0.0,
+        COD=0.0,
+        SS=0.0,
+        NH3N=0.0,
+        TN=0.0,
+        TP=0.0,
+        pH=7.0,
     )
 
 
 # ═══════════════════════════════════════════════════════════════════
 # SludgeFlow fixtures
 # ═══════════════════════════════════════════════════════════════════
+
 
 @pytest.fixture
 def sample_sludge() -> SludgeFlow:
@@ -130,6 +156,7 @@ def zero_sludge() -> SludgeFlow:
 # NodeBase / NodeResult / ParamDef / Port  fixtures
 # ═══════════════════════════════════════════════════════════════════
 
+
 class _TestNode(NodeBase):
     """仅用于测试的简单节点(传入参数和计算结果)"""
 
@@ -164,10 +191,13 @@ class _TestNode(NodeBase):
     def _vectorized_compute(cls, grid, flow, quality, fixed):
         """返回一个 dummy 结构化数组用于测试"""
         N = len(next(iter(grid.values())))
-        dt = np.dtype([
-            ("L", np.float64), ("B", np.float64),
-            ("ok_长宽比", np.bool_),
-        ])
+        dt = np.dtype(
+            [
+                ("L", np.float64),
+                ("B", np.float64),
+                ("ok_长宽比", np.bool_),
+            ]
+        )
         arr = np.zeros(N, dtype=dt)
         arr["L"] = np.full(N, 10.0)
         arr["B"] = np.full(N, 5.0)
@@ -191,10 +221,15 @@ def test_node(test_node_class) -> _TestNode:
 def param_def() -> ParamDef:
     """标准 ParamDef 实例"""
     return ParamDef(
-        name="测试参数", key="test_param",
-        value=5.0, default=5.0,
-        min_val=0.0, max_val=10.0,
-        step=0.5, unit="m", description="测试用",
+        name="测试参数",
+        key="test_param",
+        value=5.0,
+        default=5.0,
+        min_val=0.0,
+        max_val=10.0,
+        step=0.5,
+        unit="m",
+        description="测试用",
     )
 
 
@@ -218,8 +253,10 @@ def failed_result() -> NodeResult:
 def input_port() -> Port:
     """一个输入端口"""
     return Port(
-        port_id="node-1-in", name="进水",
-        port_type=PortType.MIXED, direction="input",
+        port_id="node-1-in",
+        name="进水",
+        port_type=PortType.MIXED,
+        direction="input",
         node_id="node-1",
     )
 
@@ -228,8 +265,10 @@ def input_port() -> Port:
 def output_port() -> Port:
     """一个输出端口"""
     return Port(
-        port_id="node-1-out", name="出水",
-        port_type=PortType.MIXED, direction="output",
+        port_id="node-1-out",
+        name="出水",
+        port_type=PortType.MIXED,
+        direction="output",
         node_id="node-1",
     )
 
@@ -238,8 +277,10 @@ def output_port() -> Port:
 def water_input_port() -> Port:
     """水量专用输入端口"""
     return Port(
-        port_id="pipe-1-out", name="管网出水",
-        port_type=PortType.WATER, direction="output",
+        port_id="pipe-1-out",
+        name="管网出水",
+        port_type=PortType.WATER,
+        direction="output",
         node_id="pipe-1",
     )
 
@@ -248,8 +289,10 @@ def water_input_port() -> Port:
 def quality_output_port() -> Port:
     """水质专用输出端口"""
     return Port(
-        port_id="wq-1-out", name="水质输出",
-        port_type=PortType.QUALITY, direction="output",
+        port_id="wq-1-out",
+        name="水质输出",
+        port_type=PortType.QUALITY,
+        direction="output",
         node_id="wq-1",
     )
 
@@ -258,10 +301,12 @@ def quality_output_port() -> Port:
 # GraphExecutor fixture (模拟)
 # ═══════════════════════════════════════════════════════════════════
 
+
 @pytest.fixture
 def executor():
     """返回一个预初始化的 GraphExecutor"""
     from controller.graph_executor import GraphExecutor
+
     return GraphExecutor()
 
 
@@ -269,20 +314,37 @@ def executor():
 # 工具 fixture
 # ═══════════════════════════════════════════════════════════════════
 
+
 @pytest.fixture
 def node_registry():
     """返回所有注册节点的类型列表(通过 ModManager 加载)"""
     from mods.mod_manager import get_mod_manager
+
     mgr = get_mod_manager()
     mgr.load_all()
     types = {}
-    for mod_id in ["tiaojiechi", "cugeshan", "xigeshan", "chenshachi",
-                    "chuchenchi", "cass", "gaomidu", "vxinglvchi", "ziwai",
-                    "kw_tiaojiechi", "kw_chenshachi", "kw_ningjiao", "kw_cifenli",
-                    "erchunchi", "bashi_jiliangcao", "wuni_tisheng"]:
+    for mod_id in [
+        "tiaojiechi",
+        "cugeshan",
+        "xigeshan",
+        "chenshachi",
+        "chuchenchi",
+        "cass",
+        "gaomidu",
+        "vxinglvchi",
+        "ziwai",
+        "kw_tiaojiechi",
+        "kw_chenshachi",
+        "kw_ningjiao",
+        "kw_cifenli",
+        "erchunchi",
+        "bashi_jiliangcao",
+        "wuni_tisheng",
+    ]:
         cls = mgr.load_mod(mod_id)
         if cls:
             types[mod_id] = cls
     from models.combiner import CombinerNode
+
     types["combiner"] = CombinerNode
     return types

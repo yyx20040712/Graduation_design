@@ -48,4 +48,6 @@ per-file-ignores =
     ddesign_tool/*/__init__.py: F401
     mods/*/__init__.py: F401
     ddesign_tool/main.py: E402, F401
+    tests/*.py: F401
+    tests/**/*.py: F401
 
