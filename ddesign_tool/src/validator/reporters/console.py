@@ -1,5 +1,7 @@
 """
 validator/reporters/console.py — 终端彩色报告输出
+
+设计决策: 所有输出字符均为 ASCII 安全，避免 Windows GBK 控制台崩溃.
 """
 
 from __future__ import annotations
@@ -11,7 +13,14 @@ from _logging import get_logger
 from ..engine import SEVERITY_ICON, ModReport, Severity, ValidationReport
 
 _log = get_logger(__name__)
-# ANSI color codes
+
+# ── ASCII 安全符号 (Windows GBK 控制台兼容) ──
+_BLOCK = "#"  # 进度条块
+_BAR = "="  # 分隔线
+_CHECK = "OK"  # 通过标记
+_CROSS = "!!"  # 失败标记
+
+# ANSI color codes (仅在 isatty 时启用)
 _RESET = "\033[0m"
 _BOLD = "\033[1m"
 _RED = "\033[31m"
@@ -20,8 +29,6 @@ _YELLOW = "\033[33m"
 _CYAN = "\033[36m"
 _WHITE = "\033[37m"
 _GRAY = "\033[90m"
-_BG_RED = "\033[41m"
-_BG_GREEN = "\033[42m"
 
 
 def _colorize(text: str, color: str) -> str:
@@ -43,7 +50,7 @@ class ConsoleReporter:
             _colorize("PASS", _GREEN) if report.healthy else _colorize("FAIL", _RED)
         )
         print(
-            f"\n{_BOLD}── {report.mod_name} ({report.node_type}){_RESET} "
+            f"\n{_BOLD}-- {report.mod_name} ({report.node_type}){_RESET} "
             f"[{status_icon}] "
             f"{_GRAY}{report.duration_ms:.0f}ms{_RESET}"
         )
@@ -65,7 +72,7 @@ class ConsoleReporter:
 
     def print_summary(self, total: ValidationReport):
         """打印汇总"""
-        print(f"\n{_BOLD}{'═' * 60}{_RESET}")
+        print(f"\n{_BOLD}{_BAR * 60}{_RESET}")
 
         # 进度条
         bar_width = 40
@@ -83,10 +90,10 @@ class ConsoleReporter:
         e_bar = int(e_ratio * bar_width)
 
         bar = (
-            _colorize("█" * p_bar, _GREEN)
-            + _colorize("█" * w_bar, _YELLOW)
-            + _colorize("█" * f_bar, _RED)
-            + _colorize("█" * e_bar, _RED)
+            _colorize(_BLOCK * p_bar, _GREEN)
+            + _colorize(_BLOCK * w_bar, _YELLOW)
+            + _colorize(_BLOCK * f_bar, _RED)
+            + _colorize(_BLOCK * e_bar, _RED)
         )
         print(f"  [{bar}{' ' * (bar_width - p_bar - f_bar - w_bar - e_bar)}]")
 
@@ -105,11 +112,11 @@ class ConsoleReporter:
         print(f"  耗时: {total.duration_ms:.0f}ms")
 
         if total.total_failures + total.total_errors == 0:
-            print(f"\n  {_colorize('✓ 所有模组通过验证', _BOLD + _GREEN)}")
+            print(f"\n  {_colorize(_CHECK + ' 所有模组通过验证', _BOLD + _GREEN)}")
         else:
             print(
-                f"\n  {_colorize(f'✗ {total.total_failures + total.total_errors} 个问题需修复',
-                                  _BOLD + _RED)}"
+                f"\n  {_colorize(f'{_CROSS} {total.total_failures + total.total_errors} 个问题需修复',
+                _BOLD + _RED)}"  # noqa: E128
             )
 
-        print(f"{'═' * 60}\n")
+        print(f"{_BAR * 60}\n")
