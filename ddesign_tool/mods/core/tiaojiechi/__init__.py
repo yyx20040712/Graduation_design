@@ -18,8 +18,11 @@ from typing import Dict, List, Tuple
 import numpy as np
 
 from models.base import (
-    NodeBase, NodeResult, NodeState,
-    WaterFlow, WaterQuality,
+    NodeBase,
+    NodeResult,
+    NodeState,
+    WaterFlow,
+    WaterQuality,
     ParamDef,
 )
 
@@ -47,52 +50,97 @@ class TiaojiechiNode(NodeBase):
     @classmethod
     def _default_params(cls) -> Dict[str, float]:
         return {
-            "n": 4,          # 池数,座
-            "HRT": 6,        # 水力停留时间,h
-            "h_eff": 4.0,    # 有效水深,m
+            "n": 4,  # 池数,座
+            "HRT": 6,  # 水力停留时间,h
+            "h_eff": 4.0,  # 有效水深,m
             "h_super": 0.5,  # 超高,m
-            "ratio_LB": 2.0, # 长宽比 L/B
-            "P_density": 12, # 搅拌功率密度,W/m³
+            "ratio_LB": 2.0,  # 长宽比 L/B
+            "P_density": 12,  # 搅拌功率密度,W/m³
         }
 
     def _build_param_defs(self) -> List[ParamDef]:
         return [
-            ParamDef("池数 n", "n",
-                     value=4, default=4,
-                     min_val=2, max_val=8, step=1,
-                     unit="座", description="调节池个数"),
-            ParamDef("水力停留时间 HRT", "HRT",
-                     value=6, default=6,
-                     min_val=4, max_val=12, step=0.5,
-                     unit="h", description="水力停留时间"),
-            ParamDef("有效水深", "h_eff",
-                     value=4.0, default=4.0,
-                     min_val=3.0, max_val=5.0, step=0.1,
-                     unit="m", description="调节池有效水深"),
-            ParamDef("超高", "h_super",
-                     value=0.5, default=0.5,
-                     min_val=0.3, max_val=0.5, step=0.1,
-                     unit="m", description="池体超高"),
-            ParamDef("长宽比 L/B", "ratio_LB",
-                     value=2.0, default=2.0,
-                     min_val=1.5, max_val=3.0, step=0.1,
-                     unit="", description="池长与池宽之比"),
-            ParamDef("搅拌功率密度", "P_density",
-                     value=12, default=12,
-                     min_val=10, max_val=15, step=1,
-                     unit="W/m³", description="单位容积搅拌功率,≥12 W/m³"),
+            ParamDef(
+                "池数 n",
+                "n",
+                value=4,
+                default=4,
+                min_val=2,
+                max_val=8,
+                step=1,
+                unit="座",
+                description="调节池个数",
+            ),
+            ParamDef(
+                "水力停留时间 HRT",
+                "HRT",
+                value=6,
+                default=6,
+                min_val=4,
+                max_val=12,
+                step=0.5,
+                unit="h",
+                description="水力停留时间",
+            ),
+            ParamDef(
+                "有效水深",
+                "h_eff",
+                value=4.0,
+                default=4.0,
+                min_val=3.0,
+                max_val=5.0,
+                step=0.1,
+                unit="m",
+                description="调节池有效水深",
+            ),
+            ParamDef(
+                "超高",
+                "h_super",
+                value=0.5,
+                default=0.5,
+                min_val=0.3,
+                max_val=0.5,
+                step=0.1,
+                unit="m",
+                description="池体超高",
+            ),
+            ParamDef(
+                "长宽比 L/B",
+                "ratio_LB",
+                value=2.0,
+                default=2.0,
+                min_val=1.5,
+                max_val=3.0,
+                step=0.1,
+                unit="",
+                description="池长与池宽之比",
+            ),
+            ParamDef(
+                "搅拌功率密度",
+                "P_density",
+                value=12,
+                default=12,
+                min_val=10,
+                max_val=15,
+                step=1,
+                unit="W/m³",
+                description="单位容积搅拌功率,≥12 W/m³",
+            ),
         ]
 
     @classmethod
     def _default_removal_rates(cls) -> Dict[str, float]:
         # 调节池不改变水质
         return {
-            "BOD5": 0.0, "COD": 0.0, "SS": 0.0,
-            "NH3N": 0.0, "TN": 0.0, "TP": 0.0,
+            "BOD5": 0.0,
+            "COD": 0.0,
+            "SS": 0.0,
+            "NH3N": 0.0,
+            "TN": 0.0,
+            "TP": 0.0,
         }
 
-    def calculate(self, flow: WaterFlow,
-                  quality: WaterQuality) -> NodeResult:
+    def calculate(self, flow: WaterFlow, quality: WaterQuality) -> NodeResult:
         """执行调节池设计计算
 
         计算流程:
@@ -113,8 +161,11 @@ class TiaojiechiNode(NodeBase):
 
         result = NodeResult(success=True)
         result.params = {
-            "n": n, "HRT": HRT, "h_eff": h_eff,
-            "h_super": h_super, "ratio_LB": ratio_LB,
+            "n": n,
+            "HRT": HRT,
+            "h_eff": h_eff,
+            "h_super": h_super,
+            "ratio_LB": ratio_LB,
             "P_density": P_density,
         }
 
@@ -149,19 +200,11 @@ class TiaojiechiNode(NodeBase):
         # 长宽比校核
         ratio_actual = L / B
         ratio_ok = 1.0 <= ratio_actual <= 2.0
-        result.add_check(
-            "长宽比 L/B", ratio_ok,
-            round(ratio_actual, 2),
-            "1.0~2.0", ""
-        )
+        result.add_check("长宽比 L/B", ratio_ok, round(ratio_actual, 2), "1.0~2.0", "")
 
         # HRT 校核 (范围检查: 6~12h, GB50014 §6.2)
         hrt_ok = 6.0 <= HRT_actual <= 12.0
-        result.add_check(
-            "实际 HRT", hrt_ok,
-            round(HRT_actual, 2),
-            "6~12", "h"
-        )
+        result.add_check("实际 HRT", hrt_ok, round(HRT_actual, 2), "6~12", "h")
         if not hrt_ok:
             result.add_warning(
                 f"实际 HRT={HRT_actual:.1f}h 低于设计值 {HRT}h-0.5h,"
@@ -199,8 +242,7 @@ class TiaojiechiNode(NodeBase):
 
     @classmethod
     def _vectorized_compute(
-        cls, grid: dict, flow: "WaterFlow",
-        quality: "WaterQuality", fixed: dict
+        cls, grid: dict, flow: "WaterFlow", quality: "WaterQuality", fixed: dict
     ) -> "np.ndarray":
         """向量化批量计算调节池 (N 个参数组合一次计算)
 
@@ -259,25 +301,27 @@ class TiaojiechiNode(NodeBase):
         concrete_m3 = V_total * 1.2
 
         # 构建结构化数组
-        dtype = np.dtype([
-            ("L", np.float64),
-            ("B", np.float64),
-            ("h_eff_out", np.float64),
-            ("V_actual", np.float64),
-            ("V_total", np.float64),
-            ("H_total", np.float64),
-            ("HRT_actual", np.float64),
-            ("ratio_actual", np.float64),
-            ("P_kW", np.float64),
-            ("Q_per_pool", np.float64),
-            ("area_total", np.float64),
-            ("H", np.float64),
-            ("concrete_m3", np.float64),
-            ("ok_LB_ratio", np.bool_),
-            ("ok_HRT_actual", np.bool_),
-            ("val_LB_ratio", np.float64),
-            ("val_HRT_actual", np.float64),
-        ])
+        dtype = np.dtype(
+            [
+                ("L", np.float64),
+                ("B", np.float64),
+                ("h_eff_out", np.float64),
+                ("V_actual", np.float64),
+                ("V_total", np.float64),
+                ("H_total", np.float64),
+                ("HRT_actual", np.float64),
+                ("ratio_actual", np.float64),
+                ("P_kW", np.float64),
+                ("Q_per_pool", np.float64),
+                ("area_total", np.float64),
+                ("H", np.float64),
+                ("concrete_m3", np.float64),
+                ("ok_LB_ratio", np.bool_),
+                ("ok_HRT_actual", np.bool_),
+                ("val_LB_ratio", np.float64),
+                ("val_HRT_actual", np.float64),
+            ]
+        )
         result = np.empty(N, dtype=dtype)
         result["L"] = L
         result["B"] = B

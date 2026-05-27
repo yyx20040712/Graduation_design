@@ -2,8 +2,16 @@ import math
 from typing import Dict, List
 import numpy as np
 from models.base import (
-    NodeBase, NodeResult, NodeState, WaterFlow, WaterQuality, SludgeFlow,
-    ParamDef, Port, PortType, GRAVITY,
+    NodeBase,
+    NodeResult,
+    NodeState,
+    WaterFlow,
+    WaterQuality,
+    SludgeFlow,
+    ParamDef,
+    Port,
+    PortType,
+    GRAVITY,
 )
 
 
@@ -13,27 +21,47 @@ class _BarScreenBase(NodeBase):
     def _init_ports(self) -> None:
         """格栅: MIXED进水 → MIXED出水 + SLUDGE栅渣"""
         self.input_ports = [
-            Port(port_id=f"{self.node_id}-in", name="进水",
-                 port_type=PortType.MIXED, direction="input", node_id=self.node_id),
+            Port(
+                port_id=f"{self.node_id}-in",
+                name="进水",
+                port_type=PortType.MIXED,
+                direction="input",
+                node_id=self.node_id,
+            ),
         ]
         self.output_ports = [
-            Port(port_id=f"{self.node_id}-out", name="出水",
-                 port_type=PortType.MIXED, direction="output", node_id=self.node_id),
-            Port(port_id=f"{self.node_id}-slag", name="栅渣",
-                 port_type=PortType.SLUDGE, direction="output", node_id=self.node_id),
+            Port(
+                port_id=f"{self.node_id}-out",
+                name="出水",
+                port_type=PortType.MIXED,
+                direction="output",
+                node_id=self.node_id,
+            ),
+            Port(
+                port_id=f"{self.node_id}-slag",
+                name="栅渣",
+                port_type=PortType.SLUDGE,
+                direction="output",
+                node_id=self.node_id,
+            ),
         ]
 
     @classmethod
     def _default_params(cls) -> Dict[str, float]:
-        return {"n": 3, "b": cls._b_default, "alpha": cls._alpha_default,
-                "h": cls._h_default,
-                "v": 0.8, "v1": 0.7, "s": cls._s_default,
-                "bar_shape": 0}
+        return {
+            "n": 3,
+            "b": cls._b_default,
+            "alpha": cls._alpha_default,
+            "h": cls._h_default,
+            "v": 0.8,
+            "v1": 0.7,
+            "s": cls._s_default,
+            "bar_shape": 0,
+        }
 
     @classmethod
     def _default_removal_rates(cls) -> Dict[str, float]:
-        return {"BOD5": 0.0, "COD": 0.0, "SS": 0.0,
-                "NH3N": 0.0, "TN": 0.0, "TP": 0.0}
+        return {"BOD5": 0.0, "COD": 0.0, "SS": 0.0, "NH3N": 0.0, "TN": 0.0, "TP": 0.0}
 
     # ── 栅条形状系数 β (GB50014-2021 §6.3) ──
     _BAR_SHAPE_BETA = {0: 2.42, 1: 1.97, 2: 1.83}
@@ -45,25 +73,89 @@ class _BarScreenBase(NodeBase):
 
     def _build_param_defs(self) -> List[ParamDef]:
         return [
-            ParamDef("格栅台数", "n", value=3, default=3,
-                     min_val=2, max_val=4, step=1, unit="台"),
-            ParamDef("栅条间隙", "b", value=self._b_default, default=self._b_default,
-                     min_val=self._b_range[0], max_val=self._b_range[1], step=5,
-                     unit="mm", description="栅条间隙宽度"),
-            ParamDef("格栅倾角", "alpha", value=self._alpha_default, default=self._alpha_default,
-                     min_val=60, max_val=90, step=5, unit="°"),
-            ParamDef("栅前水深", "h", value=self._h_default, default=self._h_default,
-                     min_val=0.4, max_val=1.0, step=0.1, unit="m"),
-            ParamDef("过栅流速", "v", value=0.8, default=0.8,
-                     min_val=0.6, max_val=1.0, step=0.05, unit="m/s"),
-            ParamDef("栅前流速", "v1", value=0.7, default=0.7,
-                     min_val=0.4, max_val=0.9, step=0.05, unit="m/s"),
-            ParamDef("栅条宽度", "s", value=self._s_default, default=self._s_default,
-                     min_val=1, max_val=20, step=1, unit="mm",
-                     description="栅条宽度(粗格栅10mm, 细格栅2~5mm)"),
-            ParamDef("栅条形状", "bar_shape", value=0, default=0,
-                     min_val=0, max_val=2, step=1, unit="-",
-                     description="0=矩形(β=2.42) 1=半圆(β=1.97) 2=圆形(β=1.83)"),
+            ParamDef(
+                "格栅台数",
+                "n",
+                value=3,
+                default=3,
+                min_val=2,
+                max_val=4,
+                step=1,
+                unit="台",
+            ),
+            ParamDef(
+                "栅条间隙",
+                "b",
+                value=self._b_default,
+                default=self._b_default,
+                min_val=self._b_range[0],
+                max_val=self._b_range[1],
+                step=5,
+                unit="mm",
+                description="栅条间隙宽度",
+            ),
+            ParamDef(
+                "格栅倾角",
+                "alpha",
+                value=self._alpha_default,
+                default=self._alpha_default,
+                min_val=60,
+                max_val=90,
+                step=5,
+                unit="°",
+            ),
+            ParamDef(
+                "栅前水深",
+                "h",
+                value=self._h_default,
+                default=self._h_default,
+                min_val=0.4,
+                max_val=1.0,
+                step=0.1,
+                unit="m",
+            ),
+            ParamDef(
+                "过栅流速",
+                "v",
+                value=0.8,
+                default=0.8,
+                min_val=0.6,
+                max_val=1.0,
+                step=0.05,
+                unit="m/s",
+            ),
+            ParamDef(
+                "栅前流速",
+                "v1",
+                value=0.7,
+                default=0.7,
+                min_val=0.4,
+                max_val=0.9,
+                step=0.05,
+                unit="m/s",
+            ),
+            ParamDef(
+                "栅条宽度",
+                "s",
+                value=self._s_default,
+                default=self._s_default,
+                min_val=1,
+                max_val=20,
+                step=1,
+                unit="mm",
+                description="栅条宽度(粗格栅10mm, 细格栅2~5mm)",
+            ),
+            ParamDef(
+                "栅条形状",
+                "bar_shape",
+                value=0,
+                default=0,
+                min_val=0,
+                max_val=2,
+                step=1,
+                unit="-",
+                description="0=矩形(β=2.42) 1=半圆(β=1.97) 2=圆形(β=1.83)",
+            ),
         ]
 
     def calculate(self, flow: WaterFlow, quality: WaterQuality) -> NodeResult:
@@ -77,9 +169,16 @@ class _BarScreenBase(NodeBase):
         bar_shape = int(self.get_param("bar_shape"))
 
         result = NodeResult(success=True)
-        result.params = {"n": n, "b": b_mm, "alpha": alpha_deg,
-                         "h": h, "v": v, "v1": v1, "s": s_mm,
-                         "bar_shape": bar_shape}
+        result.params = {
+            "n": n,
+            "b": b_mm,
+            "alpha": alpha_deg,
+            "h": h,
+            "v": v,
+            "v1": v1,
+            "s": s_mm,
+            "bar_shape": bar_shape,
+        }
 
         # ── 单台流量 ──
         q = flow.Q_design / n  # m³/s
@@ -108,7 +207,7 @@ class _BarScreenBase(NodeBase):
         ratio_sb = (s_mm / b_mm) if b_mm > 0 else 0.0
         sb_factor = ratio_sb ** (4.0 / 3.0)
         xi = beta_val * sb_factor
-        h0 = xi * v_checked ** 2 / (2 * GRAVITY) * sin_alpha
+        h0 = xi * v_checked**2 / (2 * GRAVITY) * sin_alpha
         h1 = h0 * 3.0  # k=3 堵塞系数
 
         # 参数回写 β (用于 results.params 显示)
@@ -150,14 +249,24 @@ class _BarScreenBase(NodeBase):
         result.add_dimension("清渣方式", cleaning, "")
 
         # ── 校核 ──
-        result.add_check("B1 < B", B1_rounded < B_rounded,
-                         round(B_rounded - B1_rounded, 2), "> 0", "m")
-        result.add_check("过栅流速 v", 0.6 <= v_checked <= 1.0,
-                         round(v_checked, 3), "0.6~1.0", "m/s")
-        result.add_check("渠内流速 v1", 0.4 <= v1_checked <= 0.9,
-                          round(v1_checked, 3), "0.4~0.9", "m/s")
-        result.add_check("水头损失 h1", h1 <= 0.3,
-                          round(h1, 3), "<= 0.3", "m")
+        result.add_check(
+            "B1 < B",
+            B1_rounded < B_rounded,
+            round(B_rounded - B1_rounded, 2),
+            "> 0",
+            "m",
+        )
+        result.add_check(
+            "过栅流速 v", 0.6 <= v_checked <= 1.0, round(v_checked, 3), "0.6~1.0", "m/s"
+        )
+        result.add_check(
+            "渠内流速 v1",
+            0.4 <= v1_checked <= 0.9,
+            round(v1_checked, 3),
+            "0.4~0.9",
+            "m/s",
+        )
+        result.add_check("水头损失 h1", h1 <= 0.3, round(h1, 3), "<= 0.3", "m")
 
         if not (B1_rounded < B_rounded):
             result.add_warning("进水渠宽 B1 不小于栅槽宽 B,需调整参数")
@@ -167,16 +276,17 @@ class _BarScreenBase(NodeBase):
         P_slag = 0.80
         DS_slag = W * (1 - P_slag) * 1000.0  # kg/d (密度≈1000kg/m³)
         self._sludge_output = SludgeFlow(
-            Q_wet=W, DS=DS_slag,
-            P_moisture=P_slag, VS_ratio=0.85,
+            Q_wet=W,
+            DS=DS_slag,
+            P_moisture=P_slag,
+            VS_ratio=0.85,
         )
 
         return result
 
     @classmethod
     def _vectorized_compute(
-        cls, grid: dict, flow: "WaterFlow",
-        quality: "WaterQuality", fixed: dict
+        cls, grid: dict, flow: "WaterFlow", quality: "WaterQuality", fixed: dict
     ) -> "np.ndarray":
         """向量化批量格栅计算
 
@@ -217,16 +327,18 @@ class _BarScreenBase(NodeBase):
         v1_checked = q / (h * B1_rounded)
 
         # 水头损失
-        bar_shape_arr = grid.get("bar_shape",
-            np.full(N, int(fixed.get("bar_shape", 0)))).astype(np.int32)
-        beta_map = np.array([cls._BAR_SHAPE_BETA[0],
-                             cls._BAR_SHAPE_BETA[1],
-                             cls._BAR_SHAPE_BETA[2]], dtype=np.float64)
+        bar_shape_arr = grid.get(
+            "bar_shape", np.full(N, int(fixed.get("bar_shape", 0)))
+        ).astype(np.int32)
+        beta_map = np.array(
+            [cls._BAR_SHAPE_BETA[0], cls._BAR_SHAPE_BETA[1], cls._BAR_SHAPE_BETA[2]],
+            dtype=np.float64,
+        )
         beta_vals = beta_map[bar_shape_arr]  # fancy-index
         ratio_sb = np.where(b_mm > 0, s_mm / b_mm, 0.0)
         sb_factor = ratio_sb ** (4.0 / 3.0)
         xi = beta_vals * sb_factor
-        h0 = xi * v_checked ** 2 / (2 * G) * sin_alpha
+        h0 = xi * v_checked**2 / (2 * G) * sin_alpha
         h1 = h0 * 3.0
 
         # 栅后总高
@@ -234,7 +346,9 @@ class _BarScreenBase(NodeBase):
         H_rounded = np.ceil(H / 0.1) * 0.1
 
         # 栅槽总长
-        L1 = np.where(B_rounded > B1_rounded, (B_rounded - B1_rounded) / (2 * tan_alpha), 0.0)
+        L1 = np.where(
+            B_rounded > B1_rounded, (B_rounded - B1_rounded) / (2 * tan_alpha), 0.0
+        )
         L2 = L1 / 2
         L = L1 + L2 + 1.0 + 0.5 + (0.2 + h) / tan_alpha
         L_rounded = np.ceil(L / 0.1) * 0.1
@@ -246,32 +360,34 @@ class _BarScreenBase(NodeBase):
         ok_v = (0.6 <= v_checked) & (v_checked <= 1.0)
         ok_v1 = (0.4 <= v1_checked) & (v1_checked <= 0.9)
         ok_B1_B = B1_rounded < B_rounded
-        ok_h1_loss = (h1 <= 0.3)
+        ok_h1_loss = h1 <= 0.3
 
-        dtype = np.dtype([
-            ("n_gap", np.int32),
-            ("B", np.float64),
-            ("B1", np.float64),
-            ("v_checked", np.float64),
-            ("v1_checked", np.float64),
-            ("xi", np.float64),
-            ("beta_val", np.float64),
-            ("sb_factor", np.float64),
-            ("h1_loss", np.float64),
-            ("H_total", np.float64),
-            ("L_total", np.float64),
-            ("W_slag", np.float64),
-            ("q_single_Ls", np.float64),
-            ("concrete_m3", np.float64),
-            ("ok_v", np.bool_),
-            ("ok_v1", np.bool_),
-            ("ok_B1_B", np.bool_),
-            ("ok_h1_loss", np.bool_),
-            ("val_v", np.float64),
-            ("val_v1", np.float64),
-            ("val_B1_B", np.float64),
-            ("val_h1_loss", np.float64),
-        ])
+        dtype = np.dtype(
+            [
+                ("n_gap", np.int32),
+                ("B", np.float64),
+                ("B1", np.float64),
+                ("v_checked", np.float64),
+                ("v1_checked", np.float64),
+                ("xi", np.float64),
+                ("beta_val", np.float64),
+                ("sb_factor", np.float64),
+                ("h1_loss", np.float64),
+                ("H_total", np.float64),
+                ("L_total", np.float64),
+                ("W_slag", np.float64),
+                ("q_single_Ls", np.float64),
+                ("concrete_m3", np.float64),
+                ("ok_v", np.bool_),
+                ("ok_v1", np.bool_),
+                ("ok_B1_B", np.bool_),
+                ("ok_h1_loss", np.bool_),
+                ("val_v", np.float64),
+                ("val_v1", np.float64),
+                ("val_B1_B", np.float64),
+                ("val_h1_loss", np.float64),
+            ]
+        )
         result = np.empty(N, dtype=dtype)
         result["n_gap"] = n_gap
         result["B"] = B_rounded
@@ -322,6 +438,7 @@ class _BarScreenBase(NodeBase):
 
 class CoarseBarScreenNode(_BarScreenBase):
     """粗格栅"""
+
     NODE_TYPE = "cugeshan"
     NODE_NAME = "粗格栅"
     NODE_CATEGORY = "一级处理"
@@ -333,6 +450,11 @@ class CoarseBarScreenNode(_BarScreenBase):
 
     @classmethod
     def _default_removal_rates(cls) -> Dict[str, float]:
-        return {"BOD5": 0.05, "COD": 0.05, "SS": 0.05,
-                "NH3N": 0.0, "TN": 0.0, "TP": 0.0}
-
+        return {
+            "BOD5": 0.05,
+            "COD": 0.05,
+            "SS": 0.05,
+            "NH3N": 0.0,
+            "TN": 0.0,
+            "TP": 0.0,
+        }

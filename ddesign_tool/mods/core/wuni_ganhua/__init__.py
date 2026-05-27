@@ -1,12 +1,17 @@
 """wuni_ganhua.py — 污泥干化 (Sludge Drying)"""
+
 import math
 from typing import Dict, List, Tuple, Optional
 
 import numpy as np
 
 from models.base import (
-    NodeBase, NodeResult, SludgeFlow, ParamDef,
-    Port, PortType,
+    NodeBase,
+    NodeResult,
+    SludgeFlow,
+    ParamDef,
+    Port,
+    PortType,
 )
 
 # 水的汽化潜热 kJ/kg at ~100°C
@@ -18,6 +23,7 @@ class WuniGanhuaNode(NodeBase):
 
     公式来源: GB50014-2021 §7.5, CJJ 131-2009
     """
+
     NODE_TYPE = "wuni_ganhua"
     NODE_NAME = "污泥干化"
     NODE_CATEGORY = "污泥处理"
@@ -26,24 +32,64 @@ class WuniGanhuaNode(NodeBase):
     def _default_params(cls) -> Dict[str, float]:
         return {
             "method": 0,  # 0=thermal, 1=solar
-            "P_out": 0.25, "T_air": 180.0,
-            "eta_thermal": 0.70, "q_evap": 8.0,
+            "P_out": 0.25,
+            "T_air": 180.0,
+            "eta_thermal": 0.70,
+            "q_evap": 8.0,
         }
 
     def _build_param_defs(self) -> List[ParamDef]:
         return [
-            ParamDef("干化方式(0=热干化,1=太阳能)", "method",
-                     value=0, default=0,
-                     min_val=0, max_val=1, step=1, unit="-"),
-            ParamDef("出泥含水率", "P_out", value=0.25, default=0.25,
-                     min_val=0.10, max_val=0.40, step=0.05, unit="-"),
-            ParamDef("热风温度", "T_air", value=180.0, default=180.0,
-                     min_val=120, max_val=250, step=10, unit="°C"),
-            ParamDef("热效率", "eta_thermal", value=0.70, default=0.70,
-                     min_val=0.55, max_val=0.85, step=0.05, unit="-"),
-            ParamDef("蒸发速率", "q_evap", value=8.0, default=8.0,
-                     min_val=4, max_val=15, step=1,
-                     unit="kgH2O/(m²·h)"),
+            ParamDef(
+                "干化方式(0=热干化,1=太阳能)",
+                "method",
+                value=0,
+                default=0,
+                min_val=0,
+                max_val=1,
+                step=1,
+                unit="-",
+            ),
+            ParamDef(
+                "出泥含水率",
+                "P_out",
+                value=0.25,
+                default=0.25,
+                min_val=0.10,
+                max_val=0.40,
+                step=0.05,
+                unit="-",
+            ),
+            ParamDef(
+                "热风温度",
+                "T_air",
+                value=180.0,
+                default=180.0,
+                min_val=120,
+                max_val=250,
+                step=10,
+                unit="°C",
+            ),
+            ParamDef(
+                "热效率",
+                "eta_thermal",
+                value=0.70,
+                default=0.70,
+                min_val=0.55,
+                max_val=0.85,
+                step=0.05,
+                unit="-",
+            ),
+            ParamDef(
+                "蒸发速率",
+                "q_evap",
+                value=8.0,
+                default=8.0,
+                min_val=4,
+                max_val=15,
+                step=1,
+                unit="kgH2O/(m²·h)",
+            ),
         ]
 
     @classmethod
@@ -52,20 +98,30 @@ class WuniGanhuaNode(NodeBase):
 
     def _init_ports(self) -> None:
         self.input_ports = [
-            Port(port_id=f"{self.node_id}-s_in", name="污泥进",
-                 port_type=PortType.SLUDGE, direction="input",
-                 node_id=self.node_id),
+            Port(
+                port_id=f"{self.node_id}-s_in",
+                name="污泥进",
+                port_type=PortType.SLUDGE,
+                direction="input",
+                node_id=self.node_id,
+            ),
         ]
         self.output_ports = [
-            Port(port_id=f"{self.node_id}-s_out", name="干化污泥",
-                 port_type=PortType.SLUDGE, direction="output",
-                 node_id=self.node_id),
+            Port(
+                port_id=f"{self.node_id}-s_out",
+                name="干化污泥",
+                port_type=PortType.SLUDGE,
+                direction="output",
+                node_id=self.node_id,
+            ),
         ]
 
     def calculate(self, flow, quality) -> NodeResult:
         return NodeResult(success=True)
 
-    def execute_sludge(self, sludge: SludgeFlow) -> Tuple[Optional[NodeResult], SludgeFlow]:
+    def execute_sludge(
+        self, sludge: SludgeFlow
+    ) -> Tuple[Optional[NodeResult], SludgeFlow]:
         method = int(self.get_param("method"))
         P_out = self.get_param("P_out")
         T_air = self.get_param("T_air")
@@ -76,8 +132,11 @@ class WuniGanhuaNode(NodeBase):
 
         result = NodeResult(success=True)
         result.params = {
-            "method": method, "P_out": P_out, "T_air": T_air,
-            "eta_thermal": eta_thermal, "q_evap": q_evap,
+            "method": method,
+            "P_out": P_out,
+            "T_air": T_air,
+            "eta_thermal": eta_thermal,
+            "q_evap": q_evap,
         }
 
         DS = sludge.DS
@@ -127,8 +186,9 @@ class WuniGanhuaNode(NodeBase):
         result.add_dimension("出泥含水率", P_out, "")
         result.add_dimension("蒸发水量", round(m_water_evap, 1), "kg/d")
         result.add_dimension("干固体量", round(DS, 1), "kg/d")
-        result.add_dimension("减量率", round(
-            (Q_wet_in - Q_wet_out) / max(Q_wet_in, 0.01) * 100, 1), "%")
+        result.add_dimension(
+            "减量率", round((Q_wet_in - Q_wet_out) / max(Q_wet_in, 0.01) * 100, 1), "%"
+        )
 
         if method == 0:
             result.add_dimension("热风温度", T_air, "°C")
@@ -138,15 +198,19 @@ class WuniGanhuaNode(NodeBase):
 
         result.add_dimension("干化面积", round(A_dry, 1), "m²")
         if method == 0:
-            result.add_check("蒸发速率合理",
-                             4 <= q_evap <= 15, q_evap, "4~15", "kgH2O/(m²·h)")
+            result.add_check(
+                "蒸发速率合理", 4 <= q_evap <= 15, q_evap, "4~15", "kgH2O/(m²·h)"
+            )
         else:
-            result.add_check("蒸发速率合理",
-                             5 <= q_evap <= 15, q_evap, "5~15", "kgH2O/(m²·d)")
+            result.add_check(
+                "蒸发速率合理", 5 <= q_evap <= 15, q_evap, "5~15", "kgH2O/(m²·d)"
+            )
 
         sludge_out = SludgeFlow(
-            Q_wet=Q_wet_out, DS=DS_out,
-            P_moisture=P_out, VS_ratio=sludge.VS_ratio,
+            Q_wet=Q_wet_out,
+            DS=DS_out,
+            P_moisture=P_out,
+            VS_ratio=sludge.VS_ratio,
         )
         self._sludge_output = sludge_out
         return result, sludge_out
@@ -157,7 +221,9 @@ class WuniGanhuaNode(NodeBase):
         P_out = grid["P_out"]
         q_evap = grid["q_evap"]
         method = grid["method"].astype(np.int32)
-        eta_thermal = grid.get("eta_thermal", np.full(len(P_out), fixed.get("eta_thermal", 0.70)))
+        eta_thermal = grid.get(
+            "eta_thermal", np.full(len(P_out), fixed.get("eta_thermal", 0.70))
+        )
         DS = fixed.get("_sludge_DS", 4000.0)
         Q_wet_in = fixed.get("_sludge_Q_wet", 100.0)
         P_in = fixed.get("_sludge_P", 0.80)
@@ -172,10 +238,12 @@ class WuniGanhuaNode(NodeBase):
 
         heat_latent = water_evap * LATENT_HEAT_WATER / 1000.0
         heat_sensible = m_wet_in * 4.2 * 80 / 1000.0
-        heat_total = np.where(eta_thermal > 0, (heat_sensible + heat_latent) / eta_thermal, 1e9)
+        heat_total = np.where(
+            eta_thermal > 0, (heat_sensible + heat_latent) / eta_thermal, 1e9
+        )
 
         # 干化面积: 热干化用 kg/(m²·h), 太阳能用 kg/(m²·d)
-        is_thermal = (method == 0)
+        is_thermal = method == 0
         A_thermal = np.where(q_evap > 0, water_evap / (q_evap * 24.0), 0)
         A_solar = np.where(q_evap > 0, water_evap / q_evap, 0)
         A_dry = np.where(is_thermal, A_thermal, A_solar)
@@ -184,15 +252,23 @@ class WuniGanhuaNode(NodeBase):
         ok_evap_sol = (q_evap >= 5) & (q_evap <= 15)
         ok_evap = np.where(is_thermal, ok_evap_th, ok_evap_sol)
 
-        dt = np.dtype([
-            ("water_evap", np.float64), ("Q_wet_out", np.float64),
-            ("heat_total", np.float64), ("A_dry", np.float64),
-            ("concrete_m3", np.float64),
-            ("ok_evap_rate", np.bool_), ("val_evap_rate", np.float64),
-        ])
+        dt = np.dtype(
+            [
+                ("water_evap", np.float64),
+                ("Q_wet_out", np.float64),
+                ("heat_total", np.float64),
+                ("A_dry", np.float64),
+                ("concrete_m3", np.float64),
+                ("ok_evap_rate", np.bool_),
+                ("val_evap_rate", np.float64),
+            ]
+        )
         arr = np.zeros(N, dtype=dt)
-        arr["water_evap"] = water_evap; arr["Q_wet_out"] = Q_wet_out
-        arr["heat_total"] = heat_total; arr["A_dry"] = A_dry
+        arr["water_evap"] = water_evap
+        arr["Q_wet_out"] = Q_wet_out
+        arr["heat_total"] = heat_total
+        arr["A_dry"] = A_dry
         arr["concrete_m3"] = A_dry * 0.3  # 干化间混凝土量 ≈ 面积×0.3m厚
-        arr["ok_evap_rate"] = ok_evap; arr["val_evap_rate"] = q_evap
+        arr["ok_evap_rate"] = ok_evap
+        arr["val_evap_rate"] = q_evap
         return arr

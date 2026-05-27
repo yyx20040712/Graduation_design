@@ -1,12 +1,17 @@
 """wuni_tuoshui.py — 污泥脱水间 (Sludge Dewatering)"""
+
 import math
 from typing import Dict, List, Tuple, Optional
 
 import numpy as np
 
 from models.base import (
-    NodeBase, NodeResult, SludgeFlow, ParamDef,
-    Port, PortType,
+    NodeBase,
+    NodeResult,
+    SludgeFlow,
+    ParamDef,
+    Port,
+    PortType,
 )
 
 
@@ -15,6 +20,7 @@ class WuniTuoshuiNode(NodeBase):
 
     公式来源: GB50014-2021 §7.4, CJJ 131-2009
     """
+
     NODE_TYPE = "wuni_tuoshui"
     NODE_NAME = "污泥脱水间"
     NODE_CATEGORY = "污泥处理"
@@ -23,23 +29,64 @@ class WuniTuoshuiNode(NodeBase):
     def _default_params(cls) -> Dict[str, float]:
         return {
             "equip_type": 0,  # 0=belt, 1=centrifuge
-            "q_capacity": 20.0, "n_machines": 2,
-            "P_out": 0.78, "dosage_PAM": 4.0,
+            "q_capacity": 20.0,
+            "n_machines": 2,
+            "P_out": 0.78,
+            "dosage_PAM": 4.0,
         }
 
     def _build_param_defs(self) -> List[ParamDef]:
         return [
-            ParamDef("设备类型(0=带式,1=离心)", "equip_type",
-                     value=0, default=0,
-                     min_val=0, max_val=1, step=1, unit="-"),
-            ParamDef("单机处理量", "q_capacity", value=20.0, default=20.0,
-                     min_val=5, max_val=60, step=5, unit="m³/h"),
-            ParamDef("脱水机台数", "n_machines", value=2, default=2,
-                     min_val=1, max_val=6, step=1, unit="台"),
-            ParamDef("出泥含水率", "P_out", value=0.78, default=0.78,
-                     min_val=0.60, max_val=0.85, step=0.02, unit="-"),
-            ParamDef("PAM投加量", "dosage_PAM", value=4.0, default=4.0,
-                     min_val=2, max_val=8, step=0.5, unit="g/kgDS"),
+            ParamDef(
+                "设备类型(0=带式,1=离心)",
+                "equip_type",
+                value=0,
+                default=0,
+                min_val=0,
+                max_val=1,
+                step=1,
+                unit="-",
+            ),
+            ParamDef(
+                "单机处理量",
+                "q_capacity",
+                value=20.0,
+                default=20.0,
+                min_val=5,
+                max_val=60,
+                step=5,
+                unit="m³/h",
+            ),
+            ParamDef(
+                "脱水机台数",
+                "n_machines",
+                value=2,
+                default=2,
+                min_val=1,
+                max_val=6,
+                step=1,
+                unit="台",
+            ),
+            ParamDef(
+                "出泥含水率",
+                "P_out",
+                value=0.78,
+                default=0.78,
+                min_val=0.60,
+                max_val=0.85,
+                step=0.02,
+                unit="-",
+            ),
+            ParamDef(
+                "PAM投加量",
+                "dosage_PAM",
+                value=4.0,
+                default=4.0,
+                min_val=2,
+                max_val=8,
+                step=0.5,
+                unit="g/kgDS",
+            ),
         ]
 
     @classmethod
@@ -48,20 +95,30 @@ class WuniTuoshuiNode(NodeBase):
 
     def _init_ports(self) -> None:
         self.input_ports = [
-            Port(port_id=f"{self.node_id}-s_in", name="污泥进",
-                 port_type=PortType.SLUDGE, direction="input",
-                 node_id=self.node_id),
+            Port(
+                port_id=f"{self.node_id}-s_in",
+                name="污泥进",
+                port_type=PortType.SLUDGE,
+                direction="input",
+                node_id=self.node_id,
+            ),
         ]
         self.output_ports = [
-            Port(port_id=f"{self.node_id}-s_out", name="脱水污泥",
-                 port_type=PortType.SLUDGE, direction="output",
-                 node_id=self.node_id),
+            Port(
+                port_id=f"{self.node_id}-s_out",
+                name="脱水污泥",
+                port_type=PortType.SLUDGE,
+                direction="output",
+                node_id=self.node_id,
+            ),
         ]
 
     def calculate(self, flow, quality) -> NodeResult:
         return NodeResult(success=True)
 
-    def execute_sludge(self, sludge: SludgeFlow) -> Tuple[Optional[NodeResult], SludgeFlow]:
+    def execute_sludge(
+        self, sludge: SludgeFlow
+    ) -> Tuple[Optional[NodeResult], SludgeFlow]:
         equip_type = int(self.get_param("equip_type"))
         q_capacity = self.get_param("q_capacity")
         n_machines = int(self.get_param("n_machines"))
@@ -72,8 +129,10 @@ class WuniTuoshuiNode(NodeBase):
 
         result = NodeResult(success=True)
         result.params = {
-            "equip_type": equip_type, "q_capacity": q_capacity,
-            "n_machines": n_machines, "P_out": P_out,
+            "equip_type": equip_type,
+            "q_capacity": q_capacity,
+            "n_machines": n_machines,
+            "P_out": P_out,
             "dosage_PAM": dosage_PAM,
         }
 
@@ -84,14 +143,15 @@ class WuniTuoshuiNode(NodeBase):
         # ── (A) 运行时间校核 ──
         Q_total_capacity = n_machines * q_capacity  # m³/h
         T_run = Q_wet_in / Q_total_capacity if Q_total_capacity > 0 else 24  # h/d
-        result.add_check("日运行时间 <= 20h", T_run <= 20,
-                         round(T_run, 1), "<= 20", "h/d")
+        result.add_check(
+            "日运行时间 <= 20h", T_run <= 20, round(T_run, 1), "<= 20", "h/d"
+        )
 
         # ── (B) 出泥量 ──
         if P_out < 1.0:
             Q_wet_out = DS / ((1 - P_out) * 1000.0)
         else:
-            Q_wet_out = float('inf')
+            Q_wet_out = float("inf")
 
         # ── (C) 分离液量 ──
         Q_filtrate = max(0, Q_wet_in - Q_wet_out)
@@ -121,8 +181,10 @@ class WuniTuoshuiNode(NodeBase):
         result.add_dimension("固体回收率", recovery * 100, "%")
 
         sludge_out = SludgeFlow(
-            Q_wet=Q_wet_out, DS=DS * recovery,
-            P_moisture=P_out, VS_ratio=sludge.VS_ratio,
+            Q_wet=Q_wet_out,
+            DS=DS * recovery,
+            P_moisture=P_out,
+            VS_ratio=sludge.VS_ratio,
         )
         self._sludge_output = sludge_out
         return result, sludge_out
@@ -145,14 +207,21 @@ class WuniTuoshuiNode(NodeBase):
         Q_wet_out = np.where(P_out < 1, DS * 0.97 / ((1 - P_out) * 1000.0), 1e9)
         PAM_daily = DS * dosage_PAM / 1000.0
 
-        dt = np.dtype([
-            ("T_run", np.float64), ("Q_wet_out", np.float64), ("PAM_daily", np.float64),
-            ("concrete_m3", np.float64),
-            ("ok_run_time", np.bool_), ("val_run_time", np.float64),
-        ])
+        dt = np.dtype(
+            [
+                ("T_run", np.float64),
+                ("Q_wet_out", np.float64),
+                ("PAM_daily", np.float64),
+                ("concrete_m3", np.float64),
+                ("ok_run_time", np.bool_),
+                ("val_run_time", np.float64),
+            ]
+        )
         arr = np.zeros(N, dtype=dt)
-        arr["T_run"] = T_run; arr["Q_wet_out"] = Q_wet_out
+        arr["T_run"] = T_run
+        arr["Q_wet_out"] = Q_wet_out
         arr["PAM_daily"] = PAM_daily
         arr["concrete_m3"] = n_machines * 50.0  # 脱水间建筑面积估算
-        arr["ok_run_time"] = ok_run; arr["val_run_time"] = T_run
+        arr["ok_run_time"] = ok_run
+        arr["val_run_time"] = T_run
         return arr
