@@ -1,6 +1,8 @@
 """test_erchunchi.py — 二沉池社区模组测试 (v5.3)"""
+
 import sys
 from pathlib import Path
+
 SRC_DIR = Path(__file__).parent.parent / "ddesign_tool" / "src"
 APP_DIR = Path(__file__).parent.parent / "ddesign_tool"
 sys.path.insert(0, str(SRC_DIR))
@@ -23,6 +25,7 @@ def _get_node():
 def test_erchunchi_loaded():
     """二沉池模组已加载并注册"""
     from mods.mod_manager import get_mod_manager
+
     mgr = get_mod_manager()
     mgr.load_all()
     cls = mgr.get_node_class("erchunchi")
@@ -42,6 +45,7 @@ def test_erchunchi_calculate():
 def test_erchunchi_solution_space():
     """方案空间枚举产生可行方案"""
     from models.solution_space import get_engine
+
     flow = WaterFlow()
     quality = WaterQuality()
     engine = get_engine()
@@ -66,15 +70,16 @@ def test_erchunchi_serialization_roundtrip():
     assert restored.node_id == node.node_id
     assert restored.NODE_TYPE == node.NODE_TYPE
     for key, val in node._params.items():
-        assert abs(restored._params.get(key, 0) - val) < 1e-9, (
-            f"param {key} mismatch: {restored._params.get(key)} vs {val}"
-        )
+        assert (
+            abs(restored._params.get(key, 0) - val) < 1e-9
+        ), f"param {key} mismatch: {restored._params.get(key)} vs {val}"
 
 
 def test_erchunchi_vectorized_shape():
     """向量化输出 dtype 包含约束和尺寸字段"""
     node = _get_node()
     from models.discretization import get_config
+
     cfg = get_config("erchunchi")
     flow, quality = WaterFlow(), WaterQuality()
     grid = {k: np.array([cfg["free"][k][0]]) for k in cfg["free"]}
@@ -90,8 +95,10 @@ def test_erchunchi_vectorized_shape():
 def test_erchunchi_all_constraints_present():
     """所有约束的 ok_*/val_* 字段存在（不强制通过，因默认值组合可能不满足）"""
     import numpy as np
+
     node = _get_node()
     from models.discretization import get_config
+
     cfg = get_config("erchunchi")
     flow, quality = WaterFlow(), WaterQuality()
     free_keys = list(cfg.get("free", {}).keys())

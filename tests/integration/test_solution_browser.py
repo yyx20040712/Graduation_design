@@ -4,6 +4,7 @@ test_solution_browser.py — 方案浏览器 GUI 集成测试 (v5.3)
 验证方案空间的完整交互链:
 - F5 计算 → 方案枚举 → 选择排序 → 应用 → 参数更新
 """
+
 from __future__ import annotations
 
 import os
@@ -133,9 +134,9 @@ class TestSolutionBrowserIntegration:
             if not sols:
                 continue
             for sol in sols[:10]:  # 上限 10 个
-                assert sol.robustness >= 0, (
-                    f"{node.NODE_NAME}: robustness={sol.robustness} < 0"
-                )
+                assert (
+                    sol.robustness >= 0
+                ), f"{node.NODE_NAME}: robustness={sol.robustness} < 0"
                 checked += 1
 
         assert checked > 0, "未检查任何方案"

@@ -23,13 +23,13 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from _logging import get_logger
 from models.base import (
+    WATER_QUALITY_ATTRS,
     NodeBase,
     NodeResult,
     NodeState,
     Port,
     PortType,
     SludgeFlow,
-    WATER_QUALITY_ATTRS,
     WaterFlow,
     WaterQuality,
 )

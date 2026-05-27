@@ -5,6 +5,7 @@ test_constraint_react.py — 约束面板反应性 GUI 集成测试 (v5.3)
 - 参数修改 → 重新计算 → 约束面板更新
 - 约束通过/失败的文本颜色标记
 """
+
 from __future__ import annotations
 
 import os
@@ -49,13 +50,18 @@ class TestConstraintReactivity:
                     found = True
                     # 验证包含具体约束条目
                     check_items = [
-                        n for n, c in node.result.checks.items()
+                        n
+                        for n, c in node.result.checks.items()
                         if isinstance(c, (list, tuple)) and len(c) >= 3
                     ]
                     if check_items:
                         # 至少第一个约束名出现在文本中
                         first_name = check_items[0]
-                        assert first_name in text_content or "✓" in text_content or "✗" in text_content, (
+                        assert (
+                            first_name in text_content
+                            or "✓" in text_content
+                            or "✗" in text_content
+                        ), (
                             f"约束 '{first_name}' 未在文本中找到, "
                             f"内容: {text_content[:200]}"
                         )
@@ -91,15 +97,15 @@ class TestConstraintReactivity:
                 except (AttributeError, ValueError):
                     pass
                 # 验证重新计算不崩溃，result 结构完整
-                assert result is not None, (
-                    f"{node.NODE_NAME}: 修改 {key} 后 execute 返回 None"
-                )
-                assert hasattr(result, "dimensions"), (
-                    f"{node.NODE_NAME}: 修改 {key} 后 result 无 dimensions"
-                )
-                assert hasattr(result, "checks"), (
-                    f"{node.NODE_NAME}: 修改 {key} 后 result 无 checks"
-                )
+                assert (
+                    result is not None
+                ), f"{node.NODE_NAME}: 修改 {key} 后 execute 返回 None"
+                assert hasattr(
+                    result, "dimensions"
+                ), f"{node.NODE_NAME}: 修改 {key} 后 result 无 dimensions"
+                assert hasattr(
+                    result, "checks"
+                ), f"{node.NODE_NAME}: 修改 {key} 后 result 无 checks"
                 if result.success and result.dimensions:
                     return  # 验证通过
 
@@ -123,8 +129,10 @@ class TestConstraintReactivity:
 
                 # 统计文本中 [✓] 或 [✗] 开头的行
                 check_lines = [
-                    line for line in text_content.split("\n")
-                    if line.strip() and ("✓" in line or "✗" in line or "约束校核" in line)
+                    line
+                    for line in text_content.split("\n")
+                    if line.strip()
+                    and ("✓" in line or "✗" in line or "约束校核" in line)
                 ]
                 # 至少有一行（含标题行 "约束校核"）
                 assert len(check_lines) >= 1, (
@@ -143,7 +151,8 @@ class TestConstraintReactivity:
 
             # 检查是否有 FAIL 的约束
             failed = [
-                (n, c) for n, c in node.result.checks.items()
+                (n, c)
+                for n, c in node.result.checks.items()
                 if isinstance(c, (list, tuple)) and not c[0]
             ]
             if not failed:
@@ -153,14 +162,12 @@ class TestConstraintReactivity:
             text_content = main_window.result_check_text.get("1.0", tk.END)
 
             # 至少一个失败约束名出现在文本中
-            found_fail = any(
-                fname in text_content for fname, _ in failed
-            )
+            found_fail = any(fname in text_content for fname, _ in failed)
             if not found_fail:
                 # 检查是否通过 ✗ 符号显示
-                assert "✗" in text_content or "[FAIL]" in text_content, (
-                    f"{node.NODE_NAME}: {len(failed)} 个失败约束未在文本中显示"
-                )
+                assert (
+                    "✗" in text_content or "[FAIL]" in text_content
+                ), f"{node.NODE_NAME}: {len(failed)} 个失败约束未在文本中显示"
             return
 
         pytest.skip("无失败约束的节点")

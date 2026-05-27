@@ -18,7 +18,6 @@ from enum import Enum, auto
 from typing import Any, ClassVar, Dict, List, Optional, Tuple
 
 import numpy as np  # noqa: F401 — used in string type annotations
-
 from _logging import get_logger
 
 from .dimension_formulas import get_dimension_category, get_formula

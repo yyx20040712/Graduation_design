@@ -13,18 +13,27 @@ test_base.py — 核心数据模型单元测试
 
 from __future__ import annotations
 
-import pytest
 import math
-from models.base import (
-    WaterFlow, WaterQuality, NodeResult, ParamDef,
-    Port, PortType, NodeBase, NodeState,
-    ceil_to, round_to, GRAVITY, WATER_QUALITY_ATTRS,
-)
 
+import pytest
+from models.base import (
+    GRAVITY,
+    WATER_QUALITY_ATTRS,
+    NodeBase,
+    NodeResult,
+    NodeState,
+    ParamDef,
+    Port,
+    PortType,
+    WaterFlow,
+    WaterQuality,
+    round_to,
+)
 
 # ═══════════════════════════════════════════════════════════════════
 # WaterFlow 测试
 # ═══════════════════════════════════════════════════════════════════
+
 
 class TestWaterFlow:
     """WaterFlow 数据类测试"""
@@ -106,6 +115,7 @@ class TestWaterFlow:
 # WaterQuality 测试
 # ═══════════════════════════════════════════════════════════════════
 
+
 class TestWaterQuality:
     """WaterQuality 数据类测试"""
 
@@ -159,12 +169,11 @@ class TestWaterQuality:
         """不达标的进水"""
         results = sample_quality.check_effluent()
         assert not results["BOD5"][0]  # 200 >> 10
-        assert not results["COD"][0]   # 400 >> 50
+        assert not results["COD"][0]  # 400 >> 50
 
     def test_check_effluent_boundary(self):
         """边界值 - 刚好达标"""
-        q = WaterQuality(BOD5=10.0, COD=50.0, SS=10.0,
-                         NH3N=5.0, TN=15.0, TP=0.5)
+        q = WaterQuality(BOD5=10.0, COD=50.0, SS=10.0, NH3N=5.0, TN=15.0, TP=0.5)
         results = q.check_effluent()
         for key, (passed, _) in results.items():
             assert passed, f"{key} at boundary should pass"
@@ -179,8 +188,7 @@ class TestWaterQuality:
 
     def test_unit_conversion_roundtrip(self):
         val = 350.0
-        assert WaterQuality.kgm3_to_mgL(
-            WaterQuality.mgL_to_kgm3(val)) == val
+        assert WaterQuality.kgm3_to_mgL(WaterQuality.mgL_to_kgm3(val)) == val
 
     def test_serialization_roundtrip(self):
         q = WaterQuality(BOD5=250.0, COD=500.0, SS=300.0)
@@ -213,6 +221,7 @@ class TestWaterQuality:
 # ═══════════════════════════════════════════════════════════════════
 # ParamDef 测试
 # ═══════════════════════════════════════════════════════════════════
+
 
 class TestParamDef:
     """ParamDef 可调参数定义测试"""
@@ -253,8 +262,14 @@ class TestParamDef:
 
     def test_from_dict_partial(self):
         """部分字段缺失"""
-        d = {"name": "x", "key": "x", "value": 1.0, "default": 1.0,
-             "min": 0.0, "max": 5.0}
+        d = {
+            "name": "x",
+            "key": "x",
+            "value": 1.0,
+            "default": 1.0,
+            "min": 0.0,
+            "max": 5.0,
+        }
         p = ParamDef.from_dict(d)
         assert p.step == 0.01  # 默认值
         assert p.unit == ""
@@ -264,6 +279,7 @@ class TestParamDef:
 # ═══════════════════════════════════════════════════════════════════
 # NodeResult 测试
 # ═══════════════════════════════════════════════════════════════════
+
 
 class TestNodeResult:
     """NodeResult 计算结果测试"""
@@ -329,6 +345,7 @@ class TestNodeResult:
 # Port 测试
 # ═══════════════════════════════════════════════════════════════════
 
+
 class TestPort:
     """Port 端口定义测试"""
 
@@ -380,6 +397,7 @@ class TestPort:
 # NodeBase 测试
 # ═══════════════════════════════════════════════════════════════════
 
+
 class TestNodeBase:
     """NodeBase 节点基类测试"""
 
@@ -394,6 +412,7 @@ class TestNodeBase:
     def test_set_param_unknown_key(self, test_node):
         """设置不存在的参数不影响状态"""
         import copy
+
         state_before = copy.copy(test_node._params)
         test_node.set_param("nonexistent", 999)
         assert test_node._params == state_before
@@ -471,7 +490,9 @@ class TestNodeBase:
         assert "cached_result" in d
         assert d["cached_result"] is not None
 
-    def test_state_transition_dirty_clears_result(self, test_node, sample_flow, sample_quality):
+    def test_state_transition_dirty_clears_result(
+        self, test_node, sample_flow, sample_quality
+    ):
         """设置为 DIRTY 应清除缓存结果"""
         test_node.execute(sample_flow, sample_quality)
         assert test_node.state == NodeState.CLEAN
@@ -493,6 +514,7 @@ class TestNodeBase:
     def test_vectorized_compute_not_implemented(self, test_node_class):
         """NodeBase._vectorized_compute 默认抛出 NotImplementedError"""
         import numpy as np
+
         grid = {"x": np.array([1.0, 2.0])}
         with pytest.raises(NotImplementedError):
             NodeBase._vectorized_compute(grid, WaterFlow(), WaterQuality(), {})
@@ -500,6 +522,7 @@ class TestNodeBase:
     def test_vectorized_compute_implemented(self, test_node_class):
         """_TestNode 实现了 _vectorized_compute"""
         import numpy as np
+
         grid = {"x": np.array([1.0, 2.0])}
         fixed = {}
         result = test_node_class._vectorized_compute(
@@ -519,20 +542,22 @@ class TestNodeBase:
 # 工具函数测试
 # ═══════════════════════════════════════════════════════════════════
 
+
 class TestUtilityFunctions:
-    """工具函数测试"""
+    """工具函数测试 (v5.3: ceil_to 已废弃，使用 math.ceil 验证等价逻辑)"""
 
-    def test_ceil_to_basic(self):
-        assert ceil_to(3.14159, 0.1) == 3.2
-        assert ceil_to(3.14159, 0.5) == 3.5
-        assert ceil_to(3.0, 0.5) == 3.0  # 刚好整除
+    def test_ceil_step_basic(self):
+        """math.ceil(value / step) * step"""
+        assert math.ceil(3.14159 / 0.1) * 0.1 == 3.2
+        assert math.ceil(3.14159 / 0.5) * 0.5 == 3.5
+        assert math.ceil(3.0 / 0.5) * 0.5 == 3.0  # 刚好整除
 
-    def test_ceil_to_integer_precision(self):
-        assert ceil_to(3.14, 1.0) == 4.0
-        assert ceil_to(5.0, 1.0) == 5.0
+    def test_ceil_step_integer_precision(self):
+        assert math.ceil(3.14 / 1.0) * 1.0 == 4.0
+        assert math.ceil(5.0 / 1.0) * 1.0 == 5.0
 
-    def test_ceil_to_negative(self):
-        assert ceil_to(-1.2, 0.5) == -1.0
+    def test_ceil_step_negative(self):
+        assert math.ceil(-1.2 / 0.5) * 0.5 == -1.0
 
     def test_round_to_basic(self):
         assert round_to(3.14159, 0.1) == 3.1
@@ -556,9 +581,9 @@ class TestWaterQualityAttrs:
 
     def test_attrs_has_six(self):
         """精确 6 个水质指标"""
-        assert len(WATER_QUALITY_ATTRS) == 6, (
-            f"expected 6, got {len(WATER_QUALITY_ATTRS)}"
-        )
+        assert (
+            len(WATER_QUALITY_ATTRS) == 6
+        ), f"expected 6, got {len(WATER_QUALITY_ATTRS)}"
 
     def test_attrs_are_waterquality_fields(self):
         """所有属性都是 WaterQuality 的字段"""
@@ -573,9 +598,9 @@ class TestWaterQualityAttrs:
         result = wq.apply_removal(rates)
         for attr in WATER_QUALITY_ATTRS:
             expected = getattr(wq, attr) * 0.5
-            assert getattr(result, attr) == expected, (
-                f"{attr}: expected {expected}, got {getattr(result, attr)}"
-            )
+            assert (
+                getattr(result, attr) == expected
+            ), f"{attr}: expected {expected}, got {getattr(result, attr)}"
 
     def test_attrs_check_effluent_uses_all(self):
         """check_effluent() 涵盖全部 6 个指标（不含 pH）"""

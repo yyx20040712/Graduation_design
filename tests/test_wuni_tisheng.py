@@ -1,6 +1,8 @@
 """test_wuni_tisheng.py — 污水提升泵房 测试 (v5.3)"""
+
 import sys
 from pathlib import Path
+
 SRC_DIR = Path(__file__).parent.parent / "ddesign_tool" / "src"
 APP_DIR = Path(__file__).parent.parent / "ddesign_tool"
 sys.path.insert(0, str(SRC_DIR))
@@ -49,6 +51,7 @@ class TestWuniTisheng:
         flow, quality = WaterFlow(), WaterQuality()
         scalar, _, _ = node.execute(flow, quality)
         from models.discretization import get_config
+
         cfg = get_config("wuni_tisheng")
         grid = {k: np.array([cfg["free"][k][0]]) for k in cfg["free"]}
         fixed = {}
@@ -60,6 +63,7 @@ class TestWuniTisheng:
         """方案空间枚举产生可行方案"""
         node = _get_node()
         from models.solution_space import get_engine
+
         flow, quality = WaterFlow(), WaterQuality()
         engine = get_engine()
         sols = engine.enumerate("wuni_tisheng", flow, quality)
@@ -81,6 +85,7 @@ class TestWuniTisheng:
         """离散化约束字段齐全"""
         node = _get_node()
         from models.discretization import get_config
+
         cfg = get_config("wuni_tisheng")
         flow, quality = WaterFlow(), WaterQuality()
         grid = {k: np.array([cfg["free"][k][0]]) for k in cfg["free"]}

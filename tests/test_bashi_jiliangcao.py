@@ -1,6 +1,8 @@
 """test_bashi_jiliangcao.py — 巴氏计量槽 测试 (v5.3)"""
+
 import sys
 from pathlib import Path
+
 SRC_DIR = Path(__file__).parent.parent / "ddesign_tool" / "src"
 APP_DIR = Path(__file__).parent.parent / "ddesign_tool"
 sys.path.insert(0, str(SRC_DIR))
@@ -63,6 +65,7 @@ class TestBashiJiliangcao:
     def test_vectorized_produces_correct_shape(self):
         node = _get_node()
         from models.discretization import get_config
+
         cfg = get_config("bashi_jiliangcao")
         flow, quality = WaterFlow(), WaterQuality()
         grid = {k: np.array(cfg["free"][k]) for k in cfg["free"]}
@@ -86,6 +89,7 @@ class TestBashiJiliangcao:
         """所有约束的 ok_*/val_* 字段存在且默认通过"""
         node = _get_node()
         from models.discretization import get_config
+
         cfg = get_config("bashi_jiliangcao")
         flow, quality = WaterFlow(), WaterQuality()
         grid = {k: np.array([cfg["free"][k][0]]) for k in cfg["free"]}
