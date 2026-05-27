@@ -3,8 +3,8 @@
   "metadata": {
     "name": "未命名项目",
     "author": "",
-    "created": "2026-05-27T17:07:10.225614",
-    "modified": "2026-05-27T17:07:10.225619",
+    "created": "2026-05-28T01:27:24.904185",
+    "modified": "2026-05-28T01:27:24.904190",
     "description": ""
   },
   "graph": {
@@ -15,8 +15,8 @@
         "name": "管网输入",
         "category": "输入/输出",
         "position": {
-          "x": -31489.975184735835,
-          "y": -48964.906712156364
+          "x": -30197.531169661255,
+          "y": -46451.21016791157
         },
         "params": {
           "Kz": 1.4,
@@ -199,8 +199,8 @@
         "name": "进水水质",
         "category": "输入/输出",
         "position": {
-          "x": -31519.415421730253,
-          "y": -48473.88238021151
+          "x": -30226.971406655663,
+          "y": -45960.18583596673
         },
         "params": {
           "BOD5": 198.0,
@@ -342,8 +342,8 @@
         "name": "水量水质合并",
         "category": "输入/输出",
         "position": {
-          "x": -31493.739987027675,
-          "y": -48737.90429268104
+          "x": -30201.295971953077,
+          "y": -46224.20774843626
         },
         "params": {
           "Kz": 1.4
@@ -380,6 +380,7 @@
               "direction": "output",
               "node_id": "combiner-82895fd1",
               "connections": [
+                "jcws_smbg-1dedf590-in",
                 "jcws_smbg-1dedf590-in"
               ]
             }
@@ -568,8 +569,8 @@
         "name": "调节池",
         "category": "一级处理",
         "position": {
-          "x": -31111.20558936704,
-          "y": -48060.66696278708
+          "x": -29818.761574292457,
+          "y": -45546.97041854231
         },
         "params": {
           "n": 4.0,
@@ -874,8 +875,8 @@
         "name": "粗格栅",
         "category": "一级处理",
         "position": {
-          "x": -31104.606851171084,
-          "y": -48729.16118436203
+          "x": -29812.16283609649,
+          "y": -46215.464640117265
         },
         "params": {
           "n": 3.0,
@@ -1222,8 +1223,8 @@
         "name": "细格栅",
         "category": "一级处理",
         "position": {
-          "x": -31117.916482634697,
-          "y": -48395.81218365195
+          "x": -29825.472467560106,
+          "y": -45882.11563940718
         },
         "params": {
           "n": 3.0,
@@ -1570,8 +1571,8 @@
         "name": "旋流沉砂池",
         "category": "一级处理",
         "position": {
-          "x": -30758.151702537103,
-          "y": -48569.75927280717
+          "x": -29465.707687462505,
+          "y": -46056.06272856242
         },
         "params": {
           "n": 2.0,
@@ -1963,8 +1964,8 @@
         "name": "辐流式初沉池",
         "category": "一级处理",
         "position": {
-          "x": -30767.6435533367,
-          "y": -47987.28461430679
+          "x": -29475.199538262103,
+          "y": -45473.58807006199
         },
         "params": {
           "n": 2.0,
@@ -2354,22 +2355,22 @@
         "name": "CASS反应器",
         "category": "二级处理",
         "position": {
-          "x": -30449.086682305413,
-          "y": -48498.71299786293
+          "x": -29156.642667230833,
+          "y": -45985.01645361814
         },
         "params": {
           "n": 6.0,
           "Ns": 0.08,
-          "X_MLSS": 3000.0,
+          "X_MLSS": 4000.0,
           "f": 0.75,
           "theta_c": 10.0,
           "Y": 0.6,
           "Kd20": 0.05,
           "theta_t": 1.04,
           "T_design": 12.0,
-          "Tc": 6.0,
-          "lam": 0.35,
-          "H_max": 6.0,
+          "Tc": 4.0,
+          "lam": 0.2,
+          "H_max": 5.5,
           "h_super": 0.5,
           "r_selector": 0.15,
           "SVI": 120.0,
@@ -2425,18 +2426,18 @@
         "cached_result": {
           "success": true,
           "params": {
-            "n": 6,
+            "n": 6.0,
             "Ns": 0.08,
-            "X_MLSS": 3000.0,
-            "f": 0.75,
+            "X_MLSS": 4000.0,
             "theta_c": 10.0,
+            "Tc": 4.0,
+            "lam": 0.2,
+            "H_max": 5.5,
+            "f": 0.75,
             "Y": 0.6,
             "Kd20": 0.05,
             "theta_t": 1.04,
             "T_design": 12.0,
-            "Tc": 6.0,
-            "lam": 0.35,
-            "H_max": 6.0,
             "h_super": 0.5,
             "r_selector": 0.15,
             "SVI": 120.0,
@@ -2446,73 +2447,121 @@
             "t_d": 1.0
           },
           "dimensions": {
-            "设计充水比 λ_design": [
-              0.35,
+            "V_main": [
+              16135.028434285708,
               ""
             ],
-            "实际充水比 λ_actual": [
-              0.351,
+            "V_main_single": [
+              2689.171405714285,
               ""
             ],
-            "滗水器堰口长度 L_w": [
-              16.24,
-              "m"
-            ],
-            "池数": [
-              6,
-              "座"
-            ],
-            "主反应区总容积": [
-              21513.4,
-              "m³"
-            ],
-            "单池主反应区容积": [
-              3585.6,
-              "m³"
-            ],
-            "选择区容积": [
-              537.8,
-              "m³"
-            ],
-            "单池总有效容积": [
-              4176.0,
-              "m³"
-            ],
-            "池长 L": [
-              58.0,
-              "m"
-            ],
-            "池宽 B": [
-              12.0,
-              "m"
-            ],
-            "长宽比 L/B": [
-              4.83,
+            "V_selector": [
+              403.37571085714274,
               ""
             ],
-            "宽高比 B/H": [
+            "V_eff_actual": [
+              3146.0,
+              ""
+            ],
+            "L": [
+              52.0,
+              ""
+            ],
+            "B": [
+              11.0,
+              ""
+            ],
+            "H_max_out": [
+              5.5,
+              ""
+            ],
+            "H_total": [
+              6.0,
+              ""
+            ],
+            "H_decant": [
+              1.1,
+              ""
+            ],
+            "H_sludge": [
+              2.64,
+              ""
+            ],
+            "H_safe": [
+              1.7600000000000002,
+              ""
+            ],
+            "lam_out": [
+              0.2,
+              ""
+            ],
+            "ratio_LB": [
+              4.7272727272727275,
+              ""
+            ],
+            "ratio_BH": [
               2.0,
               ""
             ],
-            "有效水深 H_max": [
+            "Ns_out": [
+              0.08,
+              ""
+            ],
+            "theta_c_actual": [
+              22.549668984704212,
+              ""
+            ],
+            "Px_bio": [
+              2146.598486021726,
+              ""
+            ],
+            "Px_nbio": [
+              1443.8978465845494,
+              ""
+            ],
+            "Px_total": [
+              3590.4963326062752,
+              ""
+            ],
+            "O2_carbon": [
+              7744.81364845714,
+              ""
+            ],
+            "O2_nitrification": [
+              1950.5285642269223,
+              ""
+            ],
+            "O2_denitrification": [
+              1839.4116614886836,
+              ""
+            ],
+            "O2_total": [
+              7855.930551195378,
+              ""
+            ],
+            "Q_decant": [
+              629.2,
+              ""
+            ],
+            "KdT": [
+              0.0365345102500992,
+              ""
+            ],
+            "L_w": [
+              6.9911111111111115,
+              ""
+            ],
+            "q_L_actual": [
+              25.0,
+              ""
+            ],
+            "H": [
               6.0,
-              "m"
+              ""
             ],
-            "总高度": [
-              6.5,
-              "m"
-            ],
-            "滗水高度": [
-              2.1,
-              "m"
-            ],
-            "污泥层高度": [
-              2.16,
-              "m"
-            ],
-            "安全距离": [
-              1.74,
-              "m"
+            "concrete_m3": [
+              8236.800000000001,
+              ""
             ],
             "进水BOD5": [
               120.08,
@@ -2521,50 +2570,6 @@
             "出水BOD5": [
               9.61,
               "mg/L"
-            ],
-            "BOD负荷 Ns": [
-              0.08,
-              "kgBOD5/(kgMLSS·d)"
-            ],
-            "实际污泥龄 θc'": [
-              22.5,
-              "d"
-            ],
-            "剩余生物污泥": [
-              2146.6,
-              "kgVSS/d"
-            ],
-            "剩余非生物污泥": [
-              1237.6,
-              "kg/d"
-            ],
-            "剩余污泥总量": [
-              3384.2,
-              "kg/d"
-            ],
-            "碳化需氧量": [
-              7744.8,
-              "kgO2/d"
-            ],
-            "硝化需氧量": [
-              1950.5,
-              "kgO2/d"
-            ],
-            "反硝化产氧": [
-              1839.4,
-              "kgO2/d"
-            ],
-            "总需氧量": [
-              7855.9,
-              "kgO2/d"
-            ],
-            "单池滗水流量": [
-              1461.6,
-              "m³/h"
-            ],
-            "设计水温衰减系数 KdT": [
-              0.0365,
-              "d⁻¹"
             ],
             "BOD5去除率": [
               92.0,
@@ -2634,7 +2639,7 @@
           "checks": {
             "长宽比 L/B": [
               true,
-              4.83,
+              4.7272727272727275,
               "4~6",
               ""
             ],
@@ -2644,41 +2649,41 @@
               "1~2",
               ""
             ],
-            "安全距离 1.5~2.0m": [
-              true,
-              1.74,
-              "1.5~2.0",
-              "m"
-            ],
             "充水比一致性 |λ_actual-λ_design|/λ_design < 15%": [
               true,
-              0.3,
+              0.5529924620833709,
               "< 15%",
-              "%偏差"
+              ""
+            ],
+            "安全距离 1.5~2.0m": [
+              true,
+              1.7600000000000002,
+              "1.5~2.0",
+              ""
             ],
             "污泥龄校核 θc'": [
               true,
-              22.5,
-              "10.0~30",
-              "d"
-            ],
-            "硝化污泥龄校核 θc'≥15d": [
-              true,
-              22.5,
-              "15~30",
-              "d"
+              22.549668984704212,
+              "20~30",
+              ""
             ],
             "总需氧量 > 0": [
               true,
-              7855.9,
+              7855.930551195378,
               "> 0",
-              "kgO2/d"
+              ""
             ],
             "堰口负荷 q_L 20~30 L/(s·m)": [
               true,
               25.0,
               "20~30",
-              "L/(s·m)"
+              ""
+            ],
+            "硝化污泥龄校核 θc'≥15d": [
+              true,
+              22.549668984704212,
+              "15~30",
+              ""
             ],
             "高程-超高≥0.3m": [
               true,
@@ -2702,13 +2707,8 @@
           "warnings": [],
           "error_msg": "",
           "removal_rates": {},
-          "robustness": 0.0,
-          "sludge_output": {
-            "Q_wet": 423.0281514582028,
-            "DS": 3384.2252116656255,
-            "P_moisture": 0.992,
-            "VS_ratio": 0.6342954005017968
-          },
+          "robustness": 0.1679212916160473,
+          "sludge_output": null,
           "elevation": {
             "ground_elevation": 286.5,
             "bottom_elevation": 287.487,
@@ -2721,66 +2721,40 @@
             "formula": "经验值: 0.5m"
           },
           "dimension_formulas": {
-            "设计充水比 λ_design": "λ_design = 用户设定值 (0.2~0.4)",
-            "实际充水比 λ_actual": "λ_actual = Q_avg × Tc / (24 × n × V_eff)",
-            "滗水器堰口长度 L_w": "L_w = Q_h / (q_L × 3.6), q_L=25 L/(s·m)",
-            "池数": "n = 用户设定 (≥2,保证冗余)",
-            "主反应区总容积": "V = Q × HRT",
-            "单池主反应区容积": "V = Q × HRT",
-            "选择区容积": "V = Q × HRT",
-            "单池总有效容积": "V = Q_max × HRT / 60",
-            "池长 L": "L = √(V / h_eff)",
-            "池宽 B": "B = V / (L × h_eff)",
-            "长宽比 L/B": "L/B = 池长 / 池宽",
-            "宽高比 B/H": "B/H = 池宽 / 总高度",
-            "有效水深 H_max": "h_eff = 设计规范推荐值",
-            "总高度": "H = h_eff + h_super",
-            "滗水高度": "H_decant = H_max × λ (m)",
-            "污泥层高度": "H_sludge = H_max × X × SVI / 10⁶ (m)",
-            "安全距离": "H_safe = H_max - H_decant - H_sludge (≥1.5m)",
-            "BOD负荷 Ns": "Nₛ = Q×S₀/(V×X) (kgBOD5/(kgMLSS·d))",
-            "实际污泥龄 θc'": "θc' = V·X·f / ΔXv, (4-79)",
-            "剩余生物污泥": "Px_bio = Y·Q·(S0-Se) - Kd·V·X·f (kgVSS/d)",
-            "剩余非生物污泥": "Px_nbio = Q·(SS_in/1000·(1-f_b) - SS_out/1000) (kg/d)",
-            "剩余污泥总量": "Px_total = Px_bio + Px_nbio (kg/d)",
-            "碳化需氧量": "O₂ = a'×Q×Sᵣ + b'×V×X",
-            "硝化需氧量": "O₂ = a'×Q×Sᵣ + b'×V×X",
-            "反硝化产氧": "O₂_dn = 2.86 × (TN_load - N_synth) (kgO2/d)",
-            "总需氧量": "O₂ = a'×Q×Sᵣ + b'×V×X",
-            "单池滗水流量": "Q_decant = V_eff × λ / t_d (m³/h)",
-            "设计水温衰减系数 KdT": "KdT = Kd20 × θ^(T-20)"
+            "concrete_m3": "V_conc = 2(L+B)×t_wall×h + L×B×t_floor"
           },
           "dimension_categories": {
-            "设计充水比 λ_design": "computed",
-            "实际充水比 λ_actual": "computed",
-            "滗水器堰口长度 L_w": "physical",
-            "池数": "physical",
-            "主反应区总容积": "physical",
-            "单池主反应区容积": "physical",
-            "选择区容积": "physical",
-            "单池总有效容积": "physical",
-            "池长 L": "physical",
-            "池宽 B": "physical",
-            "长宽比 L/B": "physical",
-            "宽高比 B/H": "physical",
-            "有效水深 H_max": "physical",
-            "总高度": "physical",
-            "滗水高度": "physical",
-            "污泥层高度": "physical",
-            "安全距离": "physical",
+            "V_main": "physical",
+            "V_main_single": "physical",
+            "V_selector": "physical",
+            "V_eff_actual": "physical",
+            "L": "physical",
+            "B": "physical",
+            "H_max_out": "physical",
+            "H_total": "physical",
+            "H_decant": "physical",
+            "H_sludge": "physical",
+            "H_safe": "physical",
+            "lam_out": "computed",
+            "ratio_LB": "physical",
+            "ratio_BH": "physical",
+            "Ns_out": "computed",
+            "theta_c_actual": "computed",
+            "Px_bio": "computed",
+            "Px_nbio": "computed",
+            "Px_total": "computed",
+            "O2_carbon": "computed",
+            "O2_nitrification": "computed",
+            "O2_denitrification": "computed",
+            "O2_total": "computed",
+            "Q_decant": "computed",
+            "KdT": "computed",
+            "L_w": "computed",
+            "q_L_actual": "computed",
+            "H": "physical",
+            "concrete_m3": "computed",
             "进水BOD5": "computed",
             "出水BOD5": "computed",
-            "BOD负荷 Ns": "computed",
-            "实际污泥龄 θc'": "computed",
-            "剩余生物污泥": "computed",
-            "剩余非生物污泥": "computed",
-            "剩余污泥总量": "computed",
-            "碳化需氧量": "computed",
-            "硝化需氧量": "computed",
-            "反硝化产氧": "computed",
-            "总需氧量": "computed",
-            "单池滗水流量": "computed",
-            "设计水温衰减系数 KdT": "computed",
             "BOD5去除率": "computed",
             "进水COD": "computed",
             "出水COD": "computed",
@@ -2825,8 +2799,8 @@
         "name": "高密度沉淀池",
         "category": "深度处理",
         "position": {
-          "x": -30477.94688825293,
-          "y": -47978.64056785279
+          "x": -29185.502873178346,
+          "y": -45464.944023608004
         },
         "params": {
           "n": 4.0,
@@ -3244,13 +3218,13 @@
         "name": "V型滤池",
         "category": "深度处理",
         "position": {
-          "x": -30148.140355688854,
-          "y": -48721.61418597077
+          "x": -28855.696340614257,
+          "y": -46207.917641725995
         },
         "params": {
-          "n": 16.0,
+          "n": 12.0,
           "v_filter": 5.0,
-          "v_force": 10.0,
+          "v_force": 12.0,
           "T_filter": 24.0,
           "k_self": 1.05,
           "h_media": 1.0,
@@ -3310,13 +3284,13 @@
         "cached_result": {
           "success": true,
           "params": {
-            "n": 16,
+            "n": 12.0,
             "v_filter": 5.0,
-            "v_force": 10.0,
-            "T_filter": 24.0,
-            "k_self": 1.05,
             "h_media": 1.0,
             "h_water": 1.4,
+            "v_force": 12.0,
+            "T_filter": 24.0,
+            "k_self": 1.05,
             "h_super": 0.5,
             "h_plate": 0.1,
             "h_under": 0.9,
@@ -3336,125 +3310,121 @@
             "v_hole": 2.0
           },
           "dimensions": {
-            "设计总流量 Q_d": [
-              36936.0,
-              "m³/d"
+            "F_total": [
+              310.38655462184875,
+              ""
             ],
-            "反冲洗总历时 t": [
-              12.0,
-              "min"
+            "f_single": [
+              25.865546218487395,
+              ""
             ],
-            "日有效工作时间 T_w": [
-              23.8,
-              "h/d"
+            "L": [
+              7.2,
+              ""
             ],
-            "总过滤面积 F": [
-              310.4,
-              "m²"
+            "B": [
+              3.6,
+              ""
             ],
-            "单格过滤面积 f": [
-              19.4,
-              "m²"
+            "A_actual": [
+              25.92,
+              ""
             ],
-            "设计滤速 v": [
+            "H_total": [
+              3.9,
+              ""
+            ],
+            "v_filter": [
               5.0,
-              "m/h"
+              ""
             ],
-            "实际强制滤速 v_q": [
-              5.33,
-              "m/h"
+            "v_force_actual": [
+              5.454545454545454,
+              ""
             ],
-            "单格长度 L": [
-              6.1000000000000005,
-              "m"
+            "W_w": [
+              94.86720000000001,
+              ""
             ],
-            "单格宽度 B": [
-              3.2,
-              "m"
+            "eta_w": [
+              0.03082105263157895,
+              ""
             ],
-            "滤池总高度 H_t": [
-              3.9000000000000004,
-              "m"
+            "D_g": [
+              0.20310825007719227,
+              ""
             ],
-            "气冲流量 Q_g1": [
-              292.8,
-              "L/s"
+            "D_w": [
+              0.2872384418890316,
+              ""
             ],
-            "气冲流量 Q_g2": [
-              292.8,
-              "L/s"
+            "D_out": [
+              0.2129768972944957,
+              ""
             ],
-            "水冲流量 Q_w2": [
-              58.6,
-              "L/s"
+            "Q_blower": [
+              1399.68,
+              ""
             ],
-            "水冲流量 Q_w3": [
-              97.6,
-              "L/s"
+            "Q_pump": [
+              466.5600000000001,
+              ""
             ],
-            "表扫流量 Q_s": [
-              39.0,
-              "L/s"
+            "N_head": [
+              1426,
+              ""
             ],
-            "单次冲洗水量 W_w": [
-              71.4,
-              "m³"
+            "v_v_slot": [
+              0.03298611111111111,
+              ""
             ],
-            "冲洗水占比 η_w": [
-              3.09,
-              "%"
-            ],
-            "空气干管管径 D_g": [
-              176.0,
-              "mm"
-            ],
-            "水冲干管管径 D_w": [
-              249.0,
-              "mm"
-            ],
-            "鼓风机风量 Q_blower": [
-              1054.0,
-              "m³/h"
-            ],
-            "冲洗水泵流量 Q_pump": [
-              351.0,
-              "m³/h"
-            ],
-            "滤头数量 N_nozzle": [
-              1074,
-              "个"
-            ],
-            "V型槽断面积": [
-              0.54,
-              "m²"
-            ],
-            "V型槽始端流速 v_V": [
-              0.02,
-              "m/s"
-            ],
-            "扫洗孔总面积 A_孔(单侧)": [
-              0.0195,
-              "m²"
-            ],
-            "单孔面积 a_孔": [
-              490.9,
-              "mm²"
-            ],
-            "每侧孔数 n_孔": [
-              40,
-              "个"
-            ],
-            "出水管径 D_out": [
-              184.0,
-              "mm"
-            ],
-            "过滤总水头损失 H_loss": [
+            "H_loss": [
               2.02,
-              "m"
+              ""
             ],
-            "滤池格数": [
-              16,
-              "格"
+            "Q_g1": [
+              388.8,
+              ""
+            ],
+            "Q_g2": [
+              388.8,
+              ""
+            ],
+            "Q_w2": [
+              77.76,
+              ""
+            ],
+            "Q_w3": [
+              129.60000000000002,
+              ""
+            ],
+            "Q_s": [
+              51.84,
+              ""
+            ],
+            "A_v_slot": [
+              0.5399999999999999,
+              ""
+            ],
+            "A_hole": [
+              0.025920000000000002,
+              ""
+            ],
+            "a_hole": [
+              0.0004908738521234052,
+              ""
+            ],
+            "n_hole": [
+              53,
+              ""
+            ],
+            "H": [
+              3.9,
+              ""
+            ],
+            "concrete_m3": [
+              485.22240000000005,
+              ""
             ],
             "进水BOD5": [
               7.69,
@@ -3532,51 +3502,51 @@
           "checks": {
             "强制滤速 v_q ≤ 限值": [
               true,
-              5.33,
-              "≤ 10.0",
-              "m/h"
-            ],
-            "单格宽度 B ≤ 5m": [
-              true,
-              3.2,
-              "≤ 5.0",
-              "m"
-            ],
-            "长宽比 L/B 1~3": [
-              true,
-              1.91,
-              "1~3",
+              5.454545454545454,
+              "<= 12.0",
               ""
             ],
             "冲洗水占比 η_w < 5%": [
               true,
-              3.09,
+              0.03082105263157895,
               "< 5",
-              "%"
+              ""
+            ],
+            "单格宽度 B ≤ 5m": [
+              true,
+              3.6,
+              "<= 5.0",
+              ""
+            ],
+            "长宽比 L/B 1~3": [
+              true,
+              2.0,
+              "1~3",
+              ""
             ],
             "滤头密度 48~56 个/m²": [
               true,
-              55.0,
+              55.01543209876543,
               "48~56",
-              "个/m²"
+              ""
             ],
             "V型槽流速 ≤ 0.6 m/s": [
               true,
-              0.02,
-              "≤ 0.6",
-              "m/s"
-            ],
-            "扫洗孔数 ≥ 20 个/侧": [
-              true,
-              40,
-              "≥ 20",
-              "个/侧"
+              0.03298611111111111,
+              "<= 0.6",
+              ""
             ],
             "过滤水头损失 2~3 m": [
               true,
               2.02,
               "2~3",
-              "m"
+              ""
+            ],
+            "扫洗孔数 ≥ 20 个/侧": [
+              true,
+              53.0,
+              ">= 20",
+              ""
             ],
             "高程-超高≥0.3m": [
               true,
@@ -3599,12 +3569,11 @@
           },
           "warnings": [
             "高程: V型滤池 水头损失 2.50m > 1.0m, 建议设跌水井",
-            "高程: V型滤池 水头损失 2.50m > 1.0m, 建议设跌水井",
             "高程: V型滤池 水头损失 2.50m > 1.0m, 建议设跌水井"
           ],
           "error_msg": "",
           "removal_rates": {},
-          "robustness": 0.0,
+          "robustness": 0.21350129900823311,
           "sludge_output": null,
           "elevation": {
             "ground_elevation": 286.5,
@@ -3618,68 +3587,38 @@
             "formula": "经验值: 2.5m"
           },
           "dimension_formulas": {
-            "设计总流量 Q_d": "Q_d = α × Q, α=1.05",
-            "反冲洗总历时 t": "t = t_g1 + t_gw + t_w3",
-            "日有效工作时间 T_w": "T_w = 24 - 24×t/T_f",
-            "总过滤面积 F": "F = Q_d / (v × T_w)",
-            "单格过滤面积 f": "f = F / N",
-            "设计滤速 v": "v = 设计取值 (5~8 m/h)",
-            "实际强制滤速 v_q": "v_q = N/(N-1) × v",
-            "单格长度 L": "L = ceil(f / B, 0.1m)",
-            "单格宽度 B": "B = min(ceil(√(f/2), 0.1m), 4.5m)",
-            "滤池总高度 H_t": "H_t = h_free+h_water+h_filter+h_plate+h_under",
-            "气冲流量 Q_g1": "Q_g1 = q_g1 × f",
-            "气冲流量 Q_g2": "Q_g2 = q_g2 × f",
-            "水冲流量 Q_w2": "Q_w2 = q_w2 × f",
-            "水冲流量 Q_w3": "Q_w3 = q_w3 × f",
-            "表扫流量 Q_s": "Q_s = q_s × f",
-            "单次冲洗水量 W_w": "W_w = (Q_w2·t_gw+Q_w3·t_w3+Q_s·t)×60×10⁻³",
-            "冲洗水占比 η_w": "η_w = W_w×(24/T_f) / (Q_d/N)",
-            "空气干管管径 D_g": "D_g = √(4×Q_g1/1000/(π×v_g))",
-            "水冲干管管径 D_w": "D_w = √(4×max(Q_w2,Q_w3)/1000/(π×v_w))",
-            "鼓风机风量 Q_blower": "Q_blower = Q_g1 × 3.6",
-            "冲洗水泵流量 Q_pump": "Q_pump = max(Q_w3, Q_w2+Q_s) × 3.6",
-            "滤头数量 N_nozzle": "N_nozzle = n_nozzle × f",
-            "V型槽断面积": "A_V = (h_water-0.5) × 0.6",
-            "V型槽始端流速 v_V": "v_V = Q_cell / (2×A_V槽)",
-            "扫洗孔总面积 A_孔(单侧)": "A_孔 = Q_s×10⁻³ / v_孔",
-            "单孔面积 a_孔": "a_孔 = πd_孔²/4",
-            "每侧孔数 n_孔": "n_孔 = ceil(A_孔 / a_孔)",
-            "出水管径 D_out": "D_out = √(4×Q_filtered/(π×v_out))",
-            "过滤总水头损失 H_loss": "H_loss = h_filter(1.8m) + h_head(0.22m)",
-            "滤池格数": "n = 用户设定 (≥2, 保证反洗时强制滤速不超限)"
+            "concrete_m3": "V_conc = 2(L+B)×t_wall×h + L×B×t_floor"
           },
           "dimension_categories": {
-            "设计总流量 Q_d": "computed",
-            "反冲洗总历时 t": "computed",
-            "日有效工作时间 T_w": "computed",
-            "总过滤面积 F": "physical",
-            "单格过滤面积 f": "physical",
-            "设计滤速 v": "computed",
-            "实际强制滤速 v_q": "computed",
-            "单格长度 L": "physical",
-            "单格宽度 B": "physical",
-            "滤池总高度 H_t": "physical",
-            "气冲流量 Q_g1": "computed",
-            "气冲流量 Q_g2": "computed",
-            "水冲流量 Q_w2": "computed",
-            "水冲流量 Q_w3": "computed",
-            "表扫流量 Q_s": "computed",
-            "单次冲洗水量 W_w": "computed",
-            "冲洗水占比 η_w": "computed",
-            "空气干管管径 D_g": "physical",
-            "水冲干管管径 D_w": "physical",
-            "鼓风机风量 Q_blower": "computed",
-            "冲洗水泵流量 Q_pump": "computed",
-            "滤头数量 N_nozzle": "computed",
-            "V型槽断面积": "physical",
-            "V型槽始端流速 v_V": "computed",
-            "扫洗孔总面积 A_孔(单侧)": "physical",
-            "单孔面积 a_孔": "computed",
-            "每侧孔数 n_孔": "computed",
-            "出水管径 D_out": "physical",
-            "过滤总水头损失 H_loss": "computed",
-            "滤池格数": "physical",
+            "F_total": "computed",
+            "f_single": "computed",
+            "L": "physical",
+            "B": "physical",
+            "A_actual": "physical",
+            "H_total": "physical",
+            "v_filter": "computed",
+            "v_force_actual": "computed",
+            "W_w": "computed",
+            "eta_w": "computed",
+            "D_g": "physical",
+            "D_w": "physical",
+            "D_out": "physical",
+            "Q_blower": "computed",
+            "Q_pump": "computed",
+            "N_head": "physical",
+            "v_v_slot": "computed",
+            "H_loss": "physical",
+            "Q_g1": "computed",
+            "Q_g2": "computed",
+            "Q_w2": "computed",
+            "Q_w3": "computed",
+            "Q_s": "computed",
+            "A_v_slot": "physical",
+            "A_hole": "physical",
+            "a_hole": "computed",
+            "n_hole": "physical",
+            "H": "physical",
+            "concrete_m3": "computed",
             "进水BOD5": "computed",
             "出水BOD5": "computed",
             "BOD5去除率": "computed",
@@ -3726,8 +3665,8 @@
         "name": "紫外消毒池",
         "category": "深度处理",
         "position": {
-          "x": -30128.655350363366,
-          "y": -48288.98576057983
+          "x": -28836.21133528877,
+          "y": -45775.28921633504
         },
         "params": {
           "n": 2.0,
@@ -4070,8 +4009,8 @@
         "name": "污泥泵站",
         "category": "污泥处理",
         "position": {
-          "x": -29673.382079160005,
-          "y": -48729.73754058014
+          "x": -28380.93806408542,
+          "y": -46216.04099633536
         },
         "params": {
           "n_pumps": 1.0,
@@ -4257,8 +4196,8 @@
         "name": "污泥合并",
         "category": "污泥处理",
         "position": {
-          "x": -29651.457768616965,
-          "y": -48886.11298932305
+          "x": -28359.013753542375,
+          "y": -46372.41644507827
         },
         "params": {},
         "removal_rates": {},
@@ -4271,12 +4210,12 @@
               "direction": "input",
               "node_id": "wuni_hebing-14c00c33",
               "connections": [
-                "chuchenchi-683a9b95-sludge",
-                "gaomidu-d0703acb-sludge",
-                "cass-c810b356-sludge",
-                "xigeshan-777cc241-slag",
                 "chenshachi-44bdffeb-grit",
-                "cugeshan-f239ef03-slag"
+                "xigeshan-777cc241-slag",
+                "gaomidu-d0703acb-sludge",
+                "cugeshan-f239ef03-slag",
+                "cass-c810b356-sludge",
+                "chuchenchi-683a9b95-sludge"
               ]
             }
           ],
@@ -4359,8 +4298,8 @@
         "name": "污泥浓缩池",
         "category": "污泥处理",
         "position": {
-          "x": -29668.01974508359,
-          "y": -48553.4890363898
+          "x": -28375.575730009008,
+          "y": -46039.79249214504
         },
         "params": {
           "n": 2.0,
@@ -4558,8 +4497,8 @@
         "name": "污泥脱水间",
         "category": "污泥处理",
         "position": {
-          "x": -29363.62383079164,
-          "y": -48648.93813890402
+          "x": -28071.17981571704,
+          "y": -46135.24159465923
         },
         "params": {
           "equip_type": 0.0,
@@ -4739,8 +4678,8 @@
         "name": "污泥干化",
         "category": "污泥处理",
         "position": {
-          "x": -29364.20926442663,
-          "y": -48854.737540580136
+          "x": -28071.765249352044,
+          "y": -46341.04099633538
         },
         "params": {
           "method": 0.0,
@@ -4918,8 +4857,8 @@
         "name": "污水提升泵房",
         "category": "社区模组",
         "position": {
-          "x": -31101.68509955759,
-          "y": -48566.40590109015
+          "x": -29809.241084483005,
+          "y": -46052.70935684535
         },
         "params": {
           "n_work": 3.0,
@@ -5276,8 +5215,8 @@
         "name": "巴氏计量槽",
         "category": "社区模组",
         "position": {
-          "x": -29829.799715878416,
-          "y": -47953.005398759684
+          "x": -28537.35570080382,
+          "y": -45439.3088545149
         },
         "params": {
           "b": 0.152
@@ -5580,8 +5519,8 @@
         "name": "进厂污水水面标高",
         "category": "高程模组",
         "position": {
-          "x": -31093.585331472266,
-          "y": -48926.71538261847
+          "x": -29801.141316397672,
+          "y": -46413.01883837369
         },
         "params": {
           "Z_water_inlet": 281.093,
@@ -5806,8 +5745,8 @@
         "name": "管道运输水头损失",
         "category": "高程模组",
         "position": {
-          "x": -30779.302041239618,
-          "y": -48747.954813665754
+          "x": -29486.858026165035,
+          "y": -46234.25826942098
         },
         "params": {
           "Q_manual": 0.57,
@@ -6084,8 +6023,8 @@
         "name": "配水井",
         "category": "集配水模组",
         "position": {
-          "x": -31116.315020882186,
-          "y": -48225.28342158421
+          "x": -29823.8710058076,
+          "y": -45711.586877339425
         },
         "params": {
           "n_out": 4.0,
@@ -6349,8 +6288,8 @@
         "name": "管道运输水头损失",
         "category": "高程模组",
         "position": {
-          "x": -30766.575467970433,
-          "y": -48359.64996441201
+          "x": -29474.131452895843,
+          "y": -45845.95342016719
         },
         "params": {
           "Q_manual": 0.57,
@@ -6627,8 +6566,8 @@
         "name": "配水渠",
         "category": "集配水模组",
         "position": {
-          "x": -30454.46924859721,
-          "y": -48706.88960604036
+          "x": -29162.02523352262,
+          "y": -46193.193061795566
         },
         "params": {
           "B_channel": 1.0,
@@ -6900,8 +6839,8 @@
         "name": "管道运输水头损失",
         "category": "高程模组",
         "position": {
-          "x": -30465.49288327393,
-          "y": -48933.90498799491
+          "x": -29173.048868199337,
+          "y": -46420.20844375014
         },
         "params": {
           "Q_manual": 0.57,
@@ -7178,8 +7117,8 @@
         "name": "管道运输水头损失",
         "category": "高程模组",
         "position": {
-          "x": -30449.13381781808,
-          "y": -48317.25947821627
+          "x": -29156.6898027435,
+          "y": -45803.562933971494
         },
         "params": {
           "Q_manual": 0.57,
@@ -7456,8 +7395,8 @@
         "name": "集配水井",
         "category": "集配水模组",
         "position": {
-          "x": -30476.316828829422,
-          "y": -48129.6707587278
+          "x": -29183.87281375484,
+          "y": -45615.97421448303
         },
         "params": {
           "n_out": 4.0,
@@ -7721,8 +7660,8 @@
         "name": "管道运输水头损失",
         "category": "高程模组",
         "position": {
-          "x": -30125.744498972344,
-          "y": -48904.135241212985
+          "x": -28833.300483897754,
+          "y": -46390.43869696822
         },
         "params": {
           "Q_manual": 0.57,
@@ -7999,8 +7938,8 @@
         "name": "配水井",
         "category": "集配水模组",
         "position": {
-          "x": -30150.571944601998,
-          "y": -48577.73171024766
+          "x": -28858.127929527403,
+          "y": -46064.0351660029
         },
         "params": {
           "n_out": 2.0,
@@ -8264,8 +8203,8 @@
         "name": "集水井",
         "category": "集配水模组",
         "position": {
-          "x": -30126.797018978916,
-          "y": -48140.53979708999
+          "x": -28834.35300390433,
+          "y": -45626.84325284522
         },
         "params": {
           "HRT": 8.0,
@@ -8514,8 +8453,8 @@
         "name": "管道运输水头损失",
         "category": "高程模组",
         "position": {
-          "x": -30134.80829091133,
-          "y": -48438.94145026065
+          "x": -28842.364275836742,
+          "y": -45925.24490601587
         },
         "params": {
           "Q_manual": 0.57,
@@ -8792,8 +8731,8 @@
         "name": "污水提升泵房",
         "category": "社区模组",
         "position": {
-          "x": -30140.799292462674,
-          "y": -47960.75960184238
+          "x": -28848.355277388084,
+          "y": -45447.0630575976
         },
         "params": {
           "n_work": 4.0,
@@ -9150,8 +9089,8 @@
         "name": "配水井",
         "category": "集配水模组",
         "position": {
-          "x": -30767.269222396924,
-          "y": -48186.058792719006
+          "x": -29474.825207322338,
+          "y": -45672.36224847424
         },
         "params": {
           "n_out": 2.0,
@@ -9415,8 +9354,8 @@
         "name": "集水井",
         "category": "集配水模组",
         "position": {
-          "x": -30768.418659716248,
-          "y": -48944.50714812268
+          "x": -29475.974644641658,
+          "y": -46430.81060387789
         },
         "params": {
           "HRT": 8.0,
@@ -9662,79 +9601,131 @@
     ],
     "connections": [
       {
-        "from": "peishuijing-834d4110-out",
-        "to": "chuchenchi-683a9b95-in"
-      },
-      {
-        "from": "combiner-82895fd1-mout",
-        "to": "jcws_smbg-1dedf590-in"
-      },
-      {
-        "from": "wuni_tisheng-680b01be-out",
-        "to": "xigeshan-777cc241-in"
-      },
-      {
-        "from": "gdys_stss-d5553150-out",
-        "to": "peishuijing-834d4110-in"
-      },
-      {
-        "from": "wuni_bengzhan-72cdda30-s_out",
-        "to": "wuni_nongsuo-9f1f8798-s_in"
-      },
-      {
-        "from": "jcws_smbg-1dedf590-out",
-        "to": "cugeshan-f239ef03-in"
-      },
-      {
-        "from": "jipeishuijing-f64653d6-out",
-        "to": "gaomidu-d0703acb-in"
-      },
-      {
-        "from": "cugeshan-f239ef03-out",
-        "to": "wuni_tisheng-680b01be-in"
-      },
-      {
-        "from": "pipe_network-45e82552-wout",
-        "to": "combiner-82895fd1-win"
-      },
-      {
-        "from": "gdys_stss-ba8ca51f-out",
-        "to": "jipeishuijing-f64653d6-in"
-      },
-      {
-        "from": "chuchenchi-683a9b95-out",
-        "to": "gdys_stss-587eb9cc-in"
-      },
-      {
-        "from": "jishuijing-b057091b-out",
-        "to": "gdys_stss-7eb3a359-in"
-      },
-      {
-        "from": "chenshachi-44bdffeb-grit",
-        "to": "wuni_hebing-14c00c33-s_in"
-      },
-      {
-        "from": "water_quality-79e3a69f-out",
-        "to": "combiner-82895fd1-qin"
-      },
-      {
-        "from": "gdys_stss-f84deb77-out",
-        "to": "ziwai-ccfbbcce-in"
-      },
-      {
         "from": "wuni_nongsuo-9f1f8798-s_out",
         "to": "wuni_tuoshui-9f0718e2-s_in"
+      },
+      {
+        "from": "xigeshan-777cc241-out",
+        "to": "peishuijing-27e6f4f4-in"
+      },
+      {
+        "from": "chuchenchi-683a9b95-sludge",
+        "to": "wuni_hebing-14c00c33-s_in"
       },
       {
         "from": "chenshachi-44bdffeb-out",
         "to": "gdys_stss-d5553150-in"
       },
       {
+        "from": "jcws_smbg-1dedf590-out",
+        "to": "cugeshan-f239ef03-in"
+      },
+      {
+        "from": "gdys_stss-d5553150-out",
+        "to": "peishuijing-834d4110-in"
+      },
+      {
+        "from": "wuni_tisheng-b837aebf-out",
+        "to": "bashi_jiliangcao-a231507f-in"
+      },
+      {
+        "from": "peishuijing-5b6dc2e9-out",
+        "to": "gdys_stss-f84deb77-in"
+      },
+      {
+        "from": "gdys_stss-ba8ca51f-out",
+        "to": "jipeishuijing-f64653d6-in"
+      },
+      {
+        "from": "jipeishuijing-f64653d6-out",
+        "to": "gaomidu-d0703acb-in"
+      },
+      {
+        "from": "gaomidu-d0703acb-out",
+        "to": "gdys_stss-25483e7a-in"
+      },
+      {
+        "from": "cugeshan-f239ef03-slag",
+        "to": "wuni_hebing-14c00c33-s_in"
+      },
+      {
+        "from": "cass-c810b356-out",
+        "to": "gdys_stss-ba8ca51f-in"
+      },
+      {
+        "from": "gdys_stss-587eb9cc-out",
+        "to": "peishuiqu-85ca73d0-in"
+      },
+      {
+        "from": "wuni_tuoshui-9f0718e2-s_out",
+        "to": "wuni_ganhua-0d384551-s_in"
+      },
+      {
+        "from": "wuni_tisheng-680b01be-out",
+        "to": "xigeshan-777cc241-in"
+      },
+      {
+        "from": "cugeshan-f239ef03-out",
+        "to": "wuni_tisheng-680b01be-in"
+      },
+      {
+        "from": "jishuijing-b057091b-out",
+        "to": "gdys_stss-7eb3a359-in"
+      },
+      {
+        "from": "peishuijing-834d4110-out",
+        "to": "chuchenchi-683a9b95-in"
+      },
+      {
+        "from": "peishuijing-27e6f4f4-out",
+        "to": "tiaojiechi-6f53d4ff-in"
+      },
+      {
+        "from": "chuchenchi-683a9b95-out",
+        "to": "gdys_stss-587eb9cc-in"
+      },
+      {
+        "from": "wuni_bengzhan-72cdda30-s_out",
+        "to": "wuni_nongsuo-9f1f8798-s_in"
+      },
+      {
+        "from": "pipe_network-45e82552-wout",
+        "to": "combiner-82895fd1-win"
+      },
+      {
+        "from": "gdys_stss-7eb3a359-out",
+        "to": "chenshachi-44bdffeb-in"
+      },
+      {
+        "from": "water_quality-79e3a69f-out",
+        "to": "combiner-82895fd1-qin"
+      },
+      {
+        "from": "vxinglvchi-05efcf33-out",
+        "to": "peishuijing-5b6dc2e9-in"
+      },
+      {
+        "from": "ziwai-ccfbbcce-out",
+        "to": "jishuijing-1882820b-in"
+      },
+      {
+        "from": "tiaojiechi-6f53d4ff-out",
+        "to": "jishuijing-b057091b-in"
+      },
+      {
         "from": "gdys_stss-25483e7a-out",
         "to": "vxinglvchi-05efcf33-in"
       },
       {
-        "from": "xigeshan-777cc241-slag",
+        "from": "combiner-82895fd1-mout",
+        "to": "jcws_smbg-1dedf590-in"
+      },
+      {
+        "from": "jishuijing-1882820b-out",
+        "to": "wuni_tisheng-b837aebf-in"
+      },
+      {
+        "from": "cass-c810b356-sludge",
         "to": "wuni_hebing-14c00c33-s_in"
       },
       {
@@ -9742,47 +9733,15 @@
         "to": "wuni_hebing-14c00c33-s_in"
       },
       {
-        "from": "gdys_stss-7eb3a359-out",
-        "to": "chenshachi-44bdffeb-in"
-      },
-      {
-        "from": "cugeshan-f239ef03-slag",
+        "from": "xigeshan-777cc241-slag",
         "to": "wuni_hebing-14c00c33-s_in"
       },
       {
-        "from": "gdys_stss-587eb9cc-out",
-        "to": "peishuiqu-85ca73d0-in"
+        "from": "gdys_stss-f84deb77-out",
+        "to": "ziwai-ccfbbcce-in"
       },
       {
-        "from": "cass-c810b356-out",
-        "to": "gdys_stss-ba8ca51f-in"
-      },
-      {
-        "from": "vxinglvchi-05efcf33-out",
-        "to": "peishuijing-5b6dc2e9-in"
-      },
-      {
-        "from": "gaomidu-d0703acb-out",
-        "to": "gdys_stss-25483e7a-in"
-      },
-      {
-        "from": "cass-c810b356-sludge",
-        "to": "wuni_hebing-14c00c33-s_in"
-      },
-      {
-        "from": "ziwai-ccfbbcce-out",
-        "to": "jishuijing-1882820b-in"
-      },
-      {
-        "from": "wuni_tuoshui-9f0718e2-s_out",
-        "to": "wuni_ganhua-0d384551-s_in"
-      },
-      {
-        "from": "wuni_tisheng-b837aebf-out",
-        "to": "bashi_jiliangcao-a231507f-in"
-      },
-      {
-        "from": "chuchenchi-683a9b95-sludge",
+        "from": "chenshachi-44bdffeb-grit",
         "to": "wuni_hebing-14c00c33-s_in"
       },
       {
@@ -9792,26 +9751,6 @@
       {
         "from": "peishuiqu-85ca73d0-out",
         "to": "cass-c810b356-in"
-      },
-      {
-        "from": "xigeshan-777cc241-out",
-        "to": "peishuijing-27e6f4f4-in"
-      },
-      {
-        "from": "peishuijing-27e6f4f4-out",
-        "to": "tiaojiechi-6f53d4ff-in"
-      },
-      {
-        "from": "tiaojiechi-6f53d4ff-out",
-        "to": "jishuijing-b057091b-in"
-      },
-      {
-        "from": "jishuijing-1882820b-out",
-        "to": "wuni_tisheng-b837aebf-in"
-      },
-      {
-        "from": "peishuijing-5b6dc2e9-out",
-        "to": "gdys_stss-f84deb77-in"
       }
     ]
   },
@@ -9903,7 +9842,8 @@
     "wuni_bengzhan": {
       "constraint_limits": {
         "泵送能力充足": ">= 0",
-        "管道流速经济": "1.0~2.5"
+        "管道流速经济": "1.0~2.5",
+        "水头损失 ≤ 3m": "<= 3.0"
       }
     },
     "wuni_nongsuo": {

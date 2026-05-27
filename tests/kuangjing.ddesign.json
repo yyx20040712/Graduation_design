@@ -3,8 +3,8 @@
   "metadata": {
     "name": "未命名项目",
     "author": "",
-    "created": "2026-05-27T23:59:13.607633",
-    "modified": "2026-05-27T23:59:13.607641",
+    "created": "2026-05-28T01:29:50.346167",
+    "modified": "2026-05-28T01:29:50.346173",
     "description": ""
   },
   "graph": {
@@ -15,8 +15,8 @@
         "name": "矿井水输入",
         "category": "矿井水处理",
         "position": {
-          "x": 355.6261379791745,
-          "y": 272.70574550544916
+          "x": -13687.179592538863,
+          "y": -19788.12760617023
         },
         "params": {
           "Q_avg_daily": 43836.0,
@@ -198,8 +198,8 @@
         "name": "矿井水调节池",
         "category": "矿井水处理",
         "position": {
-          "x": 595.6261379791742,
-          "y": 277.7057455054487
+          "x": -13447.179592538838,
+          "y": -19783.127606170063
         },
         "params": {
           "n": 16.0,
@@ -592,8 +592,8 @@
         "name": "平流沉砂池",
         "category": "矿井水处理",
         "position": {
-          "x": 588.7204304438443,
-          "y": 425.6585992731146
+          "x": -13454.085300074144,
+          "y": -19635.174752402443
         },
         "params": {
           "n": 8.0,
@@ -989,8 +989,8 @@
         "name": "混凝反应池",
         "category": "矿井水处理",
         "position": {
-          "x": 583.6261379791748,
-          "y": 580.6585992731148
+          "x": -13459.179592539023,
+          "y": -19481.37043678597
         },
         "params": {
           "n": 2.0,
@@ -1440,8 +1440,8 @@
         "name": "矿井水高密度沉淀池",
         "category": "矿井水处理",
         "position": {
-          "x": 885.6261379791754,
-          "y": 269.8000379701176
+          "x": -13157.179592538745,
+          "y": -19791.033313705557
         },
         "params": {
           "n": 2.0,
@@ -1714,8 +1714,8 @@
         "name": "矿井水V型滤池",
         "category": "矿井水处理",
         "position": {
-          "x": 879.6261379791749,
-          "y": 424.7057455054491
+          "x": -13163.179592538843,
+          "y": -19636.127606170077
         },
         "params": {
           "n": 16.0,
@@ -1953,6 +1953,7 @@
           },
           "warnings": [
             "高程: 矿井水V型滤池 水头损失 2.50m > 1.0m, 建议设跌水井",
+            "高程: 矿井水V型滤池 水头损失 2.50m > 1.0m, 建议设跌水井",
             "高程: 矿井水V型滤池 水头损失 2.50m > 1.0m, 建议设跌水井"
           ],
           "error_msg": "",
@@ -2045,11 +2046,11 @@
         "name": "矿井水紫外消毒池",
         "category": "矿井水处理",
         "position": {
-          "x": 881.626137979175,
-          "y": 584.7057455054492
+          "x": -13161.17959253882,
+          "y": -19476.127606170146
         },
         "params": {
-          "n": 2.0,
+          "n": 3.0,
           "D_UV": 30.0,
           "k_aging": 0.7,
           "k_foul": 0.8,
@@ -2057,7 +2058,7 @@
           "n_T": 1.5,
           "eta_geo": 0.7,
           "v_channel": 0.3,
-          "h_channel": 0.8,
+          "h_channel": 1.2,
           "h_super": 0.3,
           "L_lamp": 1.5,
           "gap": 0.1,
@@ -2104,15 +2105,15 @@
         "cached_result": {
           "success": true,
           "params": {
-            "n": 2,
+            "n": 3.0,
             "D_UV": 30.0,
+            "v_channel": 0.3,
+            "h_channel": 1.2,
             "k_aging": 0.7,
             "k_foul": 0.8,
             "T254": 65.0,
             "n_T": 1.5,
             "eta_geo": 0.7,
-            "v_channel": 0.3,
-            "h_channel": 0.8,
             "h_super": 0.3,
             "L_lamp": 1.5,
             "gap": 0.1,
@@ -2125,65 +2126,77 @@
             "xi_total": 3.0
           },
           "dimensions": {
-            "渠道数": [
-              2,
-              "条"
-            ],
-            "渠宽": [
+            "B_channel": [
               1.7,
-              "m"
-            ],
-            "有效水深": [
-              0.98,
-              "m"
-            ],
-            "实际流速": [
-              0.228,
-              "m/s"
-            ],
-            "综合衰减系数": [
-              0.56,
               ""
             ],
-            "有效透光率": [
-              0.524,
+            "h_channel_eff": [
+              1.2,
               ""
             ],
-            "平均光强": [
-              18.5,
-              "W/m²"
+            "v_actual": [
+              0.12435321350762528,
+              ""
             ],
-            "灯管排数": [
-              4,
-              "排"
+            "k_total": [
+              0.5599999999999999,
+              ""
             ],
-            "灯管总数": [
-              24,
-              "支"
+            "T_eff": [
+              0.5240467536394058,
+              ""
             ],
-            "接触时间": [
-              2.1,
-              "s"
+            "I_avg": [
+              15.104877016665226,
+              ""
             ],
-            "设计剂量": [
+            "N_rows": [
+              3,
+              ""
+            ],
+            "N_lamps": [
+              18,
+              ""
+            ],
+            "t_actual": [
+              2.8949794689296464,
+              ""
+            ],
+            "D_UV_design": [
               30.0,
-              "mJ/cm²"
+              ""
             ],
-            "实际剂量": [
-              38.9,
-              "mJ/cm²"
+            "D_actual": [
+              43.728308843953116,
+              ""
             ],
-            "渠道总长": [
-              2.48,
-              "m"
+            "L_total": [
+              2.36,
+              ""
             ],
-            "水头损失": [
+            "h_loss": [
               0.1,
-              "m"
+              ""
             ],
-            "总高度": [
-              0.4,
-              "m"
+            "H_total": [
+              1.5,
+              ""
+            ],
+            "L": [
+              2.36,
+              ""
+            ],
+            "H": [
+              1.5,
+              ""
+            ],
+            "B": [
+              1.7,
+              ""
+            ],
+            "concrete_m3": [
+              5.416199999999998,
+              ""
             ],
             "进水BOD5": [
               2.35,
@@ -2260,16 +2273,16 @@
           },
           "checks": {
             "渠内流速": [
-              true,
-              0.228,
-              "0.05~0.7",
-              "m/s"
+              false,
+              0.12435321350762528,
+              "0.15~0.7",
+              ""
             ],
             "紫外剂量": [
               true,
-              38.9,
-              ">= 30.0",
-              "mJ/cm²"
+              43.728308843953116,
+              ">= 30",
+              ""
             ],
             "高程-超高≥0.3m": [
               true,
@@ -2279,7 +2292,7 @@
             ],
             "高程-水面>池底": [
               true,
-              0.98,
+              3.0,
               "> 0",
               "m"
             ],
@@ -2290,18 +2303,16 @@
               "m"
             ]
           },
-          "warnings": [
-            "接触时间 2.1s < 6s, 但紫外剂量已达标(39 ≥ 30 mJ/cm²), 可接受"
-          ],
+          "warnings": [],
           "error_msg": "",
           "removal_rates": {},
-          "robustness": 0.0,
+          "robustness": 0.3139455699726084,
           "sludge_output": null,
           "elevation": {
             "ground_elevation": 102.0,
-            "bottom_elevation": 94.57,
+            "bottom_elevation": 92.55,
             "water_elevation": 95.55,
-            "effective_depth": 0.98,
+            "effective_depth": 3.0,
             "super_elevation": 6.45,
             "head_loss": 0.25,
             "head_loss_detail": "经验值: 0.25m",
@@ -2309,38 +2320,27 @@
             "formula": "经验值: 0.25m"
           },
           "dimension_formulas": {
-            "渠道数": "n = 按流量分配确定 (≥2)",
-            "渠宽": "B = Q / (v × h) (过水断面宽)",
-            "有效水深": "h_eff = 设计规范推荐值",
-            "实际流速": "v = Q / A",
-            "综合衰减系数": "k = k_aging × k_foul (老化×污染)",
-            "有效透光率": "T_eff = (T254/100)^n_T (灯管老化修正)",
-            "平均光强": "I_avg = I₀ × T_eff × e^(-k×d) (Beer-Lambert)",
-            "灯管排数": "N_rows = ceil(D_design / D_per_row)",
-            "灯管总数": "N_total = N_rows × N_per_row",
-            "接触时间": "t = L_channel / v (紫外接触时间 s)",
-            "设计剂量": "D_design = 规范推荐 40~100 mJ/cm²",
-            "实际剂量": "D_actual = I_avg × t (实际紫外剂量 mJ/cm²)",
-            "渠道总长": "L_total = N_rows × L_per_row + L_inlet + L_outlet",
-            "水头损失": "h = ξ × v² / (2g)",
-            "总高度": "H = h_eff + h_super"
+            "concrete_m3": "V_conc = 2(L+B)×t_wall×h + L×B×t_floor"
           },
           "dimension_categories": {
-            "渠道数": "physical",
-            "渠宽": "physical",
-            "有效水深": "physical",
-            "实际流速": "computed",
-            "综合衰减系数": "computed",
-            "有效透光率": "computed",
-            "平均光强": "computed",
-            "灯管排数": "physical",
-            "灯管总数": "physical",
-            "接触时间": "computed",
-            "设计剂量": "computed",
-            "实际剂量": "computed",
-            "渠道总长": "physical",
-            "水头损失": "computed",
-            "总高度": "physical",
+            "B_channel": "physical",
+            "h_channel_eff": "physical",
+            "v_actual": "computed",
+            "k_total": "computed",
+            "T_eff": "computed",
+            "I_avg": "computed",
+            "N_rows": "physical",
+            "N_lamps": "physical",
+            "t_actual": "computed",
+            "D_UV_design": "physical",
+            "D_actual": "physical",
+            "L_total": "physical",
+            "h_loss": "computed",
+            "H_total": "physical",
+            "L": "physical",
+            "H": "physical",
+            "B": "physical",
+            "concrete_m3": "computed",
             "进水BOD5": "computed",
             "出水BOD5": "computed",
             "BOD5去除率": "computed",
@@ -2387,8 +2387,8 @@
         "name": "磁分离",
         "category": "矿井水处理",
         "position": {
-          "x": 575.6732842115093,
-          "y": 737.3757218791076
+          "x": -13467.132446306596,
+          "y": -19324.653314180094
         },
         "params": {
           "N_units": 4.0,
@@ -2780,20 +2780,12 @@
     ],
     "connections": [
       {
-        "from": "kw_vxinglvchi-3852d5e9-out",
-        "to": "kw_ziwai-66bc05de-in"
-      },
-      {
-        "from": "kw_ningjiao-4fc4d5ab-out",
-        "to": "kw_cifenli-f3007719-in"
+        "from": "kw_cifenli-f3007719-out",
+        "to": "kw_gaomidu-dc6519e2-in"
       },
       {
         "from": "kw_gaomidu-dc6519e2-out",
         "to": "kw_vxinglvchi-3852d5e9-in"
-      },
-      {
-        "from": "kw_chenshachi-8ef4d58e-out",
-        "to": "kw_ningjiao-4fc4d5ab-in"
       },
       {
         "from": "kw_tiaojiechi-24d993d6-out",
@@ -2804,8 +2796,16 @@
         "to": "kw_tiaojiechi-24d993d6-in"
       },
       {
-        "from": "kw_cifenli-f3007719-out",
-        "to": "kw_gaomidu-dc6519e2-in"
+        "from": "kw_vxinglvchi-3852d5e9-out",
+        "to": "kw_ziwai-66bc05de-in"
+      },
+      {
+        "from": "kw_ningjiao-4fc4d5ab-out",
+        "to": "kw_cifenli-f3007719-in"
+      },
+      {
+        "from": "kw_chenshachi-8ef4d58e-out",
+        "to": "kw_ningjiao-4fc4d5ab-in"
       }
     ]
   },

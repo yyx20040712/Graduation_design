@@ -102,7 +102,9 @@ class MainWindow(tk.Tk):
         self.configure(bg="#1a1a1a")
         self.executor = GraphExecutor()
         self._pm = get_project_manager()
-        self.node_items: Dict[str, "NodeItem"] = {}  # noqa: F821 — forward ref via annotations
+        self.node_items: Dict[str, "NodeItem"] = (
+            {}
+        )  # noqa: F821 — forward ref via annotations
         self._pipe_node: Optional[PipeNetworkNode] = None
         self._selected_id: Optional[str] = None
         self._slider_vars: Dict[str, tk.DoubleVar] = {}
@@ -124,7 +126,7 @@ class MainWindow(tk.Tk):
             on_view_results=self._view_results,
             on_reset_params=self._reset_params,
         )
-        self._quality_panel.set_dirty_callback(lambda: setattr(self, '_dirty', True))
+        self._quality_panel.set_dirty_callback(lambda: setattr(self, "_dirty", True))
 
     # ═══════════════════ UI 构建 ═══════════════════
 
@@ -227,6 +229,15 @@ class MainWindow(tk.Tk):
         )
         ttk.Button(tb, text="📤 全部输出", command=self._on_export_all).pack(
             side=tk.LEFT, padx=4, pady=4
+        )
+        ttk.Separator(tb, orient=tk.VERTICAL).pack(
+            side=tk.LEFT, fill=tk.Y, padx=4, pady=4
+        )
+        ttk.Button(tb, text="🎯 定位流程", command=self._on_locate_flow).pack(
+            side=tk.LEFT, padx=4, pady=4
+        )
+        ttk.Separator(tb, orient=tk.VERTICAL).pack(
+            side=tk.LEFT, fill=tk.Y, padx=4, pady=4
         )
         ttk.Label(tb, text="管网:", background="#2d2d2d", foreground="#aaa").pack(
             side=tk.LEFT, padx=(8, 2)
@@ -618,6 +629,7 @@ class MainWindow(tk.Tk):
                 be = self.node_items[self._selected_id].backend
                 if be and hasattr(be, "NODE_TYPE"):
                     from models.node_registry import is_water_quality_node
+
                     if is_water_quality_node(be.NODE_TYPE):
                         self._quality_panel.show_water_quality_card(be)
                     else:
@@ -745,7 +757,9 @@ class MainWindow(tk.Tk):
         if show_wq:
             # 水质编辑卡片委托给 QualityPanel
             self.params_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-            self._quality_panel.show_water_quality_card(be, parent_frame=self.params_frame)
+            self._quality_panel.show_water_quality_card(
+                be, parent_frame=self.params_frame
+            )
             return
 
         self.params_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -1140,21 +1154,34 @@ class MainWindow(tk.Tk):
             name_frame = tk.Frame(row, bg="#2d2d2d")
             name_frame.pack(side=tk.LEFT, padx=(6, 4))
             tk.Label(
-                name_frame, text=label, bg="#2d2d2d", fg=color,
-                font=("Microsoft YaHei", 9, "bold"), width=6, anchor="w",
+                name_frame,
+                text=label,
+                bg="#2d2d2d",
+                fg=color,
+                font=("Microsoft YaHei", 9, "bold"),
+                width=6,
+                anchor="w",
             ).pack()
             if std_val is not None:
                 tk.Label(
-                    name_frame, text=f"≤{std_val}", bg="#2d2d2d", fg="#777",
+                    name_frame,
+                    text=f"≤{std_val}",
+                    bg="#2d2d2d",
+                    fg="#777",
                     font=("Microsoft YaHei", 7),
                 ).pack()
 
             # 数值输入 (StringVar + Entry, 仿 manual_mode)
             str_var = tk.StringVar(value=str(current_val))
             entry = tk.Entry(
-                row, textvariable=str_var, width=6,
-                bg="#1a1a1a", fg="#ffaa44", insertbackground="#fff",
-                font=("Consolas", 10), justify=tk.RIGHT,
+                row,
+                textvariable=str_var,
+                width=6,
+                bg="#1a1a1a",
+                fg="#ffaa44",
+                insertbackground="#fff",
+                font=("Consolas", 10),
+                justify=tk.RIGHT,
             )
             entry.pack(side=tk.LEFT, padx=4)
 
@@ -1185,30 +1212,53 @@ class MainWindow(tk.Tk):
                     f"{be_node.NODE_NAME} {WQ_LABELS[a]}: {val:.1f} mg/L"
                 )
 
-            entry.bind("<Return>", lambda e, f=_sync_entry_to_slider, g=_on_wq_commit,
-                       sv=str_var: (f(), g(sv.get())))
+            entry.bind(
+                "<Return>",
+                lambda e, f=_sync_entry_to_slider, g=_on_wq_commit, sv=str_var: (
+                    f(),
+                    g(sv.get()),
+                ),
+            )
 
             def _on_focus_out(e, f=_sync_entry_to_slider, g=_on_wq_commit, sv=str_var):
-                self.after(10, lambda: (
-                    f() if self.focus_get() is not None else None,
-                    g(sv.get()) if self.focus_get() is not None else None,
-                ))
+                self.after(
+                    10,
+                    lambda: (
+                        f() if self.focus_get() is not None else None,
+                        g(sv.get()) if self.focus_get() is not None else None,
+                    ),
+                )
 
             entry.bind("<FocusOut>", _on_focus_out)
 
             scale = tk.Scale(
-                row, from_=min_v, to=max_v, resolution=0.5,
-                orient=tk.HORIZONTAL, variable=var,
-                bg="#2d2d2d", fg=color, troughcolor="#3a3a3a",
-                highlightthickness=0, length=160,
+                row,
+                from_=min_v,
+                to=max_v,
+                resolution=0.5,
+                orient=tk.HORIZONTAL,
+                variable=var,
+                bg="#2d2d2d",
+                fg=color,
+                troughcolor="#3a3a3a",
+                highlightthickness=0,
+                length=160,
             )
-            scale.bind("<ButtonRelease-1>", lambda e, f=_sync_slider_to_entry,
-                       g=_on_wq_commit, sv=str_var, dv=var: (f(), g(str(dv.get()))))
+            scale.bind(
+                "<ButtonRelease-1>",
+                lambda e, f=_sync_slider_to_entry, g=_on_wq_commit, sv=str_var, dv=var: (
+                    f(),
+                    g(str(dv.get())),
+                ),
+            )
             scale.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=4)
 
             # 单位
             tk.Label(
-                row, text="mg/L", bg="#2d2d2d", fg="#888",
+                row,
+                text="mg/L",
+                bg="#2d2d2d",
+                fg="#888",
                 font=("Microsoft YaHei", 8),
             ).pack(side=tk.RIGHT, padx=4)
 
@@ -1259,12 +1309,20 @@ class MainWindow(tk.Tk):
 
     # 污染物颜色 & 标签 (模块级复用)
     WQ_COLORS = {
-        "BOD5": "#5599ff", "COD": "#ff9955", "SS": "#55cc55",
-        "NH3N": "#cc55ff", "TN": "#ff55aa", "TP": "#55aaff",
+        "BOD5": "#5599ff",
+        "COD": "#ff9955",
+        "SS": "#55cc55",
+        "NH3N": "#cc55ff",
+        "TN": "#ff55aa",
+        "TP": "#55aaff",
     }
     WQ_LABELS = {
-        "BOD5": "BOD₅", "COD": "COD", "SS": "SS",
-        "NH3N": "NH₃-N", "TN": "TN", "TP": "TP",
+        "BOD5": "BOD₅",
+        "COD": "COD",
+        "SS": "SS",
+        "NH3N": "NH₃-N",
+        "TN": "TN",
+        "TP": "TP",
     }
     WQ_INDICATORS = ["BOD5", "COD", "SS", "NH3N", "TN", "TP"]
 
@@ -1299,13 +1357,17 @@ class MainWindow(tk.Tk):
 
         # ── 总标题 ──
         tk.Label(
-            flow_frame, text="▎全流程水质追踪",
-            bg="#1a1a1a", fg="#fff",
+            flow_frame,
+            text="▎全流程水质追踪",
+            bg="#1a1a1a",
+            fg="#fff",
             font=("Microsoft YaHei", 12, "bold"),
         ).pack(anchor="w", padx=10, pady=(10, 2))
         tk.Label(
-            flow_frame, text="按水流方向依次排列 | 点击画布节点可快速跳转",
-            bg="#1a1a1a", fg="#888",
+            flow_frame,
+            text="按水流方向依次排列 | 点击画布节点可快速跳转",
+            bg="#1a1a1a",
+            fg="#888",
             font=("Microsoft YaHei", 8),
         ).pack(anchor="w", padx=10, pady=(0, 8))
 
@@ -1335,8 +1397,13 @@ class MainWindow(tk.Tk):
             has_any_data = True
 
             # ── 节容器 ──
-            section = tk.Frame(flow_frame, bg="#1a1a1a", bd=0,
-                               highlightbackground="#333", highlightthickness=1)
+            section = tk.Frame(
+                flow_frame,
+                bg="#1a1a1a",
+                bd=0,
+                highlightbackground="#333",
+                highlightthickness=1,
+            )
             section.pack(fill=tk.X, padx=6, pady=(6, 2))
             self._quality_sections[nid] = section
 
@@ -1344,13 +1411,17 @@ class MainWindow(tk.Tk):
             hdr = tk.Frame(section, bg="#2d2d2d")
             hdr.pack(fill=tk.X)
             tk.Label(
-                hdr, text=f" ▎{node.NODE_NAME} ",
-                bg="#2d2d2d", fg="#ffaa44",
+                hdr,
+                text=f" ▎{node.NODE_NAME} ",
+                bg="#2d2d2d",
+                fg="#ffaa44",
                 font=("Microsoft YaHei", 10, "bold"),
             ).pack(side=tk.LEFT)
             tk.Label(
-                hdr, text=f"  {node.NODE_CATEGORY}  ",
-                bg="#2d2d2d", fg="#888",
+                hdr,
+                text=f"  {node.NODE_CATEGORY}  ",
+                bg="#2d2d2d",
+                fg="#888",
                 font=("Microsoft YaHei", 8),
             ).pack(side=tk.LEFT)
 
@@ -1362,16 +1433,51 @@ class MainWindow(tk.Tk):
             # 列标题行
             col_hdr = tk.Frame(cards_wrap, bg="#2d2d2d")
             col_hdr.pack(fill=tk.X, padx=2)
-            tk.Label(col_hdr, text=" 指标", bg="#2d2d2d", fg="#ffaa44",
-                     font=("Microsoft YaHei", 8, "bold"), width=8, anchor="w").pack(side=tk.LEFT)
-            tk.Label(col_hdr, text="进水水质", bg="#2d2d2d", fg="#aaa",
-                     font=("Microsoft YaHei", 8), width=12, anchor="e").pack(side=tk.LEFT)
-            tk.Label(col_hdr, text="出水水质", bg="#2d2d2d", fg="#aaa",
-                     font=("Microsoft YaHei", 8), width=12, anchor="e").pack(side=tk.LEFT)
-            tk.Label(col_hdr, text="去除率", bg="#2d2d2d", fg="#aaa",
-                     font=("Microsoft YaHei", 8), width=10, anchor="e").pack(side=tk.LEFT)
-            tk.Label(col_hdr, text="标准", bg="#2d2d2d", fg="#aaa",
-                     font=("Microsoft YaHei", 8), width=10, anchor="e").pack(side=tk.LEFT)
+            tk.Label(
+                col_hdr,
+                text=" 指标",
+                bg="#2d2d2d",
+                fg="#ffaa44",
+                font=("Microsoft YaHei", 8, "bold"),
+                width=8,
+                anchor="w",
+            ).pack(side=tk.LEFT)
+            tk.Label(
+                col_hdr,
+                text="进水水质",
+                bg="#2d2d2d",
+                fg="#aaa",
+                font=("Microsoft YaHei", 8),
+                width=12,
+                anchor="e",
+            ).pack(side=tk.LEFT)
+            tk.Label(
+                col_hdr,
+                text="出水水质",
+                bg="#2d2d2d",
+                fg="#aaa",
+                font=("Microsoft YaHei", 8),
+                width=12,
+                anchor="e",
+            ).pack(side=tk.LEFT)
+            tk.Label(
+                col_hdr,
+                text="去除率",
+                bg="#2d2d2d",
+                fg="#aaa",
+                font=("Microsoft YaHei", 8),
+                width=10,
+                anchor="e",
+            ).pack(side=tk.LEFT)
+            tk.Label(
+                col_hdr,
+                text="标准",
+                bg="#2d2d2d",
+                fg="#aaa",
+                font=("Microsoft YaHei", 8),
+                width=10,
+                anchor="e",
+            ).pack(side=tk.LEFT)
 
             for attr in self.WQ_INDICATORS:
                 color = self.WQ_COLORS[attr]
@@ -1382,43 +1488,90 @@ class MainWindow(tk.Tk):
                 std_val = effluent_std.get(attr)
                 ok = out_val <= std_val if std_val else True
 
-                row = tk.Frame(cards_wrap, bg="#1a1a1a", bd=0,
-                               highlightbackground="#333", highlightthickness=1)
+                row = tk.Frame(
+                    cards_wrap,
+                    bg="#1a1a1a",
+                    bd=0,
+                    highlightbackground="#333",
+                    highlightthickness=1,
+                )
                 row.pack(fill=tk.X, padx=2, pady=1)
 
                 # 左侧色条 + 指标名
                 tk.Frame(row, bg=color, width=3).pack(side=tk.LEFT, fill=tk.Y)
-                tk.Label(row, text=f" {label}", bg="#252525", fg=color,
-                         font=("Microsoft YaHei", 9, "bold"),
-                         width=9, anchor="w").pack(side=tk.LEFT)
+                tk.Label(
+                    row,
+                    text=f" {label}",
+                    bg="#252525",
+                    fg=color,
+                    font=("Microsoft YaHei", 9, "bold"),
+                    width=9,
+                    anchor="w",
+                ).pack(side=tk.LEFT)
 
                 # 进水水质
-                tk.Label(row, text=f"{in_val:.1f} mg/L", bg="#252525", fg="#ccc",
-                         font=("Consolas", 9), width=12, anchor="e").pack(side=tk.LEFT)
+                tk.Label(
+                    row,
+                    text=f"{in_val:.1f} mg/L",
+                    bg="#252525",
+                    fg="#ccc",
+                    font=("Consolas", 9),
+                    width=12,
+                    anchor="e",
+                ).pack(side=tk.LEFT)
 
                 # 出水水质
-                tk.Label(row, text=f"{out_val:.1f} mg/L", bg="#252525", fg="#ccc",
-                         font=("Consolas", 9), width=12, anchor="e").pack(side=tk.LEFT)
+                tk.Label(
+                    row,
+                    text=f"{out_val:.1f} mg/L",
+                    bg="#252525",
+                    fg="#ccc",
+                    font=("Consolas", 9),
+                    width=12,
+                    anchor="e",
+                ).pack(side=tk.LEFT)
 
                 # 去除率
-                tk.Label(row, text=f"{removal:.1f}%", bg="#252525", fg="#55cc88",
-                         font=("Consolas", 9), width=10, anchor="e").pack(side=tk.LEFT)
+                tk.Label(
+                    row,
+                    text=f"{removal:.1f}%",
+                    bg="#252525",
+                    fg="#55cc88",
+                    font=("Consolas", 9),
+                    width=10,
+                    anchor="e",
+                ).pack(side=tk.LEFT)
 
                 # 标准
                 if std_val is not None:
                     status = "✓" if ok else "✗"
                     status_color = "#55cc88" if ok else "#ff6666"
-                    tk.Label(row, text=f"≤{std_val} {status}", bg="#252525",
-                             fg=status_color, font=("Consolas", 9, "bold"),
-                             width=10, anchor="e").pack(side=tk.LEFT)
+                    tk.Label(
+                        row,
+                        text=f"≤{std_val} {status}",
+                        bg="#252525",
+                        fg=status_color,
+                        font=("Consolas", 9, "bold"),
+                        width=10,
+                        anchor="e",
+                    ).pack(side=tk.LEFT)
                 else:
-                    tk.Label(row, text="—", bg="#252525", fg="#888",
-                             font=("Consolas", 9), width=10, anchor="e").pack(side=tk.LEFT)
+                    tk.Label(
+                        row,
+                        text="—",
+                        bg="#252525",
+                        fg="#888",
+                        font=("Consolas", 9),
+                        width=10,
+                        anchor="e",
+                    ).pack(side=tk.LEFT)
 
         if not has_any_data:
             tk.Label(
-                flow_frame, text="(请先按 F5 计算，仅显示处理单元的水质变化)",
-                bg="#1a1a1a", fg="#888",
+                flow_frame,
+                text="(请先按 F5 计算，仅显示处理单元的水质变化)",
+                bg="#1a1a1a",
+                fg="#888",
                 font=("Microsoft YaHei", 10),
             ).pack(pady=40)
 
@@ -1980,6 +2133,15 @@ class MainWindow(tk.Tk):
         self._dirty = True
         self.status_var.set("缓存已清除 — 请按 F5 重新计算")
 
+    def _on_locate_flow(self):
+        """定位工艺流程: 重置缩放并将画布视野拉回到全部节点"""
+        try:
+            self.canvas_view.reset_scale()
+            self.canvas_view.fit_view()
+            self.status_var.set("视野已重置 — 显示全部工艺流程")
+        except Exception as e:
+            _log.warning("定位流程失败: %s", e)
+
     def _on_validate_quick(self):
         """运行快速模组验证 (delegated to validator_dialog)"""
         run_validator_dialog(self, self.status_var, mode="quick")
@@ -1993,7 +2155,8 @@ class MainWindow(tk.Tk):
         self.status_var.set("正在运行系统自检...")
         self.update_idletasks()
         try:
-            from self_test import run_self_test, format_report
+            from self_test import format_report, run_self_test
+
             report = run_self_test()
             text = format_report(report)
             self.status_var.set(
@@ -2006,8 +2169,9 @@ class MainWindow(tk.Tk):
             dialog.title("系统自检报告")
             dialog.geometry("700x550")
             dialog.configure(bg="#1e1e1e")
-            txt = tk.Text(dialog, bg="#1e1e1e", fg="#ccc",
-                          font=("Consolas", 10), wrap=tk.WORD)
+            txt = tk.Text(
+                dialog, bg="#1e1e1e", fg="#ccc", font=("Consolas", 10), wrap=tk.WORD
+            )
             txt.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
             txt.insert("1.0", text)
             txt.configure(state=tk.DISABLED)
@@ -2275,13 +2439,15 @@ class MainWindow(tk.Tk):
 
         if param_items:
             self.result_tree.insert(
-                "", tk.END,
+                "",
+                tk.END,
                 values=("", "── 原始设计参数 ──", "", ""),
                 tags=("section_banner",),
             )
             for sym, meaning, unit, val_str in param_items:
                 self.result_tree.insert(
-                    "", tk.END,
+                    "",
+                    tk.END,
                     values=(sym, meaning, unit, val_str),
                     tags=("param",),
                 )
@@ -2289,7 +2455,8 @@ class MainWindow(tk.Tk):
         # ── 2. 计算结果 (不含水质) ──
         if computed:
             self.result_tree.insert(
-                "", tk.END,
+                "",
+                tk.END,
                 values=("", "── 计算结果 ──", "", ""),
                 tags=("section_banner",),
             )
@@ -2306,7 +2473,8 @@ class MainWindow(tk.Tk):
                 formula = result.dimension_formulas.get(key, "")
                 if formula:
                     self.result_tree.insert(
-                        "", tk.END,
+                        "",
+                        tk.END,
                         values=("", f"↳ {formula}", "", ""),
                         tags=("formula_sub",),
                     )
@@ -2314,7 +2482,8 @@ class MainWindow(tk.Tk):
         # ── 3. 构筑物尺寸 ──
         if physical:
             self.result_tree.insert(
-                "", tk.END,
+                "",
+                tk.END,
                 values=("", "── 构筑物尺寸 ──", "", ""),
                 tags=("section_banner",),
             )
@@ -2331,7 +2500,8 @@ class MainWindow(tk.Tk):
                 formula = result.dimension_formulas.get(key, "")
                 if formula:
                     self.result_tree.insert(
-                        "", tk.END,
+                        "",
+                        tk.END,
                         values=("", f"↳ {formula}", "", ""),
                         tags=("formula_sub",),
                     )
@@ -2388,6 +2558,7 @@ class MainWindow(tk.Tk):
                 be = self.node_items[self._selected_id].backend
                 if be:
                     from models.node_registry import is_water_quality_node
+
                     if is_water_quality_node(be.NODE_TYPE):
                         self._quality_panel.show_water_quality_card(be)
                     else:
