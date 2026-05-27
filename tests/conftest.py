@@ -278,7 +278,8 @@ def node_registry():
     types = {}
     for mod_id in ["tiaojiechi", "cugeshan", "xigeshan", "chenshachi",
                     "chuchenchi", "cass", "gaomidu", "vxinglvchi", "ziwai",
-                    "kw_tiaojiechi", "kw_chenshachi", "kw_ningjiao", "kw_cifenli"]:
+                    "kw_tiaojiechi", "kw_chenshachi", "kw_ningjiao", "kw_cifenli",
+                    "erchunchi", "bashi_jiliangcao", "wuni_tisheng"]:
         cls = mgr.load_mod(mod_id)
         if cls:
             types[mod_id] = cls
