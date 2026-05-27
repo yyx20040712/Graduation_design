@@ -1,0 +1,46 @@
+{
+  "free": {
+    "n_pumps": [
+      1,
+      2,
+      3
+    ],
+    "Q_pump": [
+      10,
+      20,
+      30,
+      50
+    ],
+    "v_pipe": [
+      1.0,
+      1.2,
+      1.5,
+      1.8
+    ]
+  },
+  "fixed": {
+    "H_pump": 15,
+    "L_pipe": 50
+  },
+  "constraint_keys": [
+    "capacity",
+    "v_pipe",
+    "h_loss"
+  ],
+  "constraint_names": [
+    "泵送能力充足",
+    "管道流速经济",
+    "水头损失 ≤ 3m"
+  ],
+  "display_name": "污泥输送泵站",
+  "constraint_limits": {
+    "泵送能力充足": ">= 0",
+    "管道流速经济": "1.0~2.5",
+    "水头损失 ≤ 3m": "<= 3.0"
+  },
+  "constraint_types": {
+    "泵送能力充足": "result",
+    "管道流速经济": "result",
+    "水头损失 ≤ 3m": "result"
+  }
+}

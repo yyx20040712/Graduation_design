@@ -1,0 +1,73 @@
+{
+  "id": "jishuijing",
+  "name": "集水井",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "收集各来水管道污水，兼具水量调节和初步沉砂功能。",
+  "category": "市政污水处理",
+  "icon": "🕳️",
+  "node_type": "jishuijing",
+  "process_stage": "collection",
+  "node_class": "JishuijingNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "HRT",
+      "symbol": "HRT",
+      "name": "水力停留时间",
+      "unit": "min",
+      "default": 5.0,
+      "min": 3.0,
+      "max": 15.0,
+      "step": 1.0
+    },
+    {
+      "key": "h_eff",
+      "symbol": "h_eff",
+      "name": "有效水深",
+      "unit": "m",
+      "default": 3.0,
+      "min": 2.0,
+      "max": 5.0,
+      "step": 0.5
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_free",
+      "name": "超高",
+      "unit": "m",
+      "default": 0.5,
+      "min": 0.3,
+      "max": 1.0,
+      "step": 0.1
+    }
+  ],
+  "removal_rates": {
+    "SS": 0.05
+  },
+  "formula": "V = Q_max x HRT / 60",
+  "dependencies": [],
+  "tags": [
+    "集水",
+    "调节"
+  ],
+  "references": [
+    "GB50014-2021"
+  ],
+  "elevation_loss": {
+    "value": 0.15,
+    "formula": "经验值: 0.15m"
+  }
+}

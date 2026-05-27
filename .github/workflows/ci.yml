@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        run: pip install flake8
+      - name: Run flake8
+        run: flake8 ddesign_tool/src/ --max-line-length=100 --extend-ignore=E203,W503,E501 --count --statistics
+
+  validate:
+    name: Mod Validator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run validator
+        run: |
+          cd ddesign_tool
+          PYTHONPATH=src python -m validator --all --deep --ci
+
+  test:
+    name: Unit Tests (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+      - name: Run tests
+        run: |
+          python -m pytest tests/ -x --tb=short -q \
+            -k "not (test_all_vectorized or test_no_fallback)"
+
+  sync:
+    name: Mod Sync Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check mod directories synced
+        run: |
+          cd ddesign_tool
+          PYTHONPATH=src python -m tools.sync_mods --check

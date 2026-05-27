@@ -1,0 +1,94 @@
+{
+  "id": "jipeishuijing",
+  "name": "集配水井",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "集水+配水组合构筑物。",
+  "category": "市政污水处理",
+  "icon": "🔗",
+  "node_type": "jipeishuijing",
+  "process_stage": "collection",
+  "node_class": "JipeishuijingNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n_out",
+      "symbol": "n_out",
+      "name": "出水方向数",
+      "unit": "个",
+      "default": 2,
+      "min": 1,
+      "max": 6,
+      "step": 1
+    },
+    {
+      "key": "HRT",
+      "symbol": "HRT",
+      "name": "水力停留时间",
+      "unit": "min",
+      "default": 5.0,
+      "min": 3.0,
+      "max": 15.0,
+      "step": 1.0
+    },
+    {
+      "key": "h_eff",
+      "symbol": "h_eff",
+      "name": "有效水深",
+      "unit": "m",
+      "default": 3.0,
+      "min": 2.0,
+      "max": 5.0,
+      "step": 0.5
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_free",
+      "name": "超高",
+      "unit": "m",
+      "default": 0.5,
+      "min": 0.3,
+      "max": 1.0,
+      "step": 0.1
+    },
+    {
+      "key": "h_weir",
+      "symbol": "h_weir",
+      "name": "堰上水头",
+      "unit": "m",
+      "default": 0.3,
+      "min": 0.1,
+      "max": 0.5,
+      "step": 0.05
+    }
+  ],
+  "removal_rates": {
+    "SS": 0.05
+  },
+  "formula": "V = Q_max x HRT / 60",
+  "dependencies": [],
+  "tags": [
+    "集水",
+    "配水",
+    "组合"
+  ],
+  "references": [
+    "GB50014-2021"
+  ],
+  "elevation_loss": {
+    "value": 0.25,
+    "formula": "经验值: 0.25m"
+  }
+}

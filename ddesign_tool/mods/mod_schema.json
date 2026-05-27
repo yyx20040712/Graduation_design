@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "排水工程设计工具 — 模组清单 (mod.json)",
+  "description": "每个处理单元模组的元数据定义。放在 mods/core/<mod_id>/mod.json 或 mods/community/<mod_id>/mod.json",
+  "type": "object",
+  "required": ["id", "name", "node_type", "node_class"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "模组唯一标识符，小写字母+数字+下划线"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "模组显示名称 (中文)"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.]+)?$",
+      "default": "1.0.0"
+    },
+    "author": { "type": "string", "default": "Unknown" },
+    "description": { "type": "string", "default": "" },
+    "category": { "type": "string", "default": "未分类" },
+    "icon": { "type": "string", "default": "📦" },
+    "node_type": {
+      "type": "string",
+      "description": "节点类型标识符 (与代码中 NODE_TYPE 类属性一致)"
+    },
+    "node_class": {
+      "type": "string",
+      "description": "NodeBase 子类名称 (在 __init__.py 中定义)"
+    },
+    "module_path": {
+      "type": "string",
+      "description": "Python 模块路径 (如 models.tiaojiechi)。community 模组可省略"
+    },
+    "process_stage": {
+      "type": "string",
+      "enum": ["io", "primary", "secondary", "tertiary", "sludge", "mine_water", "collection", "elevation"],
+      "description": "处理阶段: io=输入输出, primary=一级, secondary=二级, tertiary=深度, sludge=污泥, mine_water=矿井水, collection=集配水, elevation=高程"
+    },
+    "inputs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/port" },
+      "description": "输入端口定义"
+    },
+    "outputs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/port" },
+      "description": "输出端口定义"
+    },
+    "parameters": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/param" },
+      "description": "可调参数定义"
+    },
+    "removal_rates": {
+      "type": "object",
+      "description": "污染物去除率 {BOD5: 0.85, COD: 0.80, ...}"
+    },
+    "formula": { "type": "string", "description": "核心计算公式 (简要)" },
+    "formula_detail": { "type": "string", "description": "公式详细说明" },
+    "elevation_formula": { "type": "string", "description": "高程计算公式说明" },
+    "elevation_loss": {
+      "type": "object",
+      "description": "水头损失配置 {value: 经验值(m), formula: 公式说明}。value 为 0 表示泵站(由H_pump参数决定)，为负数表示需实际计算",
+      "properties": {
+        "value": { "description": "水头损失经验值 (m), 或 'computed' 表示动态计算" },
+        "formula": { "type": "string", "description": "计算公式说明" },
+        "type": { "type": "string", "description": "分类标记: source/pipe/structure/pump" }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "依赖的其他模组 ID 列表"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "references": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "参考标准/规范"
+    }
+  },
+  "$defs": {
+    "port": {
+      "type": "object",
+      "required": ["type", "name"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["WATER", "QUALITY", "MIXED", "SLUDGE"],
+          "description": "端口类型"
+        },
+        "name": { "type": "string", "description": "端口显示名称" }
+      }
+    },
+    "param": {
+      "type": "object",
+      "required": ["key", "name"],
+      "properties": {
+        "key": { "type": "string", "description": "参数键名 (与代码中 _params dict 一致)" },
+        "symbol": { "type": "string", "description": "参数符号" },
+        "name": { "type": "string", "description": "参数中文名称" },
+        "unit": { "type": "string", "default": "" },
+        "default": { "type": "number", "default": 0.0 },
+        "min": { "type": "number", "default": 0.0 },
+        "max": { "type": "number", "default": 100.0 },
+        "step": { "type": "number", "default": 0.1 },
+        "description": { "type": "string" }
+      }
+    }
+  }
+}

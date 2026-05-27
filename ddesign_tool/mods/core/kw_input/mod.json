@@ -1,0 +1,146 @@
+{
+  "id": "kw_input",
+  "name": "矿井水输入",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "矿井涌水量和水质输入节点，定义矿井水处理的设计基础条件。可调参数包括流量（Q_avg_daily、Kz）和水质（SS、COD、BOD5、NH3N、TN、TP、TDS、pH）。设计流量由 Q_avg_daily/86400×Kz 自动计算。",
+  "category": "矿井水处理",
+  "icon": "⛏️",
+  "node_type": "kw_input",
+  "process_stage": "io",
+  "node_class": "KwInputNode",
+  "module_path": "",
+  "inputs": [],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水（水量+水质）"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "Q_avg_daily",
+      "symbol": "Q avg daily",
+      "name": "平均日涌水量",
+      "unit": "m³/d",
+      "default": 43835.6,
+      "min": 1000,
+      "max": 500000,
+      "step": 1,
+      "description": "矿井平均日涌水量"
+    },
+    {
+      "key": "Kz",
+      "symbol": "K_z",
+      "name": "总变化系数 Kz",
+      "unit": "-",
+      "default": 1.5,
+      "min": 1.0,
+      "max": 3.0,
+      "step": 0.1,
+      "description": "涌水量变化系数"
+    },
+    {
+      "key": "SS_in",
+      "symbol": "SS in",
+      "name": "进水SS",
+      "unit": "mg/L",
+      "default": 800,
+      "min": 100,
+      "max": 3000,
+      "step": 10,
+      "description": "进水悬浮固体浓度"
+    },
+    {
+      "key": "COD",
+      "symbol": "COD",
+      "name": "进水COD",
+      "unit": "mg/L",
+      "default": 200,
+      "min": 50,
+      "max": 500,
+      "step": 10,
+      "description": "进水化学需氧量"
+    },
+    {
+      "key": "BOD5",
+      "symbol": "BOD₅",
+      "name": "进水BOD5",
+      "unit": "mg/L",
+      "default": 30,
+      "min": 5,
+      "max": 200,
+      "step": 5,
+      "description": "进水五日生化需氧量"
+    },
+    {
+      "key": "NH3N",
+      "symbol": "NH₃-N",
+      "name": "进水NH3N",
+      "unit": "mg/L",
+      "default": 8,
+      "min": 1,
+      "max": 50,
+      "step": 0.5,
+      "description": "进水氨氮"
+    },
+    {
+      "key": "TN",
+      "symbol": "TN",
+      "name": "进水TN",
+      "unit": "mg/L",
+      "default": 12,
+      "min": 2,
+      "max": 60,
+      "step": 1,
+      "description": "进水总氮"
+    },
+    {
+      "key": "TP",
+      "symbol": "TP",
+      "name": "进水TP",
+      "unit": "mg/L",
+      "default": 2,
+      "min": 0.5,
+      "max": 10,
+      "step": 0.1,
+      "description": "进水总磷"
+    },
+    {
+      "key": "TDS",
+      "symbol": "TDS",
+      "name": "溶解性总固体",
+      "unit": "mg/L",
+      "default": 1500,
+      "min": 500,
+      "max": 5000,
+      "step": 50,
+      "description": "总溶解固体（不作去除率传递）"
+    },
+    {
+      "key": "pH",
+      "symbol": "pH",
+      "name": "酸碱度",
+      "unit": "-",
+      "default": 7.5,
+      "min": 5.0,
+      "max": 9.0,
+      "step": 0.1,
+      "description": "进水酸碱度"
+    }
+  ],
+  "removal_rates": {},
+  "formula": "Q_design = Q_avg_daily / 86400 × Kz",
+  "formula_detail": "设计流量由平均日涌水量和总变化系数自动计算；水质参数传递给下游去除率体系（TDS除外）",
+  "dependencies": [],
+  "tags": [
+    "矿井水",
+    "输入",
+    "煤矿",
+    "水质"
+  ],
+  "references": [
+    "煤炭矿井水处理设计规范",
+    "dlc.docx §4.1.2"
+  ]
+}

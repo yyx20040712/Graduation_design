@@ -1,0 +1,64 @@
+{
+  "free": {
+    "n_work": [
+      2,
+      3,
+      4
+    ],
+    "H_st": [
+      3.0,
+      5.0,
+      8.0,
+      12.0
+    ],
+    "v_suction": [
+      0.7,
+      1.0,
+      1.2,
+      1.5
+    ],
+    "v_discharge": [
+      1.0,
+      1.5,
+      2.0,
+      2.5
+    ]
+  },
+  "fixed": {
+    "eta_pump": 0.75,
+    "t_sump_min": 5.0,
+    "h_outlet": 1.5,
+    "h_super": 0.5,
+    "h_sump_eff": 2.5,
+    "k_local": 1.2,
+    "n_rough": 0.014,
+    "L_suction": 10.0,
+    "L_discharge": 50.0
+  },
+  "constraint_keys": [
+    "v_suction",
+    "v_discharge",
+    "H_total_range",
+    "V_sump"
+  ],
+  "constraint_names": [
+    "吸水管流速 v_suction",
+    "出水管流速 v_discharge",
+    "总扬程 H_total",
+    "集水池容积 V_sump"
+  ],
+  "constraint_limits": {
+    "吸水管流速 v_suction": "0.7~1.5",
+    "出水管流速 v_discharge": "0.8~2.5",
+    "总扬程 H_total": "5~30",
+    "集水池容积 V_sump": ">= 0"
+  },
+  "display_name": "污水提升泵房",
+  "estimator_type": "rectangular",
+  "constraint_types": {
+    "吸水管流速 v_suction": "result",
+    "出水管流速 v_discharge": "result",
+    "总扬程 H_total": "result",
+    "集水池容积 V_sump": "result"
+  }
+}

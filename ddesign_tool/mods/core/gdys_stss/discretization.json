@@ -1,0 +1,42 @@
+{
+  "free": {
+    "L_pipe": [
+      10.0,
+      20.0,
+      30.0,
+      50.0,
+      80.0,
+      100.0
+    ]
+  },
+  "fixed": {
+    "Q_manual": 0.57
+  },
+  "constraint_keys": [
+    "h_total_ok",
+    "v_ok",
+    "fullness_ok"
+  ],
+  "constraint_keys": [
+    "total",
+    "v",
+    "fill"
+  ],
+  "constraint_names": [
+    "总水头损失 ≤ 2.0m",
+    "流速 0.6~1.5m/s",
+    "充满度 ≤ GB50014限值"
+  ],
+  "constraint_limits": {
+    "总水头损失 ≤ 2.0m": "<= 2.0",
+    "流速 0.6~1.5m/s": "0.6~1.5",
+    "充满度 ≤ GB50014限值": "<= 0.75"
+  },
+  "display_name": "管道运输水头损失",
+  "estimator_type": "pipe",
+  "constraint_types": {
+    "总水头损失 ≤ 2.0m": "result",
+    "流速 0.6~1.5m/s": "result",
+    "充满度 ≤ GB50014限值": "result"
+  }
+}

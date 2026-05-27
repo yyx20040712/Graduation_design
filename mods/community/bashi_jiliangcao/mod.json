@@ -1,0 +1,63 @@
+{
+  "id": "bashi_jiliangcao",
+  "name": "巴氏计量槽",
+  "version": "5.1.0",
+  "author": "yyx",
+  "description": "巴歇尔量水槽(Parshall Flume)设计计算，用于明渠流量测量。依据CJ/T3008.5-93、GB50014-2021。",
+  "category": "社区模组",
+  "process_stage": "tertiary",
+  "icon": "📏",
+  "node_type": "bashi_jiliangcao",
+  "node_class": "BashiJiliangcaoNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "b",
+      "symbol": "b",
+      "name": "喉道宽度",
+      "unit": "m",
+      "default": 0.3,
+      "min": 0.152,
+      "max": 0.6,
+      "step": 0.001,
+      "description": "标准喉道宽度: 0.152,0.228,0.30,0.45,0.60m。喉宽≈渠道宽1/3~1/2"
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.0,
+    "COD": 0.0,
+    "SS": 0.0,
+    "NH3N": 0.0,
+    "TN": 0.0,
+    "TP": 0.0
+  },
+  "formula": "h_a = (Q/C)^(1/n)",
+  "formula_detail": "h_a:上游水深(m) Q:流量(m³/s) C,n:喉道系数(查表) 自由出流: h_b/h_a≤0.6",
+  "dependencies": [],
+  "tags": [
+    "计量",
+    "明渠",
+    "流量测量",
+    "深度处理"
+  ],
+  "references": [
+    "CJ/T3008.5-93",
+    "GB50014-2021"
+  ],
+  "elevation_loss": {
+    "value": 0.15,
+    "formula": "经验值: 0.15m"
+  }
+}

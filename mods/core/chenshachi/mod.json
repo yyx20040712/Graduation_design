@@ -1,0 +1,156 @@
+{
+  "id": "chenshachi",
+  "name": "旋流沉砂池",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "钟氏旋流沉砂池，利用离心力分离砂粒，表面负荷150~200m³/(m²·h)。",
+  "category": "市政污水处理",
+  "icon": "🌪️",
+  "node_type": "chenshachi",
+  "process_stage": "primary",
+  "node_class": "ChenshachiNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    },
+    {
+      "type": "SLUDGE",
+      "name": "沉砂"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "池数",
+      "unit": "座",
+      "default": 2,
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "description": "并联池数量"
+    },
+    {
+      "key": "q_surf",
+      "symbol": "q",
+      "name": "表面负荷 q",
+      "unit": "m³/(m²·h)",
+      "default": 180,
+      "min": 150,
+      "max": 200,
+      "step": 10,
+      "description": "表面水力负荷"
+    },
+    {
+      "key": "t",
+      "symbol": "t",
+      "name": "停留时间 t",
+      "unit": "s",
+      "default": 45.0,
+      "min": 30,
+      "max": 60,
+      "step": 5,
+      "description": "水力停留时间"
+    },
+    {
+      "key": "B_channel",
+      "symbol": "B_channel",
+      "name": "进水渠宽",
+      "unit": "m",
+      "default": 0.8,
+      "min": 0.5,
+      "max": 2.0,
+      "step": 0.1,
+      "description": "进水渠道宽度"
+    },
+    {
+      "key": "v_channel",
+      "symbol": "v_channel",
+      "name": "进水流速",
+      "unit": "m/s",
+      "default": 1.0,
+      "min": 0.6,
+      "max": 1.2,
+      "step": 0.1,
+      "description": "进水渠道设计流速"
+    },
+    {
+      "key": "T_clean",
+      "symbol": "T_clean",
+      "name": "清砂间隔 T",
+      "unit": "d",
+      "default": 2,
+      "min": 1,
+      "max": 3,
+      "step": 1
+    },
+    {
+      "key": "dr",
+      "symbol": "d_r",
+      "name": "排沙口直径 dr",
+      "unit": "m",
+      "default": 0.5,
+      "min": 0.4,
+      "max": 0.6,
+      "step": 0.05
+    },
+    {
+      "key": "h1",
+      "symbol": "h₁",
+      "name": "超高 h1",
+      "unit": "m",
+      "default": 0.3,
+      "min": 0.3,
+      "max": 0.5,
+      "step": 0.1
+    },
+    {
+      "key": "theta",
+      "symbol": "θ",
+      "name": "砂斗倾角",
+      "unit": "°",
+      "default": 55,
+      "min": 55,
+      "max": 60,
+      "step": 1
+    },
+    {
+      "key": "X",
+      "symbol": "X",
+      "name": "沉砂量",
+      "unit": "-",
+      "default": 30,
+      "min": 15.0,
+      "max": 60.0,
+      "step": 3.0
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.05,
+    "COD": 0.05,
+    "SS": 0.1
+  },
+  "formula": "D=√(4Q/(πn·q)); A渠=Q1/v渠; h渠=A渠/B渠; L直≥max(7B渠,4.5); B出=2B渠",
+  "formula_detail": "D:池径(m) Q:设计流量(m³/h) n:池数 q:表面负荷; A渠:进水渠断面(m²) Q1:单池流量(m³/s) v渠:进水流速(m/s); B渠:渠宽(m) h渠:水深(m) L直:直段长(m) B出:出水渠宽(m)",
+  "dependencies": [],
+  "tags": [
+    "预处理",
+    "物理处理",
+    "除砂"
+  ],
+  "references": [
+    "GB50014-2021 §6.4"
+  ],
+  "elevation_loss": {
+    "value": 0.2,
+    "formula": "经验值: 0.2m"
+  }
+}

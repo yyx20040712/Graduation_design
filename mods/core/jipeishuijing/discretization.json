@@ -1,0 +1,45 @@
+{
+  "free": {
+    "n_out": [
+      2,
+      3,
+      4
+    ],
+    "HRT": [
+      3.0,
+      5.0,
+      8.0,
+      10.0,
+      15.0
+    ],
+    "h_eff": [
+      2.0,
+      2.5,
+      3.0,
+      4.0,
+      5.0
+    ]
+  },
+  "fixed": {
+    "h_super": 0.5,
+    "h_weir": 0.3
+  },
+  "constraint_keys": [
+    "HRT",
+    "h_eff"
+  ],
+  "constraint_names": [
+    "水力停留时间 3~15 min",
+    "有效水深 2.0~5.0 m"
+  ],
+  "constraint_limits": {
+    "水力停留时间 3~15 min": "3~15",
+    "有效水深 2.0~5.0 m": "2.0~5.0"
+  },
+  "display_name": "集配水井",
+  "estimator_type": "rectangular",
+  "constraint_types": {
+    "水力停留时间 3~15 min": "result",
+    "有效水深 2.0~5.0 m": "result"
+  }
+}

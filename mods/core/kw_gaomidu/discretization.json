@@ -1,0 +1,45 @@
+{
+  "free": {
+    "n": [
+      2,
+      3,
+      4
+    ],
+    "t_mix": [
+      0.5,
+      1.0,
+      1.5
+    ],
+    "t_floc": [
+      8.0,
+      10.0,
+      12.0
+    ],
+    "q_surf": [
+      6.0,
+      8.0,
+      10.0,
+      12.0
+    ]
+  },
+  "fixed": {
+    "L_tube": 1.0,
+    "alpha_tube": 60.0,
+    "h_clear": 1.0,
+    "h_dist": 1.5,
+    "h_super": 0.5
+  },
+  "constraint_keys": [
+    "axial_v"
+  ],
+  "constraint_names": [
+    "斜管轴向流速 < 5mm/s"
+  ],
+  "estimator_type": "rectangular",
+  "constraint_limits": {
+    "斜管轴向流速 < 5mm/s": "< 0.005"
+  },
+  "constraint_types": {
+    "斜管轴向流速 < 5mm/s": "result"
+  }
+}

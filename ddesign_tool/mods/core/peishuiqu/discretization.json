@@ -1,0 +1,46 @@
+{
+  "free": {
+    "B_channel": [
+      0.5,
+      0.8,
+      1.0,
+      1.5,
+      2.0,
+      3.0
+    ],
+    "h_eff": [
+      0.5,
+      0.8,
+      1.0,
+      1.5,
+      2.0,
+      3.0
+    ]
+  },
+  "fixed": {
+    "h_super": 0.4,
+    "n_out": 4
+  },
+  "constraint_keys": [
+    "v",
+    "h",
+    "B"
+  ],
+  "constraint_names": [
+    "渠内流速 0.3~1.2 m/s",
+    "有效水深 0.5~3.0 m",
+    "渠宽 0.5~3.0 m"
+  ],
+  "constraint_limits": {
+    "渠内流速 0.3~1.2 m/s": "0.3~1.2",
+    "有效水深 0.5~3.0 m": "0.5~3.0",
+    "渠宽 0.5~3.0 m": "0.5~3.0"
+  },
+  "display_name": "配水渠",
+  "estimator_type": "channel",
+  "constraint_types": {
+    "渠内流速 0.3~1.2 m/s": "result",
+    "有效水深 0.5~3.0 m": "result",
+    "渠宽 0.5~3.0 m": "result"
+  }
+}

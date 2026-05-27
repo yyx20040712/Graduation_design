@@ -1,0 +1,9 @@
+{
+  "suppressed": {
+    "cfg_overlap": [
+      "参数同时在 free 和 fixed 中: {'bar_shape'}"
+    ]
+  },
+  "design_decisions": [],
+  "created": "2026-05-27 11:21:05"
+}

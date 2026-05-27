@@ -1,0 +1,137 @@
+{
+  "id": "xigeshan",
+  "name": "细格栅",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "细格栅进一步拦截较小悬浮物，栅条间隙1.5~10mm。",
+  "category": "市政污水处理",
+  "icon": "🧹",
+  "node_type": "xigeshan",
+  "process_stage": "primary",
+  "node_class": "FineBarScreenNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    },
+    {
+      "type": "SLUDGE",
+      "name": "栅渣"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "格栅台数",
+      "unit": "台",
+      "default": 3.0,
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "description": "并联格栅数量"
+    },
+    {
+      "key": "b",
+      "symbol": "b",
+      "name": "栅条间隙",
+      "unit": "mm",
+      "default": 5,
+      "min": 1.5,
+      "max": 10,
+      "step": 5,
+      "description": "细格栅间隙1.5~10mm"
+    },
+    {
+      "key": "alpha",
+      "symbol": "α",
+      "name": "格栅倾角",
+      "unit": "°",
+      "default": 60,
+      "min": 60,
+      "max": 90,
+      "step": 5,
+      "description": "格栅安装倾角"
+    },
+    {
+      "key": "h",
+      "symbol": "h",
+      "name": "栅前水深",
+      "unit": "m",
+      "default": 0.5,
+      "min": 0.4,
+      "max": 1.0,
+      "step": 0.1,
+      "description": "栅前渠道水深"
+    },
+    {
+      "key": "bar_shape",
+      "symbol": "shape",
+      "name": "栅条形状",
+      "unit": "-",
+      "default": 0,
+      "min": 0,
+      "max": 2,
+      "step": 1,
+      "description": "0=矩形(β=2.42) 1=半圆(β=1.97) 2=圆形(β=1.83)"
+    },
+    {
+      "key": "s",
+      "symbol": "s",
+      "name": "栅条宽度",
+      "unit": "mm",
+      "default": 3.0,
+      "min": 1,
+      "max": 20,
+      "step": 1,
+      "description": "栅条宽度(粗格栅10mm, 细格栅2~5mm)"
+    },
+    {
+      "key": "v",
+      "symbol": "v",
+      "name": "过栅流速",
+      "unit": "m/s",
+      "default": 0.8,
+      "min": 0.6,
+      "max": 1.0,
+      "step": 0.05
+    },
+    {
+      "key": "v1",
+      "symbol": "v₁",
+      "name": "栅前流速",
+      "unit": "m/s",
+      "default": 0.7,
+      "min": 0.4,
+      "max": 0.9,
+      "step": 0.05
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.08,
+    "COD": 0.08,
+    "SS": 0.08
+  },
+  "formula": "n_bar = Q_max × √(sin α) / (b × h × v)",
+  "formula_detail": "同粗格栅，栅条间隙更小",
+  "dependencies": [],
+  "tags": [
+    "预处理",
+    "物理处理",
+    "细筛"
+  ],
+  "references": [
+    "GB50014-2021 §6.3"
+  ],
+  "elevation_loss": {
+    "value": 0.2,
+    "formula": "经验值: 0.2m"
+  }
+}

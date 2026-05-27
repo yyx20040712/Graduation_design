@@ -1,0 +1,61 @@
+{
+  "free": {
+    "n": [
+      2,
+      3
+    ],
+    "D_UV": [
+      20.0,
+      25.0,
+      30.0
+    ],
+    "v_channel": [
+      0.3,
+      0.35,
+      0.4,
+      0.45,
+      0.5,
+      0.55
+    ],
+    "h_channel": [
+      0.8,
+      1.0,
+      1.2,
+      1.5,
+      1.8
+    ]
+  },
+  "fixed": {
+    "k_aging": 0.7,
+    "k_foul": 0.8,
+    "T254": 65.0,
+    "n_T": 1.5,
+    "eta_geo": 0.7,
+    "h_super": 0.3,
+    "L_lamp": 1.5,
+    "gap": 0.1,
+    "N_layer": 6,
+    "d_vert": 0.08,
+    "d_long": 0.12,
+    "P_lamp": 250.0,
+    "L_in": 1.0,
+    "L_out": 1.0,
+    "xi_total": 3.0
+  },
+  "constraint_keys": [
+    "v_channel",
+    "UV_dose"
+  ],
+  "constraint_names": [
+    "渠内流速",
+    "紫外剂量"
+  ],
+  "constraint_limits": {
+    "渠内流速": "0.05~0.7",
+    "紫外剂量": ">= 20"
+  },
+  "constraint_types": {
+    "渠内流速": "result",
+    "紫外剂量": "result"
+  }
+}

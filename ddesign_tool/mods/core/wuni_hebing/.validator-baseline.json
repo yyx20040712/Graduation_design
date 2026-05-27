@@ -1,0 +1,12 @@
+{
+  "suppressed": {
+    "calc_fail": [
+      "无尺寸产出 (dimensions 为空)"
+    ],
+    "vec_no_grid": [
+      "无自由参数，跳过"
+    ]
+  },
+  "design_decisions": [],
+  "created": "2026-05-27 12:08:58"
+}

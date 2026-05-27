@@ -1,0 +1,66 @@
+{
+  "id": "gdys_stss",
+  "name": "管道运输水头损失",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "计算两构筑物之间连接管渠的沿程水头损失和局部水头损失。",
+  "category": "市政污水处理",
+  "icon": "〽️",
+  "node_type": "gdys_stss",
+  "process_stage": "elevation",
+  "node_class": "GdysStssNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "Q_manual",
+      "symbol": "Q",
+      "name": "设计流量",
+      "unit": "m3/s",
+      "default": 0.57,
+      "min": 0.01,
+      "max": 10.0,
+      "step": 0.01
+    },
+    {
+      "key": "L_pipe",
+      "symbol": "L",
+      "name": "管段长度",
+      "unit": "m",
+      "default": 50.0,
+      "min": 5.0,
+      "max": 500.0,
+      "step": 5.0
+    }
+  ],
+  "removal_rates": {},
+  "formula": "designer.design(Q) -> DN/i/v/h/D; h_f = i x L; h_m = 1.5 x v^2/(2g)",
+  "formula_detail": "自动设计最优管径/坡度/流速/充满度, 沿程损失=i*L, 局部损失(ksi=1.5)",
+  "elevation_formula": "下游水面标高 = 上游水面标高 - h_total",
+  "elevation_loss": {
+    "type": "pipe",
+    "value": "computed",
+    "formula": "Manning公式沿程+局部损失"
+  },
+  "dependencies": [],
+  "tags": [
+    "高程",
+    "水头损失",
+    "管道"
+  ],
+  "references": [
+    "GB50014-2021 §5.2",
+    "给水排水设计手册第1册"
+  ]
+}

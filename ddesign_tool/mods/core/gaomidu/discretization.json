@@ -1,0 +1,77 @@
+{
+  "free": {
+    "n": [
+      2,
+      3,
+      4
+    ],
+    "t_mix": [
+      0.5,
+      1.0,
+      1.5
+    ],
+    "t_floc": [
+      8.0,
+      10.0,
+      12.0
+    ],
+    "q_surf": [
+      6.0,
+      8.0,
+      10.0,
+      12.0
+    ]
+  },
+  "fixed": {
+    "R_sludge": 0.01,
+    "L_tube": 1.0,
+    "alpha_tube": 60.0,
+    "h_clear": 1.0,
+    "h_dist": 1.5,
+    "h_super": 0.5,
+    "t_thicken": 1.5,
+    "D_PAC": 40.0,
+    "k_PAC": 0.5,
+    "G_mix": 750.0,
+    "G_floc": 75.0,
+    "X_r_assumed": 15.0,
+    "P_out": 0.96
+  },
+  "constraint_keys": [
+    "axial_v",
+    "solid_flux",
+    "G_mix",
+    "G_floc",
+    "LB",
+    "X_r",
+    "weir"
+  ],
+  "constraint_names": [
+    "斜管轴向流速 ≤ 5 mm/s",
+    "固体通量 G ≤ 150 kgDS/(m²·d)",
+    "混合区 G_mix 500~1000 s⁻¹",
+    "絮凝区 G_floc 50~100 s⁻¹",
+    "长宽比 L/B 1~2",
+    "回流污泥浓度 X_r ≥ 0 g/L",
+    "堰负荷 1.5~2.9 L/(s·m)"
+  ],
+  "constraint_limits": {
+    "斜管轴向流速 ≤ 5 mm/s": "<= 0.005",
+    "固体通量 G ≤ 150 kgDS/(m²·d)": "<= 150",
+    "混合区 G_mix 500~1000 s⁻¹": "500~1000",
+    "絮凝区 G_floc 50~100 s⁻¹": "50~100",
+    "长宽比 L/B 1~2": "1~2",
+    "回流污泥浓度 X_r ≥ 0 g/L": ">= 0",
+    "堰负荷 1.5~2.9 L/(s·m)": "1.5~2.9"
+  },
+  "constraint_types": {
+    "斜管轴向流速 ≤ 5 mm/s": "result",
+    "固体通量 G ≤ 150 kgDS/(m²·d)": "result",
+    "混合区 G_mix 500~1000 s⁻¹": "result",
+    "絮凝区 G_floc 50~100 s⁻¹": "result",
+    "长宽比 L/B 1~2": "result",
+    "回流污泥浓度 X_r ≥ 0 g/L": "result",
+    "堰负荷 1.5~2.9 L/(s·m)": "result"
+  },
+  "display_name": ""
+}

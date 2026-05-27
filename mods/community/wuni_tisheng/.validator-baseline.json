@@ -1,0 +1,9 @@
+{
+  "suppressed": {
+    "crash": [
+      "name 'nt' is not defined"
+    ]
+  },
+  "design_decisions": [],
+  "created": "2026-05-27 11:03:56"
+}

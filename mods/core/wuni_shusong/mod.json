@@ -1,0 +1,98 @@
+{
+  "id": "wuni_shusong",
+  "name": "污泥输送泵站",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "污泥输送/汇集节点，将多股污泥合并后输送至后续处理单元。含泵站设计计算。",
+  "category": "市政污水处理",
+  "icon": "🚛",
+  "node_type": "wuni_shusong",
+  "process_stage": "sludge",
+  "node_class": "WuniShusongNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "SLUDGE",
+      "name": "污泥进"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "SLUDGE",
+      "name": "污泥出"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n_pumps",
+      "symbol": "n_pump",
+      "name": "泵数量",
+      "unit": "台",
+      "default": 2,
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "description": "工作泵台数(不含备用)"
+    },
+    {
+      "key": "Q_pump",
+      "symbol": "Q_p",
+      "name": "单泵流量",
+      "unit": "m³/h",
+      "default": 20,
+      "min": 5,
+      "max": 100,
+      "step": 5,
+      "description": "单台泵设计流量"
+    },
+    {
+      "key": "H_pump",
+      "symbol": "H",
+      "name": "扬程",
+      "unit": "m",
+      "default": 15,
+      "min": 5,
+      "max": 50,
+      "step": 1,
+      "description": "水泵设计扬程"
+    },
+    {
+      "key": "v_pipe",
+      "symbol": "v",
+      "name": "管道流速",
+      "unit": "m/s",
+      "default": 1.5,
+      "min": 1.0,
+      "max": 2.5,
+      "step": 0.1,
+      "description": "污泥管道设计流速"
+    },
+    {
+      "key": "L_pipe",
+      "symbol": "L",
+      "name": "出水管长度",
+      "unit": "m",
+      "default": 80.0,
+      "min": 10.0,
+      "max": 500.0,
+      "step": 10.0
+    }
+  ],
+  "removal_rates": {},
+  "formula": "D = √(4Q/(πv))",
+  "formula_detail": "D:管径(m) Q:单泵流量(m³/s) v:流速(m/s)",
+  "dependencies": [],
+  "tags": [
+    "污泥处理",
+    "输送",
+    "泵站"
+  ],
+  "references": [
+    "GB50014-2021 §7.1",
+    "CJJ 131-2009"
+  ],
+  "elevation_loss": {
+    "value": 0.0,
+    "formula": "经验值: 0.0m"
+  }
+}

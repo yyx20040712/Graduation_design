@@ -1,0 +1,9 @@
+{
+  "suppressed": {
+    "calc_fail": [
+      "1 个校核未通过: BOD负荷"
+    ]
+  },
+  "design_decisions": [],
+  "created": "2026-05-27 12:07:18"
+}

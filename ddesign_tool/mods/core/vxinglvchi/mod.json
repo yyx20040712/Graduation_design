@@ -1,0 +1,291 @@
+{
+  "id": "vxinglvchi",
+  "name": "V型滤池",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "V型滤池采用均质滤料、气水反冲洗，过滤效果稳定。强制滤速≤8m/h。",
+  "category": "市政污水处理",
+  "icon": "🔽",
+  "node_type": "vxinglvchi",
+  "process_stage": "tertiary",
+  "node_class": "VxinglvchiNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "滤池格数",
+      "unit": "格",
+      "default": 4,
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "description": "滤池分格数量（对称分布，≥2座并联，取4的倍数）"
+    },
+    {
+      "key": "h_media",
+      "symbol": "h media",
+      "name": "滤层厚度",
+      "unit": "m",
+      "default": 1.2,
+      "min": 1.0,
+      "max": 1.5,
+      "step": 0.1,
+      "description": "滤料层厚度"
+    },
+    {
+      "key": "h_water",
+      "symbol": "h water",
+      "name": "滤层上水深",
+      "unit": "m",
+      "default": 1.2,
+      "min": 1.2,
+      "max": 1.5,
+      "step": 0.1,
+      "description": "滤层表面以上水深≥1.2m"
+    },
+    {
+      "key": "T_filter",
+      "symbol": "T",
+      "name": "过滤周期",
+      "unit": "h",
+      "default": 24.0,
+      "min": 12.0,
+      "max": 36.0,
+      "step": 4.0
+    },
+    {
+      "key": "v_filter",
+      "symbol": "v",
+      "name": "设计滤速",
+      "unit": "m/h",
+      "default": 6.0,
+      "min": 5.0,
+      "max": 8.0,
+      "step": 0.5
+    },
+    {
+      "key": "v_force",
+      "symbol": "v_force",
+      "name": "强制滤速限值",
+      "unit": "m/h",
+      "default": 10.0,
+      "min": 7.0,
+      "max": 12.0,
+      "step": 0.5
+    },
+    {
+      "key": "h_plate",
+      "symbol": "h_plate",
+      "name": "承托层厚度",
+      "unit": "m",
+      "default": 0.1,
+      "min": 0.05,
+      "max": 0.2,
+      "step": 0.010000000000000002
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_super",
+      "name": "超高",
+      "unit": "m",
+      "default": 0.5,
+      "min": 0.25,
+      "max": 1.0,
+      "step": 0.05
+    },
+    {
+      "key": "h_under",
+      "symbol": "h_under",
+      "name": "配水区高度",
+      "unit": "m",
+      "default": 0.9,
+      "min": 0.45,
+      "max": 1.8,
+      "step": 0.09000000000000001
+    },
+    {
+      "key": "k_self",
+      "symbol": "k_self",
+      "name": "自用水系数",
+      "unit": "-",
+      "default": 1.05,
+      "min": 0.525,
+      "max": 2.1,
+      "step": 0.10500000000000001
+    },
+    {
+      "key": "q_g1",
+      "symbol": "q_g1",
+      "name": "气冲强度1",
+      "unit": "L/(m²·s)",
+      "default": 15.0,
+      "min": 7.5,
+      "max": 30.0,
+      "step": 1.5
+    },
+    {
+      "key": "q_g2",
+      "symbol": "q_g2",
+      "name": "气冲强度2",
+      "unit": "L/(m²·s)",
+      "default": 15.0,
+      "min": 7.5,
+      "max": 30.0,
+      "step": 1.5
+    },
+    {
+      "key": "q_s",
+      "symbol": "q_s",
+      "name": "表冲强度",
+      "unit": "L/(m²·s)",
+      "default": 2.0,
+      "min": 1.0,
+      "max": 4.0,
+      "step": 0.2
+    },
+    {
+      "key": "q_w2",
+      "symbol": "q_w2",
+      "name": "水冲强度2",
+      "unit": "L/(m²·s)",
+      "default": 3.0,
+      "min": 1.5,
+      "max": 6.0,
+      "step": 0.30000000000000004
+    },
+    {
+      "key": "q_w3",
+      "symbol": "q_w3",
+      "name": "水冲强度3",
+      "unit": "L/(m²·s)",
+      "default": 5.0,
+      "min": 2.5,
+      "max": 10.0,
+      "step": 0.5
+    },
+    {
+      "key": "d_hole",
+      "symbol": "d_hole",
+      "name": "扫洗孔径",
+      "unit": "m",
+      "default": 0.025,
+      "min": 0.02,
+      "max": 0.03,
+      "step": 0.001
+    },
+    {
+      "key": "v_hole",
+      "symbol": "v_hole",
+      "name": "过孔流速",
+      "unit": "m/s",
+      "default": 2.0,
+      "min": 1.5,
+      "max": 2.5,
+      "step": 0.1
+    },
+    {
+      "key": "rho_head",
+      "symbol": "rho_head",
+      "name": "滤头密度",
+      "unit": "kg/m³",
+      "default": 55.0,
+      "min": 27.5,
+      "max": 110.0,
+      "step": 5.5
+    },
+    {
+      "key": "t_g1",
+      "symbol": "t_g1",
+      "name": "气冲时间",
+      "unit": "min",
+      "default": 3.0,
+      "min": 1.5,
+      "max": 6.0,
+      "step": 0.30000000000000004
+    },
+    {
+      "key": "t_gw",
+      "symbol": "t_gw",
+      "name": "气水联冲时间",
+      "unit": "min",
+      "default": 4.0,
+      "min": 2.0,
+      "max": 8.0,
+      "step": 0.4
+    },
+    {
+      "key": "t_w3",
+      "symbol": "t_w3",
+      "name": "水冲时间",
+      "unit": "min",
+      "default": 5.0,
+      "min": 2.5,
+      "max": 10.0,
+      "step": 0.5
+    },
+    {
+      "key": "v_g_pipe",
+      "symbol": "v_g_pipe",
+      "name": "气管流速",
+      "unit": "m/s",
+      "default": 12.0,
+      "min": 6.0,
+      "max": 24.0,
+      "step": 1.2000000000000002
+    },
+    {
+      "key": "v_out_pipe",
+      "symbol": "v_out_pipe",
+      "name": "出水管流速",
+      "unit": "m/s",
+      "default": 1.0,
+      "min": 0.5,
+      "max": 2.0,
+      "step": 0.1
+    },
+    {
+      "key": "v_w_pipe",
+      "symbol": "v_w_pipe",
+      "name": "水管流速",
+      "unit": "m/s",
+      "default": 2.0,
+      "min": 1.0,
+      "max": 4.0,
+      "step": 0.2
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.15,
+    "COD": 0.25,
+    "SS": 0.65,
+    "TP": 0.8
+  },
+  "formula": "A = Q / (n × v)",
+  "formula_detail": "A: 单格过滤面积(m²), Q: 设计流量(m³/h), n: 格数, v: 滤速(m/h)",
+  "dependencies": [],
+  "tags": [
+    "深度处理",
+    "过滤",
+    "SS去除"
+  ],
+  "references": [
+    "GB50014-2021 §6.8"
+  ],
+  "elevation_loss": {
+    "value": 2.5,
+    "formula": "经验值: 2.5m"
+  }
+}

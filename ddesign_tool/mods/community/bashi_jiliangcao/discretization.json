@@ -1,0 +1,34 @@
+{
+  "free": {
+    "b": [
+      0.152,
+      0.228,
+      0.3,
+      0.45,
+      0.6
+    ]
+  },
+  "fixed": {},
+  "constraint_keys": [
+    "b_standard",
+    "Fr",
+    "v_approach"
+  ],
+  "constraint_names": [
+    "标准喉宽 b",
+    "弗劳德数 Fr",
+    "行进流速 v_approach"
+  ],
+  "constraint_limits": {
+    "标准喉宽 b": "b 为标准值",
+    "弗劳德数 Fr": "< 1.0",
+    "行进流速 v_approach": "0.3~2.0"
+  },
+  "display_name": "巴氏计量槽",
+  "estimator_type": "",
+  "constraint_types": {
+    "标准喉宽 b": "original",
+    "弗劳德数 Fr": "result",
+    "行进流速 v_approach": "result"
+  }
+}

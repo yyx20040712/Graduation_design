@@ -1,0 +1,216 @@
+{
+  "id": "kw_tiaojiechi",
+  "name": "矿井水调节池",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "矿井水专用调节池，HRT≥6h，兼顾煤粉预沉淀功能。含积泥坑校核、Stokes沉降速度、出水管径、堰口负荷全流程设计。",
+  "category": "矿井水处理",
+  "icon": "🪣",
+  "node_type": "kw_tiaojiechi",
+  "process_stage": "mine_water",
+  "node_class": "KwTiaojiechiNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "池数 n",
+      "unit": "座",
+      "default": 4,
+      "min": 4,
+      "max": 8,
+      "step": 2,
+      "description": "并联池数 4~8格，步长2"
+    },
+    {
+      "key": "HRT",
+      "symbol": "HRT",
+      "name": "水力停留时间 HRT",
+      "unit": "h",
+      "default": 8,
+      "min": 6,
+      "max": 12,
+      "step": 1,
+      "description": "≥6h，涌水量波动大时取高值"
+    },
+    {
+      "key": "k",
+      "symbol": "k",
+      "name": "综合变化系数 k",
+      "unit": "-",
+      "default": 1.0,
+      "min": 0.8,
+      "max": 1.5,
+      "step": 0.05,
+      "description": "按日处理能力查表确定"
+    },
+    {
+      "key": "h_eff",
+      "symbol": "h_eff",
+      "name": "有效水深",
+      "unit": "m",
+      "default": 4.0,
+      "min": 3.0,
+      "max": 5.0,
+      "step": 0.5,
+      "description": "3.0~5.0m"
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_free",
+      "name": "超高",
+      "unit": "m",
+      "default": 0.5,
+      "min": 0.3,
+      "max": 0.5,
+      "step": 0.1
+    },
+    {
+      "key": "h_pit",
+      "symbol": "h_pit",
+      "name": "积泥坑深度",
+      "unit": "m",
+      "default": 1.0,
+      "min": 0.5,
+      "max": 1.5,
+      "step": 0.1,
+      "description": "池底集泥区加深，0.5~1.5m"
+    },
+    {
+      "key": "ratio_LB",
+      "symbol": "L/B",
+      "name": "长宽比 L/B",
+      "unit": "-",
+      "default": 2.5,
+      "min": 2.0,
+      "max": 4.0,
+      "step": 0.25,
+      "description": "2:1~4:1，保证推流状态"
+    },
+    {
+      "key": "P_density",
+      "symbol": "p_mix",
+      "name": "搅拌功率密度",
+      "unit": "W/m³",
+      "default": 8,
+      "min": 5,
+      "max": 10,
+      "step": 1,
+      "description": "5~10 W/m³防煤粉沉积"
+    },
+    {
+      "key": "slope",
+      "symbol": "i",
+      "name": "池底坡度",
+      "unit": "-",
+      "default": 0.02,
+      "min": 0.01,
+      "max": 0.03,
+      "step": 0.005,
+      "description": "≥1%，向积泥坑倾斜"
+    },
+    {
+      "key": "P_sludge",
+      "symbol": "P_sludge",
+      "name": "沉泥含水率",
+      "unit": "-",
+      "default": 0.92,
+      "min": 0.9,
+      "max": 0.95,
+      "step": 0.01,
+      "description": "煤泥含水率 90%~95%"
+    },
+    {
+      "key": "T_sludge",
+      "symbol": "T_sludge",
+      "name": "排泥周期",
+      "unit": "d",
+      "default": 2,
+      "min": 1,
+      "max": 2,
+      "step": 1,
+      "description": "1~2d 排泥一次"
+    },
+    {
+      "key": "rho_sludge",
+      "symbol": "ρ_sludge",
+      "name": "湿泥密度",
+      "unit": "t/m³",
+      "default": 1.1,
+      "min": 1.0,
+      "max": 1.2,
+      "step": 0.05
+    },
+    {
+      "key": "v_out",
+      "symbol": "v_out",
+      "name": "出水管流速",
+      "unit": "m/s",
+      "default": 1.5,
+      "min": 1.0,
+      "max": 2.0,
+      "step": 0.1,
+      "description": "满管流设计 1.0~2.0m/s"
+    },
+    {
+      "key": "rho_coal",
+      "symbol": "ρ_coal",
+      "name": "煤颗粒密度",
+      "unit": "kg/m³",
+      "default": 1400,
+      "min": 1300,
+      "max": 1500,
+      "step": 50,
+      "description": "1.3~1.5 t/m³"
+    },
+    {
+      "key": "d_coal",
+      "symbol": "d_coal",
+      "name": "煤颗粒粒径",
+      "unit": "mm",
+      "default": 0.1,
+      "min": 0.01,
+      "max": 0.5,
+      "step": 0.01,
+      "description": "以细粉为主 0.01~0.5mm"
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.05,
+    "COD": 0.1,
+    "SS": 0.3,
+    "NH3N": 0.0,
+    "TN": 0.0,
+    "TP": 0.05
+  },
+  "formula": "V = Q_avg × HRT × k / n",
+  "formula_detail": "V: 单池有效容积(m³), Q_avg: 平均涌水量(m³/h), HRT: 水力停留时间(h), k: 变化系数, n: 池数",
+  "elevation_formula": "下游水面标高 = 上游水面标高 - 0.30m",
+  "elevation_loss": {
+    "value": 0.3,
+    "formula": "经验值: 0.30m"
+  },
+  "dependencies": [],
+  "tags": [
+    "矿井水",
+    "调节",
+    "预沉淀",
+    "煤泥"
+  ],
+  "references": [
+    "煤炭矿井水处理设计规范",
+    "GB50014-2021 §4.2"
+  ]
+}

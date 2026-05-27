@@ -1,0 +1,5 @@
+{
+  "allow": {
+    "calc_fail": "BOD负荷 check uses standard test flow; may not pass with all param combos"
+  }
+}

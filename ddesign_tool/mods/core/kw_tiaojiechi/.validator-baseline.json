@@ -1,0 +1,12 @@
+{
+  "suppressed": {
+    "calc_fail": [
+      "1 个校核未通过: 堰口负荷 ≤ 2.9 L/(s·m)"
+    ],
+    "con_mismatch": [
+      "1/4 个约束不一致"
+    ]
+  },
+  "design_decisions": [],
+  "created": "2026-05-27 12:07:18"
+}

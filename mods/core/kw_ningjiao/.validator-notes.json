@@ -1,0 +1,5 @@
+{
+  "allow": {
+    "con_mismatch": "L/B check uses conditional np.where; runtime dynamic check overrides"
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "id": "wuni_tisheng",
+  "name": "污水提升泵房",
+  "version": "5.1.0",
+  "author": "yyx",
+  "description": "污水提升泵房设计计算，含水泵选型、集水池容积、进出水管径、扬程计算。依据GB50014-2021 §6.2-§6.4。",
+  "category": "社区模组",
+  "process_stage": "primary",
+  "icon": "🏗️",
+  "node_type": "wuni_tisheng",
+  "node_class": "WuniTishengNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n_work",
+      "symbol": "n work",
+      "name": "工作泵台数",
+      "unit": "台",
+      "default": 3,
+      "min": 2,
+      "max": 8,
+      "step": 1,
+      "description": "GB50014 §6.4.1: 工作泵≥2台，≤8台"
+    },
+    {
+      "key": "H_st",
+      "symbol": "H_st",
+      "name": "静扬程",
+      "unit": "m",
+      "default": 5.0,
+      "min": 3.0,
+      "max": 12.0,
+      "step": 0.5,
+      "description": "提升高度（静扬程）"
+    },
+    {
+      "key": "v_suction",
+      "symbol": "v suction",
+      "name": "吸水管流速",
+      "unit": "m/s",
+      "default": 1.0,
+      "min": 0.7,
+      "max": 1.5,
+      "step": 0.1,
+      "description": "GB50014 §6.4.4: 吸水管 0.7~1.5 m/s"
+    },
+    {
+      "key": "v_discharge",
+      "symbol": "v discharge",
+      "name": "出水管流速",
+      "unit": "m/s",
+      "default": 1.5,
+      "min": 0.8,
+      "max": 2.5,
+      "step": 0.1,
+      "description": "GB50014 §6.4.4: 出水管 0.8~2.5 m/s"
+    },
+    {
+      "key": "L_suction",
+      "symbol": "L_suction",
+      "name": "吸水管长度",
+      "unit": "m",
+      "default": 10.0,
+      "min": 5.0,
+      "max": 30.0,
+      "step": 1.0
+    },
+    {
+      "key": "L_discharge",
+      "symbol": "L_discharge",
+      "name": "出水管长度",
+      "unit": "m",
+      "default": 50.0,
+      "min": 10.0,
+      "max": 200.0,
+      "step": 5.0
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.0,
+    "COD": 0.0,
+    "SS": 0.0,
+    "NH3N": 0.0,
+    "TN": 0.0,
+    "TP": 0.0
+  },
+  "formula": "H_total = H_st + h_loss_suction + h_loss_discharge + h_outlet",
+  "formula_detail": "V_sump ≥ Q_single × 5min; H_total:总扬程(m); D=√(4Q/πv); h_loss:曼宁公式水头损失",
+  "dependencies": [],
+  "tags": [
+    "预处理",
+    "提升泵站",
+    "水力"
+  ],
+  "references": [
+    "GB50014-2021 §6.2-§6.4"
+  ],
+  "elevation_loss": {
+    "value": 0.0,
+    "formula": "经验值: 0.0m"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "free": {
+    "n": [
+      4,
+      6,
+      8,
+      12,
+      16
+    ],
+    "HRT": [
+      6.0,
+      8.0,
+      10.0,
+      12.0
+    ],
+    "h_eff": [
+      3.0,
+      4.0,
+      4.5,
+      5.0
+    ],
+    "ratio_LB": [
+      2.0,
+      2.5,
+      3.0,
+      4.0
+    ]
+  },
+  "fixed": {
+    "k": 1.0,
+    "h_super": 0.5,
+    "h_pit": 1.0,
+    "P_density": 8,
+    "slope": 0.02,
+    "P_sludge": 0.92,
+    "T_sludge": 2,
+    "rho_sludge": 1.1,
+    "v_out": 1.5,
+    "rho_coal": 1400,
+    "d_coal": 0.1
+  },
+  "constraint_keys": [
+    "LB_ratio",
+    "HRT_actual",
+    "pit_vol",
+    "weir_load"
+  ],
+  "constraint_names": [
+    "长宽比 L/B",
+    "实际 HRT",
+    "积泥坑容积足够",
+    "堰口负荷 ≤ 5.0 L/(s·m)"
+  ],
+  "constraint_limits": {
+    "长宽比 L/B": "2~4",
+    "实际 HRT": "3.0~12.0",
+    "积泥坑容积足够": ">= 0",
+    "堰口负荷 ≤ 5.0 L/(s·m)": "<= 5.0"
+  },
+  "constraint_types": {
+    "长宽比 L/B": "result",
+    "实际 HRT": "result",
+    "积泥坑容积足够": "result",
+    "堰口负荷 ≤ 5.0 L/(s·m)": "result"
+  },
+  "display_name": ""
+}

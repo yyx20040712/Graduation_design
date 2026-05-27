@@ -1,0 +1,5 @@
+{
+  "allow": {
+    "ui_contract": "v_filter has 7 values by design for finer filtration rate tuning"
+  }
+}

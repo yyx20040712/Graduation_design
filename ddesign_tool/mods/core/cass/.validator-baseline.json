@@ -1,0 +1,12 @@
+{
+  "suppressed": {
+    "calc_fail": [
+      "2 个校核未通过: 长宽比 L/B, 充水比一致性 |λ_actual-λ_design|/λ_design < 15%"
+    ],
+    "con_mismatch": [
+      "1/8 个约束不一致"
+    ]
+  },
+  "design_decisions": [],
+  "created": "2026-05-27 12:07:18"
+}

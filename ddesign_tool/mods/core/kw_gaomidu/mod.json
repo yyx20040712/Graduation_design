@@ -1,0 +1,143 @@
+{
+  "id": "kw_gaomidu",
+  "name": "矿井水高密度沉淀池",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "矿井水高密度沉淀池，集混凝、絮凝、沉淀于一体的高效沉淀工艺。计算方式与市政污水高密度沉淀池相同，不含污泥排泥接口。",
+  "category": "矿井水处理",
+  "icon": "🧪",
+  "node_type": "kw_gaomidu",
+  "process_stage": "mine_water",
+  "node_class": "KwGaomiduNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "池数",
+      "unit": "座",
+      "default": 4,
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "description": "并联池数量"
+    },
+    {
+      "key": "t_mix",
+      "symbol": "t_mix",
+      "name": "混合时间",
+      "unit": "min",
+      "default": 1.0,
+      "min": 0.5,
+      "max": 2.0,
+      "step": 0.1,
+      "description": "快速混合区停留时间"
+    },
+    {
+      "key": "t_floc",
+      "symbol": "t_floc",
+      "name": "絮凝时间",
+      "unit": "min",
+      "default": 10.0,
+      "min": 8.0,
+      "max": 15.0,
+      "step": 0.5,
+      "description": "絮凝区停留时间"
+    },
+    {
+      "key": "q_surf",
+      "symbol": "q",
+      "name": "斜管区表面负荷",
+      "unit": "m³/(m²·h)",
+      "default": 8.0,
+      "min": 6.0,
+      "max": 12.0,
+      "step": 0.5,
+      "description": "沉淀区表面负荷"
+    },
+    {
+      "key": "L_tube",
+      "symbol": "L_tube",
+      "name": "斜管长度",
+      "unit": "m",
+      "default": 1.0,
+      "min": 0.8,
+      "max": 1.5,
+      "step": 0.1
+    },
+    {
+      "key": "alpha_tube",
+      "symbol": "α",
+      "name": "斜管倾角",
+      "unit": "°",
+      "default": 60,
+      "min": 55,
+      "max": 65,
+      "step": 1
+    },
+    {
+      "key": "h_clear",
+      "symbol": "h_clear",
+      "name": "清水区高度",
+      "unit": "m",
+      "default": 1.0,
+      "min": 0.5,
+      "max": 2.0,
+      "step": 0.1
+    },
+    {
+      "key": "h_dist",
+      "symbol": "h_dist",
+      "name": "配水区高度",
+      "unit": "m",
+      "default": 1.5,
+      "min": 0.75,
+      "max": 3.0,
+      "step": 0.15000000000000002
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_super",
+      "name": "超高",
+      "unit": "m",
+      "default": 0.5,
+      "min": 0.25,
+      "max": 1.0,
+      "step": 0.05
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.2,
+    "COD": 0.6,
+    "SS": 0.9,
+    "TP": 0.85
+  },
+  "formula": "V_mix = Q × t_mix / n",
+  "formula_detail": "V_mix: 混合区容积(m³), Q: 设计流量(m³/min), t_mix: 混合时间(min)",
+  "dependencies": [],
+  "tags": [
+    "矿井水",
+    "深度处理",
+    "混凝沉淀",
+    "化学除磷"
+  ],
+  "references": [
+    "GB50014-2021 §6.7"
+  ],
+  "elevation_loss": {
+    "value": 0.5,
+    "formula": "经验值: 0.5m"
+  }
+}

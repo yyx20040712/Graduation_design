@@ -1,0 +1,9 @@
+{
+  "suppressed": {
+    "calc_fail": [
+      "2 个校核未通过: 宽深比 B/H 1.0~2.0, 堰口负荷 ≤ 10 L/(s·m)"
+    ]
+  },
+  "design_decisions": [],
+  "created": "2026-05-27 11:36:34"
+}

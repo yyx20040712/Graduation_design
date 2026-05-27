@@ -1,0 +1,81 @@
+{
+  "id": "peishuiqu",
+  "name": "配水渠",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "沿程配水的明渠构筑物，通过堰口或闸孔向各处处理单元均匀配水。",
+  "category": "市政污水处理",
+  "icon": "🏗️",
+  "node_type": "peishuiqu",
+  "process_stage": "collection",
+  "node_class": "PeishuiquNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n_out",
+      "symbol": "n_out",
+      "name": "出水口数",
+      "unit": "个",
+      "default": 4,
+      "min": 2,
+      "max": 10,
+      "step": 1
+    },
+    {
+      "key": "B_channel",
+      "symbol": "B",
+      "name": "渠宽 B",
+      "unit": "m",
+      "default": 0.8,
+      "min": 0.5,
+      "max": 3.0,
+      "step": 0.1
+    },
+    {
+      "key": "h_eff",
+      "symbol": "h_eff",
+      "name": "有效水深 h_eff",
+      "unit": "m",
+      "default": 1.5,
+      "min": 0.5,
+      "max": 3.0,
+      "step": 0.1
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_free",
+      "name": "超高 h_super",
+      "unit": "m",
+      "default": 0.4,
+      "min": 0.3,
+      "max": 0.8,
+      "step": 0.1
+    }
+  ],
+  "removal_rates": {},
+  "formula": "A = Q / v, h = A / B, L = n x L_section",
+  "dependencies": [],
+  "tags": [
+    "配水",
+    "明渠"
+  ],
+  "references": [
+    "GB50014-2021"
+  ],
+  "elevation_loss": {
+    "value": 0.1,
+    "formula": "经验值: 0.1m"
+  }
+}

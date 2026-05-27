@@ -1,0 +1,226 @@
+{
+  "id": "gaomidu",
+  "name": "高密度沉淀池",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "集混凝、絮凝、沉淀于一体的高效沉淀工艺。通过污泥回流提高絮凝效果。",
+  "category": "市政污水处理",
+  "icon": "🧪",
+  "node_type": "gaomidu",
+  "process_stage": "tertiary",
+  "node_class": "GaomiduNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    },
+    {
+      "type": "SLUDGE",
+      "name": "排泥"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "池数",
+      "unit": "座",
+      "default": 4,
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "description": "并联池数量"
+    },
+    {
+      "key": "t_mix",
+      "symbol": "t_mix",
+      "name": "混合时间",
+      "unit": "min",
+      "default": 1.0,
+      "min": 0.5,
+      "max": 2.0,
+      "step": 0.1,
+      "description": "快速混合区停留时间"
+    },
+    {
+      "key": "t_floc",
+      "symbol": "t_floc",
+      "name": "絮凝时间",
+      "unit": "min",
+      "default": 10.0,
+      "min": 8.0,
+      "max": 15.0,
+      "step": 0.5,
+      "description": "絮凝区停留时间"
+    },
+    {
+      "key": "q_surf",
+      "symbol": "q",
+      "name": "斜管区表面负荷",
+      "unit": "m³/(m²·h)",
+      "default": 8.0,
+      "min": 6.0,
+      "max": 12.0,
+      "step": 0.5,
+      "description": "沉淀区表面负荷"
+    },
+    {
+      "key": "D_PAC",
+      "symbol": "D_PAC",
+      "name": "PAC投加量",
+      "unit": "mg/L",
+      "default": 40,
+      "min": 15,
+      "max": 80,
+      "step": 5
+    },
+    {
+      "key": "L_tube",
+      "symbol": "L_tube",
+      "name": "斜管长度",
+      "unit": "m",
+      "default": 1.0,
+      "min": 0.8,
+      "max": 1.5,
+      "step": 0.1
+    },
+    {
+      "key": "R_sludge",
+      "symbol": "R",
+      "name": "污泥回流比",
+      "unit": "-",
+      "default": 0.03,
+      "min": 0.03,
+      "max": 0.1,
+      "step": 0.01
+    },
+    {
+      "key": "alpha_tube",
+      "symbol": "α",
+      "name": "斜管倾角",
+      "unit": "°",
+      "default": 60,
+      "min": 55,
+      "max": 65,
+      "step": 1
+    },
+    {
+      "key": "G_floc",
+      "symbol": "G_floc",
+      "name": "絮凝G值",
+      "unit": "s⁻¹",
+      "default": 75.0,
+      "min": 37.5,
+      "max": 150.0,
+      "step": 7.5
+    },
+    {
+      "key": "G_mix",
+      "symbol": "G_mix",
+      "name": "混合G值",
+      "unit": "s⁻¹",
+      "default": 750.0,
+      "min": 375.0,
+      "max": 1500.0,
+      "step": 75.0
+    },
+    {
+      "key": "P_out",
+      "symbol": "P_out",
+      "name": "出泥含水率",
+      "unit": "kW",
+      "default": 0.96,
+      "min": 0.48,
+      "max": 1.92,
+      "step": 0.096
+    },
+    {
+      "key": "X_r_assumed",
+      "symbol": "X_r_assumed",
+      "name": "假定回流浓度",
+      "unit": "mg/L",
+      "default": 15.0,
+      "min": 7.5,
+      "max": 30.0,
+      "step": 1.5
+    },
+    {
+      "key": "h_clear",
+      "symbol": "h_clear",
+      "name": "清水区高度",
+      "unit": "m",
+      "default": 1.0,
+      "min": 0.5,
+      "max": 2.0,
+      "step": 0.1
+    },
+    {
+      "key": "h_dist",
+      "symbol": "h_dist",
+      "name": "配水区高度",
+      "unit": "m",
+      "default": 1.5,
+      "min": 0.75,
+      "max": 3.0,
+      "step": 0.15000000000000002
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_super",
+      "name": "超高",
+      "unit": "m",
+      "default": 0.5,
+      "min": 0.25,
+      "max": 1.0,
+      "step": 0.05
+    },
+    {
+      "key": "k_PAC",
+      "symbol": "k_PAC",
+      "name": "PAC产泥系数",
+      "unit": "-",
+      "default": 0.5,
+      "min": 0.25,
+      "max": 1.0,
+      "step": 0.05
+    },
+    {
+      "key": "t_thicken",
+      "symbol": "t_thicken",
+      "name": "浓缩时间",
+      "unit": "h",
+      "default": 1.5,
+      "min": 0.75,
+      "max": 3.0,
+      "step": 0.15000000000000002
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.2,
+    "COD": 0.6,
+    "SS": 0.9,
+    "TP": 0.85
+  },
+  "formula": "V_mix = Q × t_mix / n",
+  "formula_detail": "V_mix: 混合区容积(m³), Q: 设计流量(m³/min), t_mix: 混合时间(min)",
+  "dependencies": [],
+  "tags": [
+    "深度处理",
+    "混凝沉淀",
+    "化学除磷"
+  ],
+  "references": [
+    "GB50014-2021 §6.7"
+  ],
+  "elevation_loss": {
+    "value": 0.5,
+    "formula": "经验值: 0.5m"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "id": "jcws_smbg",
+  "name": "进厂污水水面标高",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "高程计算起点节点，设定进厂污水管水面标高。",
+  "category": "市政污水处理",
+  "icon": "📏",
+  "node_type": "jcws_smbg",
+  "process_stage": "elevation",
+  "node_class": "JcwsSmbgNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "Z_water_inlet",
+      "symbol": "Z_inlet",
+      "name": "进厂水面标高",
+      "unit": "m",
+      "default": 100.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "step": 0.001
+    },
+    {
+      "key": "Z_ground",
+      "symbol": "Z_ground",
+      "name": "进厂地面标高",
+      "unit": "m",
+      "default": 102.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "step": 0.001
+    },
+    {
+      "key": "DN_inlet",
+      "symbol": "DN",
+      "name": "进水管径",
+      "unit": "mm",
+      "default": 800.0,
+      "min": 300.0,
+      "max": 2000.0,
+      "step": 50.0
+    }
+  ],
+  "removal_rates": {},
+  "formula": "设定进厂水面标高 = Z_water_inlet",
+  "elevation_formula": "起始水面标高 = Z_water_inlet",
+  "elevation_loss": {
+    "type": "source",
+    "value": 0.0,
+    "formula": "起始节点, 无水头损失"
+  },
+  "dependencies": [],
+  "tags": [
+    "高程",
+    "起始点",
+    "水面标高"
+  ],
+  "references": [
+    "GB50014-2021 §5"
+  ]
+}

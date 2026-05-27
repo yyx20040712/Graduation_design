@@ -1,0 +1,9 @@
+{
+  "suppressed": {
+    "con_mismatch": [
+      "1/10 个约束不一致"
+    ]
+  },
+  "design_decisions": [],
+  "created": "2026-05-27 11:36:34"
+}

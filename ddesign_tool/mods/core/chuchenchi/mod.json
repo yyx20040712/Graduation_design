@@ -1,0 +1,179 @@
+{
+  "id": "chuchenchi",
+  "name": "辐流式初沉池",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "辐流式初沉池，中心进水周边出水，去除可沉降固体。SS去除率约50%。排泥周期1~2d。",
+  "category": "市政污水处理",
+  "icon": "🏊",
+  "node_type": "chuchenchi",
+  "process_stage": "primary",
+  "node_class": "ChuchenchiNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    },
+    {
+      "type": "SLUDGE",
+      "name": "排泥"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "池数",
+      "unit": "座",
+      "default": 2,
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "description": "并联池数量"
+    },
+    {
+      "key": "q_prime",
+      "symbol": "q'",
+      "name": "表面负荷 q'",
+      "unit": "m³/(m²·h)",
+      "default": 2.0,
+      "min": 1.5,
+      "max": 3.0,
+      "step": 0.1,
+      "description": "表面水力负荷"
+    },
+    {
+      "key": "T_settle",
+      "symbol": "T",
+      "name": "沉淀时间 T",
+      "unit": "h",
+      "default": 1.5,
+      "min": 1.0,
+      "max": 2.0,
+      "step": 0.1,
+      "description": "水力停留时间"
+    },
+    {
+      "key": "h1",
+      "symbol": "h₁",
+      "name": "超高 h1",
+      "unit": "m",
+      "default": 0.3,
+      "min": 0.3,
+      "max": 0.5,
+      "step": 0.1
+    },
+    {
+      "key": "h3",
+      "symbol": "h₃",
+      "name": "缓冲层 h3",
+      "unit": "m",
+      "default": 0.3,
+      "min": 0.3,
+      "max": 0.5,
+      "step": 0.1
+    },
+    {
+      "key": "i_slope",
+      "symbol": "i",
+      "name": "池底坡度 i",
+      "unit": "-",
+      "default": 0.05,
+      "min": 0.03,
+      "max": 0.08,
+      "step": 0.01
+    },
+    {
+      "key": "R1",
+      "symbol": "R₁",
+      "name": "泥斗上口半径 R1",
+      "unit": "m",
+      "default": 1.8,
+      "min": 1.5,
+      "max": 2.0,
+      "step": 0.1
+    },
+    {
+      "key": "R2",
+      "symbol": "R₂",
+      "name": "泥斗下口半径 R2",
+      "unit": "m",
+      "default": 0.8,
+      "min": 0.6,
+      "max": 1.0,
+      "step": 0.1
+    },
+    {
+      "key": "h5",
+      "symbol": "h₅",
+      "name": "泥斗高度 h5",
+      "unit": "m",
+      "default": 1.5,
+      "min": 1.2,
+      "max": 2.0,
+      "step": 0.1
+    },
+    {
+      "key": "P_sludge",
+      "symbol": "P_sludge",
+      "name": "污泥含水率",
+      "unit": "-",
+      "default": 0.96,
+      "min": 0.95,
+      "max": 0.97,
+      "step": 0.01
+    },
+    {
+      "key": "T_sludge",
+      "symbol": "T_sludge",
+      "name": "排泥周期",
+      "unit": "d",
+      "default": 2,
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "description": "GB50014 §6.5.7: 宜1~2d"
+    },
+    {
+      "key": "v_center",
+      "symbol": "v_c",
+      "name": "中心管流速",
+      "unit": "m/s",
+      "default": 0.3,
+      "min": 0.2,
+      "max": 0.5,
+      "step": 0.05
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.3,
+    "COD": 0.3,
+    "SS": 0.5,
+    "NH3N": 0.05,
+    "TN": 0.05,
+    "TP": 0.05
+  },
+  "formula": "F = Q / (n × q'), D = √(4F / π)",
+  "formula_detail": "F: 单池表面积(m²), Q: 设计流量(m³/h), n: 池数, q': 表面负荷, D: 池径(m)",
+  "elevation_formula": "下游水面标高 = 上游水面标高 - 0.30m",
+  "elevation_loss": {
+    "value": 0.3,
+    "formula": "经验值: 0.30m"
+  },
+  "dependencies": [],
+  "tags": [
+    "一级处理",
+    "沉淀",
+    "固液分离"
+  ],
+  "references": [
+    "GB50014-2021 §6.5"
+  ]
+}

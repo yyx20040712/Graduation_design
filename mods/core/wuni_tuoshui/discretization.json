@@ -1,0 +1,42 @@
+{
+  "free": {
+    "equip_type": [
+      0,
+      1
+    ],
+    "n_machines": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "q_capacity": [
+      10,
+      20,
+      30,
+      40
+    ],
+    "P_out": [
+      0.7,
+      0.75,
+      0.78,
+      0.8
+    ]
+  },
+  "fixed": {
+    "dosage_PAM": 4.0
+  },
+  "constraint_keys": [
+    "run_time"
+  ],
+  "constraint_names": [
+    "日运行时间 <= 20h"
+  ],
+  "display_name": "污泥脱水间",
+  "constraint_limits": {
+    "日运行时间 <= 20h": "<= 20"
+  },
+  "constraint_types": {
+    "日运行时间 <= 20h": "result"
+  }
+}

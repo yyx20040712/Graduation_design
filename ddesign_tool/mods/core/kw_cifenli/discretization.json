@@ -1,0 +1,64 @@
+{
+  "free": {
+    "N_units": [
+      2,
+      3,
+      4
+    ],
+    "D_disk": [
+      0.8,
+      1.0,
+      1.2
+    ],
+    "delta": [
+      0.02,
+      0.025,
+      0.03
+    ],
+    "eta_immerse": [
+      0.35,
+      0.4,
+      0.45
+    ],
+    "q_design": [
+      20,
+      30,
+      40
+    ]
+  },
+  "fixed": {
+    "omega": 3,
+    "B0": 0.6,
+    "eta_SS": 0.95,
+    "P_sludge": 0.92,
+    "rho_sludge": 1.1,
+    "delta_end": 0.6,
+    "delta_side": 0.3,
+    "delta_bottom": 0.4,
+    "delta_top": 0.6
+  },
+  "constraint_keys": [
+    "tdisk",
+    "vdisk",
+    "q",
+    "vline"
+  ],
+  "constraint_names": [
+    "流道停留时间 30~60s",
+    "流道流速 ≤ 0.10 m/s",
+    "表面负荷 20~40 m³/(m²·h)",
+    "外缘线速度 ≤ 0.30 m/s"
+  ],
+  "constraint_limits": {
+    "流道停留时间 30~60s": "30~60",
+    "流道流速 ≤ 0.10 m/s": "<= 0.10",
+    "表面负荷 20~40 m³/(m²·h)": "20~40",
+    "外缘线速度 ≤ 0.30 m/s": "<= 0.30"
+  },
+  "constraint_types": {
+    "流道停留时间 30~60s": "result",
+    "流道流速 ≤ 0.10 m/s": "result",
+    "表面负荷 20~40 m³/(m²·h)": "result",
+    "外缘线速度 ≤ 0.30 m/s": "result"
+  }
+}

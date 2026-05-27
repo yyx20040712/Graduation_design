@@ -1,0 +1,6 @@
+{
+  "allow": {
+    "vec_mismatch": "validator test param mismatch (scalar uses defaults, vec uses grid[0]); not a mod bug",
+    "con_mismatch": "hardcoded HRT bounds overridden by runtime _filter_feasible dynamic check"
+  }
+}

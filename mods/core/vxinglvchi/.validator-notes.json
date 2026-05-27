@@ -1,0 +1,6 @@
+{
+  "allow": {
+    "ui_contract": "v_filter has 7 values by design for fine-grained filter rate selection",
+    "calc_fail": "L/B ratio may fail with default params in standard flow"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "id": "wuni_hebing",
+  "name": "污泥合并",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "多股污泥合并节点，将多个上游污泥流合并为一股。类似水处理线的Combiner，但专门用于SLUDGE端口。",
+  "category": "市政污水处理",
+  "icon": "🔗",
+  "node_type": "wuni_hebing",
+  "process_stage": "sludge",
+  "node_class": "WuniHebingNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "SLUDGE",
+      "name": "污泥进(可多连)"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "SLUDGE",
+      "name": "合并污泥"
+    }
+  ],
+  "parameters": [],
+  "removal_rates": {},
+  "formula": "DS_total = ΣDS_i, P_merged = Σ(DS_i·P_i)/ΣDS_i",
+  "formula_detail": "DS:干固量(kg/d) P:含水率 合并采用干固量加权平均",
+  "dependencies": [],
+  "tags": [
+    "污泥处理",
+    "合并",
+    "汇集"
+  ],
+  "references": [
+    "GB50014-2021",
+    "CJJ 131-2009"
+  ],
+  "elevation_loss": {
+    "value": 0.05,
+    "formula": "经验值: 0.05m"
+  }
+}

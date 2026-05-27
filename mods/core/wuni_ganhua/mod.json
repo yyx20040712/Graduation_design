@@ -1,0 +1,100 @@
+{
+  "id": "wuni_ganhua",
+  "name": "污泥干化",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "污泥热干化/太阳能干化，进一步将含水率降至30%以下。计算蒸发水量、热耗和干化面积。",
+  "category": "市政污水处理",
+  "icon": "☀️",
+  "node_type": "wuni_ganhua",
+  "process_stage": "sludge",
+  "node_class": "WuniGanhuaNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "SLUDGE",
+      "name": "污泥进"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "SLUDGE",
+      "name": "干化污泥"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "method",
+      "symbol": "method",
+      "name": "干化方式(0=热干化,1=太阳能)",
+      "unit": "-",
+      "default": "thermal",
+      "min": 0,
+      "max": 1,
+      "step": 1,
+      "description": "thermal=热干化, solar=太阳能"
+    },
+    {
+      "key": "P_out",
+      "symbol": "P_out",
+      "name": "出泥含水率",
+      "unit": "-",
+      "default": 0.25,
+      "min": 0.1,
+      "max": 0.4,
+      "step": 0.05,
+      "description": "干化后污泥含水率"
+    },
+    {
+      "key": "T_air",
+      "symbol": "T air",
+      "name": "热风温度",
+      "unit": "°C",
+      "default": 180,
+      "min": 120,
+      "max": 250,
+      "step": 10,
+      "description": "热干化进风温度"
+    },
+    {
+      "key": "eta_thermal",
+      "symbol": "η",
+      "name": "热效率",
+      "unit": "-",
+      "default": 0.7,
+      "min": 0.55,
+      "max": 0.85,
+      "step": 0.05,
+      "description": "干化系统热效率"
+    },
+    {
+      "key": "q_evap",
+      "symbol": "q_evap",
+      "name": "蒸发速率",
+      "unit": "kgH2O/(m²·h)",
+      "default": 8,
+      "min": 4,
+      "max": 15,
+      "step": 1,
+      "description": "单位面积水分蒸发速率"
+    }
+  ],
+  "removal_rates": {},
+  "formula": "W_evap = DS×(1/(1-P_in)-1/(1-P_out))",
+  "formula_detail": "W_evap:蒸发水量(kg/d) DS:干固量(kg/d) P_in/P_out:进/出泥含水率",
+  "dependencies": [],
+  "tags": [
+    "污泥处理",
+    "干化",
+    "热干化",
+    "太阳能"
+  ],
+  "references": [
+    "GB50014-2021 §7.5",
+    "CJJ 131-2009"
+  ],
+  "elevation_loss": {
+    "value": 0.15,
+    "formula": "经验值: 0.15m"
+  }
+}

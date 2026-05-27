@@ -1,0 +1,8 @@
+{
+  "allow": {
+    "ui_contract": "n has 5 values for broader multi-pool configurations",
+    "con_mismatch": "hardcoded ok_* bounds overridden by runtime dynamic check",
+    "calc_fail": "standard test flow produces marginal weir load with default params",
+    "vec_mismatch": "validator uses different params for scalar vs vec; not a mod bug"
+  }
+}

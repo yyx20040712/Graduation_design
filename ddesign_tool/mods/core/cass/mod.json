@@ -1,0 +1,249 @@
+{
+  "id": "cass",
+  "name": "CASS反应器",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "循环式活性污泥法(CASS)反应器，集生物选择、主反应、沉淀滗水于一体的SBR变型工艺。脱氮除磷效率高。",
+  "category": "市政污水处理",
+  "icon": "🧬",
+  "node_type": "cass",
+  "process_stage": "secondary",
+  "node_class": "CASSNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    },
+    {
+      "type": "SLUDGE",
+      "name": "剩余污泥"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "池数",
+      "unit": "座",
+      "default": 4,
+      "min": 2,
+      "max": 8,
+      "step": 1,
+      "description": "并联池数量"
+    },
+    {
+      "key": "Ns",
+      "symbol": "N_s",
+      "name": "BOD负荷 Ns",
+      "unit": "kgBOD5/(kgMLSS·d)",
+      "default": 0.08,
+      "min": 0.05,
+      "max": 0.15,
+      "step": 0.01,
+      "description": "BOD5污泥负荷"
+    },
+    {
+      "key": "theta_c",
+      "symbol": "θ_c",
+      "name": "设计污泥龄 θc",
+      "unit": "d",
+      "default": 20.0,
+      "min": 10.0,
+      "max": 30.0,
+      "step": 1.0,
+      "description": "设计污泥龄"
+    },
+    {
+      "key": "Tc",
+      "symbol": "T_c",
+      "name": "工作周期 Tc",
+      "unit": "h",
+      "default": 6.0,
+      "min": 4.0,
+      "max": 8.0,
+      "step": 1,
+      "description": "单个运行周期时长"
+    },
+    {
+      "key": "H_max",
+      "symbol": "H_max",
+      "name": "最大有效水深",
+      "unit": "m",
+      "default": 6.0,
+      "min": 4.0,
+      "max": 6.0,
+      "step": 0.1
+    },
+    {
+      "key": "SVI",
+      "symbol": "SVI",
+      "name": "污泥容积指数",
+      "unit": "mL/g",
+      "default": 120,
+      "min": 80,
+      "max": 150,
+      "step": 5
+    },
+    {
+      "key": "T_design",
+      "symbol": "T",
+      "name": "设计水温 T",
+      "unit": "°C",
+      "default": 12,
+      "min": 8,
+      "max": 25,
+      "step": 1
+    },
+    {
+      "key": "X_MLSS",
+      "symbol": "X",
+      "name": "MLSS浓度 X",
+      "unit": "mg/L",
+      "default": 3500,
+      "min": 2500,
+      "max": 4500,
+      "step": 100
+    },
+    {
+      "key": "Y",
+      "symbol": "Y",
+      "name": "产率系数 Y",
+      "unit": "kgVSS/kgBOD5",
+      "default": 0.6,
+      "min": 0.4,
+      "max": 0.8,
+      "step": 0.05
+    },
+    {
+      "key": "delta_H_safe",
+      "symbol": "ΔH",
+      "name": "安全距离 ΔH",
+      "unit": "m",
+      "default": 0.5,
+      "min": 0.3,
+      "max": 0.8,
+      "step": 0.1
+    },
+    {
+      "key": "f",
+      "symbol": "f",
+      "name": "MLVSS/MLSS f",
+      "unit": "-",
+      "default": 0.75,
+      "min": 0.7,
+      "max": 0.8,
+      "step": 0.01
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_free",
+      "name": "超高",
+      "unit": "m",
+      "default": 0.5,
+      "min": 0.5,
+      "max": 0.5,
+      "step": 0.1
+    },
+    {
+      "key": "lam",
+      "symbol": "λ",
+      "name": "充水比 λ",
+      "unit": "-",
+      "default": 0.3,
+      "min": 0.2,
+      "max": 0.4,
+      "step": 0.05
+    },
+    {
+      "key": "r_selector",
+      "symbol": "r_sel",
+      "name": "选择区比例",
+      "unit": "-",
+      "default": 0.15,
+      "min": 0.1,
+      "max": 0.2,
+      "step": 0.01
+    },
+    {
+      "key": "Kd20",
+      "symbol": "Kd20",
+      "name": "衰减系数",
+      "unit": "d⁻¹",
+      "default": 0.05,
+      "min": 0.025,
+      "max": 0.1,
+      "step": 0.005000000000000001
+    },
+    {
+      "key": "a_prime",
+      "symbol": "a_prime",
+      "name": "碳化需氧系数",
+      "unit": "kgO₂/kgBOD₅",
+      "default": 0.5,
+      "min": 0.25,
+      "max": 1.0,
+      "step": 0.05
+    },
+    {
+      "key": "b_prime",
+      "symbol": "b_prime",
+      "name": "内源呼吸系数",
+      "unit": "d⁻¹",
+      "default": 0.12,
+      "min": 0.06,
+      "max": 0.24,
+      "step": 0.012
+    },
+    {
+      "key": "t_d",
+      "symbol": "t_d",
+      "name": "滗水时间",
+      "unit": "h",
+      "default": 1,
+      "min": 0.5,
+      "max": 2.0,
+      "step": 0.1
+    },
+    {
+      "key": "theta_t",
+      "symbol": "theta_t",
+      "name": "温度系数",
+      "unit": "-",
+      "default": 1.04,
+      "min": 0.52,
+      "max": 2.08,
+      "step": 0.10400000000000001
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.92,
+    "COD": 0.88,
+    "SS": 0.7,
+    "NH3N": 0.9,
+    "TN": 0.75,
+    "TP": 0.65
+  },
+  "formula": "V = Q(S₀-Sₑ) / (N_s × X × f)",
+  "formula_detail": "V: 反应区容积(m³), Q: 日均流量(m³/d), S₀: 进水BOD5(mg/L), Sₑ: 出水BOD5(mg/L), N_s: 污泥负荷, X: MLSS(mg/L), f: 挥发分比(0.75)",
+  "dependencies": [],
+  "tags": [
+    "二级处理",
+    "生物处理",
+    "SBR",
+    "脱氮除磷"
+  ],
+  "references": [
+    "GB50014-2021 §6.6"
+  ],
+  "elevation_loss": {
+    "value": 0.5,
+    "formula": "经验值: 0.5m"
+  }
+}

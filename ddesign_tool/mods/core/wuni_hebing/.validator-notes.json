@@ -1,0 +1,6 @@
+{
+  "allow": {
+    "vec_no_grid": "combiner node, no free params needed",
+    "calc_fail": "combiner node produces no dimensions with WaterFlow input"
+  }
+}

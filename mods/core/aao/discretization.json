@@ -1,0 +1,64 @@
+{
+  "free": {
+    "n": [
+      2,
+      3,
+      4
+    ],
+    "tp": [
+      1.0,
+      1.5,
+      2.0
+    ],
+    "tn": [
+      2.0,
+      3.0,
+      4.0
+    ],
+    "to": [
+      8.0,
+      10.0,
+      12.0
+    ],
+    "Ls": [
+      0.05,
+      0.1,
+      0.15
+    ],
+    "X_MLSS": [
+      2.5,
+      3.5,
+      4.5
+    ]
+  },
+  "fixed": {
+    "theta_c": 15,
+    "R": 60,
+    "Ri": 200,
+    "y": 0.7,
+    "Y_obs": 0.5,
+    "h_eff": 5.0,
+    "ratio_LB": 2.0,
+    "h_super": 0.5
+  },
+  "constraint_keys": [
+    "HRT_total",
+    "HRT_oxic",
+    "BOD_load"
+  ],
+  "constraint_names": [
+    "总HRT",
+    "好氧HRT",
+    "BOD负荷"
+  ],
+  "constraint_limits": {
+    "总HRT": ">= 6",
+    "好氧HRT": ">= 4",
+    "BOD负荷": "0.05~0.15"
+  },
+  "constraint_types": {
+    "总HRT": "result",
+    "好氧HRT": "result",
+    "BOD负荷": "result"
+  }
+}

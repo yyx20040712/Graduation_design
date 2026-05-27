@@ -1,0 +1,6 @@
+{
+  "allow": {
+    "ui_contract": "L_pipe has 6 values for representative pipe length sampling",
+    "con_mismatch": "constraint field naming mismatch in edge-case mod"
+  }
+}

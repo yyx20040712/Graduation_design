@@ -1,0 +1,116 @@
+{
+  "id": "tiaojiechi",
+  "name": "调节池",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "基于水力停留时间(HRT)法的调节池设计计算。均衡水量水质波动，为后续处理单元提供稳定进水。",
+  "category": "市政污水处理",
+  "icon": "🔄",
+  "node_type": "tiaojiechi",
+  "process_stage": "primary",
+  "node_class": "TiaojiechiNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "池数 n",
+      "unit": "座",
+      "default": 4,
+      "min": 2,
+      "max": 8,
+      "step": 1,
+      "description": "并联调节池数量"
+    },
+    {
+      "key": "HRT",
+      "symbol": "HRT",
+      "name": "水力停留时间 HRT",
+      "unit": "h",
+      "default": 6.0,
+      "min": 4.0,
+      "max": 12.0,
+      "step": 0.5,
+      "description": "水力停留时间，决定池容"
+    },
+    {
+      "key": "h_eff",
+      "symbol": "h_eff",
+      "name": "有效水深",
+      "unit": "m",
+      "default": 4.0,
+      "min": 3.0,
+      "max": 5.0,
+      "step": 0.1,
+      "description": "有效水深，一般取4~5m"
+    },
+    {
+      "key": "ratio_LB",
+      "symbol": "L/B",
+      "name": "长宽比 L/B",
+      "unit": "-",
+      "default": 2.0,
+      "min": 1.5,
+      "max": 3.0,
+      "step": 0.1,
+      "description": "池体长宽比"
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_free",
+      "name": "超高",
+      "unit": "m",
+      "default": 0.5,
+      "min": 0.3,
+      "max": 0.5,
+      "step": 0.1,
+      "description": "池体超高"
+    },
+    {
+      "key": "P_density",
+      "symbol": "P_d",
+      "name": "搅拌功率密度",
+      "unit": "W/m³",
+      "default": 12.0,
+      "min": 10,
+      "max": 15,
+      "step": 1.0,
+      "description": "搅拌功率密度，≥12W/m³"
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.0,
+    "COD": 0.0,
+    "SS": 0.0,
+    "NH3N": 0.0,
+    "TN": 0.0,
+    "TP": 0.0
+  },
+  "formula": "V = Q_single × HRT",
+  "formula_detail": "V: 单池有效容积(m³), Q_single: 单池平均时流量(m³/h), HRT: 水力停留时间(h)",
+  "dependencies": [],
+  "tags": [
+    "预处理",
+    "调节",
+    "水量均衡"
+  ],
+  "references": [
+    "GB50014-2021 §4.2"
+  ],
+  "elevation_loss": {
+    "value": 0.3,
+    "formula": "经验值: 0.3m"
+  }
+}

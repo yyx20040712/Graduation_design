@@ -1,0 +1,5 @@
+{
+  "allow": {
+    "calc_fail": "test flow may not satisfy h2/D ratio with default params"
+  }
+}

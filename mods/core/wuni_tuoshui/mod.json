@@ -1,0 +1,100 @@
+{
+  "id": "wuni_tuoshui",
+  "name": "污泥脱水间",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "机械污泥脱水车间，带式压滤或离心脱水，含水率从~96%降至80%以下。含PAM投加计算。",
+  "category": "市政污水处理",
+  "icon": "🔧",
+  "node_type": "wuni_tuoshui",
+  "process_stage": "sludge",
+  "node_class": "WuniTuoshuiNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "SLUDGE",
+      "name": "污泥进"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "SLUDGE",
+      "name": "脱水污泥"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "equip_type",
+      "symbol": "type",
+      "name": "设备类型(0=带式,1=离心)",
+      "unit": "-",
+      "default": "belt",
+      "min": 0,
+      "max": 1,
+      "step": 1,
+      "description": "belt=带式压滤, centrifuge=离心脱水"
+    },
+    {
+      "key": "q_capacity",
+      "symbol": "q_cap",
+      "name": "单机处理量",
+      "unit": "m³/h",
+      "default": 20,
+      "min": 5,
+      "max": 60,
+      "step": 5,
+      "description": "单台脱水机处理能力"
+    },
+    {
+      "key": "n_machines",
+      "symbol": "n_m",
+      "name": "脱水机台数",
+      "unit": "台",
+      "default": 2,
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "description": "工作台数(不含备用)"
+    },
+    {
+      "key": "P_out",
+      "symbol": "P_out",
+      "name": "出泥含水率",
+      "unit": "-",
+      "default": 0.78,
+      "min": 0.6,
+      "max": 0.85,
+      "step": 0.02,
+      "description": "脱水后污泥含水率"
+    },
+    {
+      "key": "dosage_PAM",
+      "symbol": "PAM",
+      "name": "PAM投加量",
+      "unit": "g/kgDS",
+      "default": 4,
+      "min": 2,
+      "max": 8,
+      "step": 0.5,
+      "description": "阳离子PAM投加量"
+    }
+  ],
+  "removal_rates": {},
+  "formula": "Q_out = DS / ((1-P_out)×1000)",
+  "formula_detail": "Q_out:脱水后湿泥量(m³/d) DS:干固量(kg/d) P_out:出泥含水率",
+  "dependencies": [],
+  "tags": [
+    "污泥处理",
+    "脱水",
+    "带式压滤",
+    "离心"
+  ],
+  "references": [
+    "GB50014-2021 §7.4",
+    "CJJ 131-2009"
+  ],
+  "elevation_loss": {
+    "value": 0.2,
+    "formula": "经验值: 0.2m"
+  }
+}

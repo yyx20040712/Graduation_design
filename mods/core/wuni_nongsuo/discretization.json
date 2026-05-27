@@ -1,0 +1,48 @@
+{
+  "free": {
+    "n": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "q_solid": [
+      30,
+      40,
+      50,
+      60
+    ],
+    "T_thicken": [
+      12,
+      16,
+      20,
+      24
+    ]
+  },
+  "fixed": {
+    "P_out": 0.96,
+    "h_eff": 4.0
+  },
+  "constraint_keys": [
+    "D_min",
+    "solid_flux",
+    "h_eff"
+  ],
+  "constraint_names": [
+    "池径 D >= 5",
+    "固体负荷合理",
+    "有效水深"
+  ],
+  "constraint_limits": {
+    "池径 D >= 5": ">= 5",
+    "固体负荷合理": "30~60",
+    "有效水深": "3.0~5.0"
+  },
+  "display_name": "污泥浓缩池",
+  "estimator_type": "circular",
+  "constraint_types": {
+    "池径 D >= 5": "result",
+    "固体负荷合理": "result",
+    "有效水深": "result"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "allow": {
+    "calc_fail": "standard test flow may not satisfy all checks with default params"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "free": {
+    "n": [
+      2,
+      4,
+      6,
+      8
+    ],
+    "HRT": [
+      4.0,
+      6.0,
+      8.0,
+      10.0
+    ],
+    "h_eff": [
+      4.0,
+      4.5,
+      5.0
+    ],
+    "ratio_LB": [
+      1.5,
+      2.0,
+      2.5,
+      3.0
+    ]
+  },
+  "fixed": {
+    "h_super": 0.5,
+    "P_density": 12.0
+  },
+  "constraint_keys": [
+    "LB_ratio",
+    "HRT_actual"
+  ],
+  "constraint_names": [
+    "长宽比 L/B",
+    "实际 HRT"
+  ],
+  "constraint_limits": {
+    "长宽比 L/B": "1.0~2.0",
+    "实际 HRT": "6~12"
+  },
+  "constraint_types": {
+    "长宽比 L/B": "result",
+    "实际 HRT": "result"
+  },
+  "display_name": ""
+}

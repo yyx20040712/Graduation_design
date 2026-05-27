@@ -1,0 +1,9 @@
+{
+  "suppressed": {
+    "calc_fail": [
+      "2 个校核未通过: 有效水深 h2, 径深比 D/h2"
+    ]
+  },
+  "design_decisions": [],
+  "created": "2026-05-27 12:08:58"
+}

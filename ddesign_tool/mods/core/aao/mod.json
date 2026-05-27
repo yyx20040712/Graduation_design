@@ -1,0 +1,202 @@
+{
+  "id": "aao",
+  "name": "AAO反应池",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "厌氧-缺氧-好氧（A2O）生物脱氮除磷工艺，适用于市政污水处理二级处理。同步去除BOD、氮、磷。",
+  "category": "市政污水处理",
+  "icon": "🔄",
+  "node_type": "aao",
+  "process_stage": "secondary",
+  "node_class": "AAONode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    },
+    {
+      "type": "SLUDGE",
+      "name": "剩余污泥"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "系列数",
+      "unit": "系列",
+      "default": 2,
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "description": "并联系列数"
+    },
+    {
+      "key": "Ls",
+      "symbol": "L_s",
+      "name": "BOD负荷",
+      "unit": "kgBOD5/(kgMLSS·d)",
+      "default": 0.1,
+      "min": 0.05,
+      "max": 0.15,
+      "step": 0.01,
+      "description": "五日生化需氧量污泥负荷"
+    },
+    {
+      "key": "X_MLSS",
+      "symbol": "X",
+      "name": "MLSS",
+      "unit": "g/L",
+      "default": 3.5,
+      "min": 2.0,
+      "max": 4.5,
+      "step": 0.5,
+      "description": "混合液悬浮固体浓度"
+    },
+    {
+      "key": "tp",
+      "symbol": "t_p",
+      "name": "厌氧HRT",
+      "unit": "h",
+      "default": 1.5,
+      "min": 1.0,
+      "max": 2.0,
+      "step": 0.5,
+      "description": "厌氧区水力停留时间"
+    },
+    {
+      "key": "tn",
+      "symbol": "t_n",
+      "name": "缺氧HRT",
+      "unit": "h",
+      "default": 3.0,
+      "min": 2.0,
+      "max": 4.0,
+      "step": 0.5,
+      "description": "缺氧区水力停留时间"
+    },
+    {
+      "key": "to",
+      "symbol": "t_o",
+      "name": "好氧HRT",
+      "unit": "h",
+      "default": 10.0,
+      "min": 8.0,
+      "max": 12.0,
+      "step": 1.0,
+      "description": "好氧区水力停留时间"
+    },
+    {
+      "key": "h_eff",
+      "symbol": "h_eff",
+      "name": "有效水深",
+      "unit": "m",
+      "default": 5.0,
+      "min": 4.0,
+      "max": 6.0,
+      "step": 0.5
+    },
+    {
+      "key": "ratio_LB",
+      "symbol": "L/B",
+      "name": "长宽比",
+      "unit": "-",
+      "default": 2.0,
+      "min": 1.5,
+      "max": 3.0,
+      "step": 0.5
+    },
+    {
+      "key": "R",
+      "symbol": "R",
+      "name": "回流比",
+      "unit": "-　",
+      "default": 60,
+      "min": 30.0,
+      "max": 120.0,
+      "step": 6.0
+    },
+    {
+      "key": "Ri",
+      "symbol": "Ri",
+      "name": "内回流比",
+      "unit": "-　",
+      "default": 200,
+      "min": 100.0,
+      "max": 400.0,
+      "step": 20.0
+    },
+    {
+      "key": "Y_obs",
+      "symbol": "Y_obs",
+      "name": "表观产率",
+      "unit": "kgVSS/kgBOD5",
+      "default": 0.5,
+      "min": 0.25,
+      "max": 1.0,
+      "step": 0.05
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_super",
+      "name": "超高",
+      "unit": "m",
+      "default": 0.5,
+      "min": 0.25,
+      "max": 1.0,
+      "step": 0.05
+    },
+    {
+      "key": "theta_c",
+      "symbol": "theta_c",
+      "name": "污泥龄",
+      "unit": "d",
+      "default": 15,
+      "min": 7.5,
+      "max": 30.0,
+      "step": 1.5
+    },
+    {
+      "key": "y",
+      "symbol": "y",
+      "name": "产率系数",
+      "unit": "-　",
+      "default": 0.7,
+      "min": 0.35,
+      "max": 1.4,
+      "step": 0.06999999999999999
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.92,
+    "COD": 0.88,
+    "SS": 0.8,
+    "NH3N": 0.9,
+    "TN": 0.7,
+    "TP": 0.75
+  },
+  "formula": "V = Q * S0 / (Ls * X)",
+  "formula_detail": "V: 好氧区容积(m3), Q: 流量(m3/d), S0: 进水BOD5(mg/L), Ls: BOD负荷, X: MLSS浓度",
+  "dependencies": [],
+  "tags": [
+    "二级处理",
+    "生物脱氮除磷",
+    "AAO",
+    "A2O"
+  ],
+  "references": [
+    "GB50014-2021",
+    "HJ577-2010"
+  ],
+  "elevation_loss": {
+    "value": 0.5,
+    "formula": "经验值: 0.5m"
+  }
+}

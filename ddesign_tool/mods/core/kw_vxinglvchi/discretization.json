@@ -1,0 +1,62 @@
+{
+  "free": {
+    "n": [
+      4,
+      8,
+      12,
+      16
+    ],
+    "v_filter": [
+      5.0,
+      5.5,
+      6.0,
+      6.5,
+      7.0,
+      7.5,
+      8.0
+    ],
+    "h_media": [
+      1.0,
+      1.2,
+      1.4
+    ],
+    "h_water": [
+      1.2,
+      1.4
+    ]
+  },
+  "fixed": {
+    "v_force": 10.0,
+    "T_filter": 24.0,
+    "k_self": 1.05,
+    "h_super": 0.5,
+    "h_plate": 0.1,
+    "h_under": 0.9,
+    "rho_head": 55.0,
+    "q_g1": 15.0,
+    "q_w2": 3.0,
+    "q_w3": 5.0,
+    "q_s": 2.0,
+    "t_g1": 3.0,
+    "t_gw": 4.0,
+    "t_w3": 5.0
+  },
+  "constraint_keys": [
+    "force",
+    "bw"
+  ],
+  "constraint_names": [
+    "强制滤速 v_q <= 限值",
+    "冲洗水占比 < 5%"
+  ],
+  "constraint_limits": {
+    "强制滤速 v_q <= 限值": "<= 10",
+    "冲洗水占比 < 5%": "< 5"
+  },
+  "constraint_types": {
+    "强制滤速 v_q <= 限值": "result",
+    "冲洗水占比 < 5%": "result"
+  },
+  "display_name": "",
+  "estimator_type": "rectangular"
+}

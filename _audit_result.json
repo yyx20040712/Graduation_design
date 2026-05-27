@@ -1,0 +1,952 @@
+[
+  {
+    "mod": "aao",
+    "line": 65,
+    "code": "Q_avg_h = flow.Q_avg_hourly; Q_per = Q_avg_h / n"
+  },
+  {
+    "mod": "aao",
+    "line": 67,
+    "code": "Va = Q_per * tp; Vn = Q_per * tn; Vo = Q_per * to"
+  },
+  {
+    "mod": "aao",
+    "line": 70,
+    "code": "Q_daily = Q_per * 24; Xv = X_MLSS * y"
+  },
+  {
+    "mod": "aao",
+    "line": 83,
+    "code": "t_total = V_actual / Q_per"
+  },
+  {
+    "mod": "aao",
+    "line": 94,
+    "code": "Q_total_daily = flow.Q_avg_daily"
+  },
+  {
+    "mod": "aao",
+    "line": 97,
+    "code": "Q_r = R / 100 * Q_per; Q_ri = Ri / 100 * Q_per"
+  },
+  {
+    "mod": "aao",
+    "line": 140,
+    "code": "Q_avg_h = flow.Q_avg_hourly; Q_per = Q_avg_h / n"
+  },
+  {
+    "mod": "aao",
+    "line": 142,
+    "code": "Va = Q_per * tp; Vn = Q_per * tn; Vo = Q_per * to"
+  },
+  {
+    "mod": "aao",
+    "line": 149,
+    "code": "t_total = np.where(Q_per > 0, V_actual / Q_per, 0)"
+  },
+  {
+    "mod": "aao",
+    "line": 151,
+    "code": "Q_daily = Q_per * 24; Xv = X_MLSS * y"
+  },
+  {
+    "mod": "cass",
+    "line": 120,
+    "code": "Q_avg = flow.Q_avg_daily  # m³/d"
+  },
+  {
+    "mod": "cass",
+    "line": 132,
+    "code": "V_main_single = V_main / n"
+  },
+  {
+    "mod": "cass",
+    "line": 307,
+    "code": "Q_avg = flow.Q_avg_daily"
+  },
+  {
+    "mod": "cass",
+    "line": 319,
+    "code": "V_main_single = V_main / n"
+  },
+  {
+    "mod": "chenshachi",
+    "line": 93,
+    "code": "Q_single = flow.Q_design / n"
+  },
+  {
+    "mod": "chenshachi",
+    "line": 94,
+    "code": "Q_single_m3h = Q_single * 3600"
+  },
+  {
+    "mod": "chenshachi",
+    "line": 97,
+    "code": "D_theory = math.sqrt(4 * Q_single_m3h / (PI * q_surf))"
+  },
+  {
+    "mod": "chenshachi",
+    "line": 114,
+    "code": "t_actual = V_eff / Q_single if Q_single > 0 else 0"
+  },
+  {
+    "mod": "chenshachi",
+    "line": 119,
+    "code": "V_sand_daily = (flow.Q_avg_daily / n) * X / 1e6  # m³/d"
+  },
+  {
+    "mod": "chenshachi",
+    "line": 155,
+    "code": "A_channel = Q_single / v_channel if v_channel > 0 else 0"
+  },
+  {
+    "mod": "chenshachi",
+    "line": 175,
+    "code": "result.add_dimension(\"每日沉砂量\", round(V_sand_daily, 4), \"m³/d\", formula=\"V_sand = (Q_avg/n)×X/10⁶ (3-24)\")"
+  },
+  {
+    "mod": "chenshachi",
+    "line": 223,
+    "code": "Q_single = flow.Q_design / n"
+  },
+  {
+    "mod": "chenshachi",
+    "line": 224,
+    "code": "Q_single_m3h = Q_single * 3600"
+  },
+  {
+    "mod": "chenshachi",
+    "line": 227,
+    "code": "D_theory = np.sqrt(4 * Q_single_m3h / (PI_V * q_surf))"
+  },
+  {
+    "mod": "chenshachi",
+    "line": 242,
+    "code": "t_actual = np.where(Q_single > 0, V_eff / Q_single, 0.0)"
+  },
+  {
+    "mod": "chenshachi",
+    "line": 246,
+    "code": "V_sand_daily = (flow.Q_avg_daily / n) * X / 1e6"
+  },
+  {
+    "mod": "chenshachi",
+    "line": 262,
+    "code": "A_channel = np.where(v_channel > 0, Q_single / v_channel, 0.0)"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 104,
+    "code": "Q_single = flow.Q_design / n"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 105,
+    "code": "Q_single_m3h = Q_single * 3600"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 108,
+    "code": "F = Q_single_m3h / q_prime"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 117,
+    "code": "q_prime_actual = Q_single_m3h / F_actual"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 137,
+    "code": "S_dry = flow.Q_avg_daily * (SS_in - SS_out) / 1000.0 / n  # kg/d (单池)"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 165,
+    "code": "q_weir = Q_single * 1000.0 / weir_len  # L/(s·m)"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 170,
+    "code": "d_center_theory = math.sqrt(4 * Q_single / (PI * v_center))"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 233,
+    "code": "Q_single = flow.Q_design / n"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 234,
+    "code": "Q_single_m3h = Q_single * 3600"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 237,
+    "code": "F = Q_single_m3h / q_prime"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 245,
+    "code": "q_prime_actual = np.where(F_actual > 0, Q_single_m3h / F_actual, 0.0)"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 258,
+    "code": "S_dry = flow.Q_avg_daily * (SS_in - SS_out) / 1000.0 / n  # kg/d 单池"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 273,
+    "code": "q_weir = np.where(weir_len > 0, Q_single * 1000.0 / weir_len, 0.0)"
+  },
+  {
+    "mod": "chuchenchi",
+    "line": 277,
+    "code": "d_center_theory = np.sqrt(4 * Q_single / (PI_V * v_center))"
+  },
+  {
+    "mod": "cugeshan",
+    "line": 85,
+    "code": "q = flow.Q_design / n  # m³/s"
+  },
+  {
+    "mod": "cugeshan",
+    "line": 130,
+    "code": "W = flow.Q_design * 86400 * self._W1 / (flow.Kz * 1000)"
+  },
+  {
+    "mod": "cugeshan",
+    "line": 200,
+    "code": "q = flow.Q_design / n  # 单台流量 m³/s"
+  },
+  {
+    "mod": "cugeshan",
+    "line": 243,
+    "code": "W = flow.Q_design * 86400 * cls._W1 / (flow.Kz * 1000)"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 110,
+    "code": "Q_single = flow.Q_design / n       # m³/s"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 111,
+    "code": "Q_single_m3h = Q_single * 3600     # m³/h"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 116,
+    "code": "V_mix = Q_single * t_mix * 60.0  # m³"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 131,
+    "code": "Q_r = Q_single * R_sludge       # m³/s 回流污泥量"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 132,
+    "code": "Q_floc_total = Q_single + Q_r   # m³/s 进入絮凝区总流量"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 148,
+    "code": "A_settle = Q_single_m3h / q_surf  # m²"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 184,
+    "code": "S_dry_SS = flow.Q_avg_daily * SS_removed / 1000.0  # kg/d"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 186,
+    "code": "S_dry_chem = flow.Q_avg_daily * (D_PAC / 1000.0) * k_PAC  # kg/d"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 253,
+    "code": "q_weir = Q_single * 1000.0 / weir_len if weir_len > 0 else 0  # L/(s·m)"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 266,
+    "code": "result.add_dimension(\"PAC日耗量\", round(D_PAC * flow.Q_avg_daily / 1000, 1), \"kg/d\")"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 305,
+    "code": "if flow.Q_design <= 0:"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 326,
+    "code": "Q_single = flow.Q_design / n"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 327,
+    "code": "Q_single_m3h = Q_single * 3600"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 330,
+    "code": "V_mix = Q_single * t_mix * 60.0"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 335,
+    "code": "Q_r = Q_single * R_sludge"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 336,
+    "code": "Q_floc_total = Q_single + Q_r"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 342,
+    "code": "A_settle = Q_single_m3h / q_surf"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 358,
+    "code": "S_dry_SS = flow.Q_avg_daily * SS_removed / 1000.0"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 359,
+    "code": "S_dry_chem = flow.Q_avg_daily * (D_PAC / 1000.0) * k_PAC"
+  },
+  {
+    "mod": "gaomidu",
+    "line": 381,
+    "code": "q_weir = np.where(weir_len > 0, Q_single * 1000.0 / weir_len, 0.0)"
+  },
+  {
+    "mod": "jipeishuijing",
+    "line": 55,
+    "code": "Q_max = flow.Q_design_as(\"m3/h\")"
+  },
+  {
+    "mod": "jipeishuijing",
+    "line": 82,
+    "code": "Q_max = flow.Q_design_as(\"m3/h\")"
+  },
+  {
+    "mod": "jishuijing",
+    "line": 50,
+    "code": "Q_max = flow.Q_design_as(\"m3/h\")"
+  },
+  {
+    "mod": "jishuijing",
+    "line": 73,
+    "code": "Q_max = flow.Q_design_as(\"m3/h\")"
+  },
+  {
+    "mod": "kw_chenshachi",
+    "line": 102,
+    "code": "Q_max = flow.Q_design  # m³/s"
+  },
+  {
+    "mod": "kw_chenshachi",
+    "line": 103,
+    "code": "Q_single = Q_max / n  # 单池流量 m³/s"
+  },
+  {
+    "mod": "kw_chenshachi",
+    "line": 131,
+    "code": "V_sand_daily = flow.Q_avg_daily * X_sand / 1000  # m³/d"
+  },
+  {
+    "mod": "kw_chenshachi",
+    "line": 145,
+    "code": "weir_load = Q_single * 1000 / weir_length  # L/(s·m)"
+  },
+  {
+    "mod": "kw_chenshachi",
+    "line": 183,
+    "code": "if flow.Q_design <= 0:"
+  },
+  {
+    "mod": "kw_chenshachi",
+    "line": 195,
+    "code": "Q_max = flow.Q_design"
+  },
+  {
+    "mod": "kw_chenshachi",
+    "line": 196,
+    "code": "Q_single = flow.Q_design / n  # 单池流量 m³/s"
+  },
+  {
+    "mod": "kw_chenshachi",
+    "line": 214,
+    "code": "V_sand_required = flow.Q_avg_daily * X_sand / 1000 * 2"
+  },
+  {
+    "mod": "kw_chenshachi",
+    "line": 218,
+    "code": "weir_load = Q_single * 1000 / (B_single * 2)"
+  },
+  {
+    "mod": "kw_cifenli",
+    "line": 95,
+    "code": "Q_single = flow.Q_design / n  # m³/s"
+  },
+  {
+    "mod": "kw_cifenli",
+    "line": 96,
+    "code": "Q_single_m3h = Q_single * 3600  # m³/h"
+  },
+  {
+    "mod": "kw_cifenli",
+    "line": 99,
+    "code": "A_required = Q_single_m3h / v_filt  # m²"
+  },
+  {
+    "mod": "kw_cifenli",
+    "line": 110,
+    "code": "v_actual = Q_single_m3h / A_actual"
+  },
+  {
+    "mod": "kw_cifenli",
+    "line": 122,
+    "code": "wash_ratio = backwash_vol_per_time / (Q_single_m3h * 24) * 100  # 占日处理量%"
+  },
+  {
+    "mod": "kw_cifenli",
+    "line": 128,
+    "code": "Q_daily = flow.Q_avg_daily"
+  },
+  {
+    "mod": "kw_cifenli",
+    "line": 168,
+    "code": "if flow.Q_design <= 0:"
+  },
+  {
+    "mod": "kw_cifenli",
+    "line": 177,
+    "code": "Q_single_m3h = flow.Q_design / n * 3600"
+  },
+  {
+    "mod": "kw_cifenli",
+    "line": 178,
+    "code": "A_required = Q_single_m3h / v_filt"
+  },
+  {
+    "mod": "kw_cifenli",
+    "line": 183,
+    "code": "v_actual = Q_single_m3h / A_actual"
+  },
+  {
+    "mod": "kw_gaomidu",
+    "line": 83,
+    "code": "Q_single = flow.Q_design / n"
+  },
+  {
+    "mod": "kw_gaomidu",
+    "line": 84,
+    "code": "Q_single_m3h = Q_single * 3600"
+  },
+  {
+    "mod": "kw_gaomidu",
+    "line": 85,
+    "code": "V_mix = Q_single * t_mix * 60.0"
+  },
+  {
+    "mod": "kw_gaomidu",
+    "line": 86,
+    "code": "V_floc = Q_single * t_floc * 60.0"
+  },
+  {
+    "mod": "kw_gaomidu",
+    "line": 87,
+    "code": "A_settle = Q_single_m3h / q_surf"
+  },
+  {
+    "mod": "kw_gaomidu",
+    "line": 125,
+    "code": "if flow.Q_design <= 0:"
+  },
+  {
+    "mod": "kw_gaomidu",
+    "line": 139,
+    "code": "Q_single = flow.Q_design / n"
+  },
+  {
+    "mod": "kw_gaomidu",
+    "line": 140,
+    "code": "Q_single_m3h = Q_single * 3600"
+  },
+  {
+    "mod": "kw_gaomidu",
+    "line": 141,
+    "code": "V_mix = Q_single * t_mix * 60.0"
+  },
+  {
+    "mod": "kw_gaomidu",
+    "line": 142,
+    "code": "V_floc = Q_single * t_floc * 60.0"
+  },
+  {
+    "mod": "kw_gaomidu",
+    "line": 143,
+    "code": "A_settle = Q_single_m3h / q_surf"
+  },
+  {
+    "mod": "kw_ningjiao",
+    "line": 96,
+    "code": "Q_per_series = flow.Q_design / n  # m³/s"
+  },
+  {
+    "mod": "kw_ningjiao",
+    "line": 99,
+    "code": "V_mix = Q_per_series * t_mix  # m³"
+  },
+  {
+    "mod": "kw_ningjiao",
+    "line": 102,
+    "code": "V_floc = Q_per_series * t_floc * 60  # m³"
+  },
+  {
+    "mod": "kw_ningjiao",
+    "line": 119,
+    "code": "t_actual = V_actual / Q_per_series / 60  # 实际停留时间 min"
+  },
+  {
+    "mod": "kw_ningjiao",
+    "line": 145,
+    "code": "Q_daily = flow.Q_avg_daily  # m³/d"
+  },
+  {
+    "mod": "kw_ningjiao",
+    "line": 191,
+    "code": "if flow.Q_design <= 0:"
+  },
+  {
+    "mod": "kw_ningjiao",
+    "line": 205,
+    "code": "Q_per_series = flow.Q_design / n"
+  },
+  {
+    "mod": "kw_ningjiao",
+    "line": 206,
+    "code": "V_mix = Q_per_series * t_mix"
+  },
+  {
+    "mod": "kw_ningjiao",
+    "line": 207,
+    "code": "V_floc = Q_per_series * t_floc * 60"
+  },
+  {
+    "mod": "kw_ningjiao",
+    "line": 217,
+    "code": "t_actual = V_actual / Q_per_series / 60"
+  },
+  {
+    "mod": "kw_tiaojiechi",
+    "line": 95,
+    "code": "Q_per_pool = Q_avg_h / n"
+  },
+  {
+    "mod": "kw_tiaojiechi",
+    "line": 98,
+    "code": "V_eff = Q_per_pool * HRT"
+  },
+  {
+    "mod": "kw_tiaojiechi",
+    "line": 111,
+    "code": "HRT_actual = V_actual / Q_per_pool"
+  },
+  {
+    "mod": "kw_tiaojiechi",
+    "line": 138,
+    "code": "dry_sludge_t_d = flow.Q_avg_daily * SS_in * eta_SS / 1e6  # t/d"
+  },
+  {
+    "mod": "kw_tiaojiechi",
+    "line": 155,
+    "code": "result.add_dimension(\"单池设计流量\", round(Q_per_pool, 2), \"m³/h\")"
+  },
+  {
+    "mod": "kw_tiaojiechi",
+    "line": 177,
+    "code": "if flow.Q_design <= 0:"
+  },
+  {
+    "mod": "kw_tiaojiechi",
+    "line": 183,
+    "code": "(\"Q_per_pool\", np.float64),"
+  },
+  {
+    "mod": "kw_tiaojiechi",
+    "line": 192,
+    "code": "Q_per_pool = Q_avg_h / n"
+  },
+  {
+    "mod": "kw_tiaojiechi",
+    "line": 193,
+    "code": "V_eff = Q_per_pool * HRT"
+  },
+  {
+    "mod": "kw_tiaojiechi",
+    "line": 201,
+    "code": "HRT_actual = V_actual / Q_per_pool"
+  },
+  {
+    "mod": "kw_tiaojiechi",
+    "line": 220,
+    "code": "(\"Q_per_pool\", np.float64),"
+  },
+  {
+    "mod": "kw_tiaojiechi",
+    "line": 231,
+    "code": "result[\"Q_per_pool\"] = Q_per_pool"
+  },
+  {
+    "mod": "kw_vxinglvchi",
+    "line": 76,
+    "code": "Q_total = flow.Q_design * k_self  # m³/s"
+  },
+  {
+    "mod": "kw_vxinglvchi",
+    "line": 77,
+    "code": "Q_total_m3h = Q_total * 3600.0"
+  },
+  {
+    "mod": "kw_vxinglvchi",
+    "line": 80,
+    "code": "A_total = Q_total_m3h / v_filter  # m²"
+  },
+  {
+    "mod": "kw_vxinglvchi",
+    "line": 83,
+    "code": "A_single = A_total / n"
+  },
+  {
+    "mod": "kw_vxinglvchi",
+    "line": 87,
+    "code": "v_force_actual = Q_total_m3h / (A_single * (n - 1))"
+  },
+  {
+    "mod": "kw_vxinglvchi",
+    "line": 107,
+    "code": "V_produced = flow.Q_design * 3600.0 * T_filter  # m³"
+  },
+  {
+    "mod": "kw_vxinglvchi",
+    "line": 154,
+    "code": "if flow.Q_design <= 0:"
+  },
+  {
+    "mod": "kw_vxinglvchi",
+    "line": 169,
+    "code": "Q_total = flow.Q_design * k_self"
+  },
+  {
+    "mod": "kw_vxinglvchi",
+    "line": 170,
+    "code": "Q_total_m3h = Q_total * 3600.0"
+  },
+  {
+    "mod": "kw_vxinglvchi",
+    "line": 172,
+    "code": "A_total = Q_total_m3h / v_filter"
+  },
+  {
+    "mod": "kw_vxinglvchi",
+    "line": 173,
+    "code": "A_single = A_total / n"
+  },
+  {
+    "mod": "kw_vxinglvchi",
+    "line": 176,
+    "code": "v_force_actual = np.where(n > 1, Q_total_m3h / (A_single * (n - 1)), np.inf)"
+  },
+  {
+    "mod": "kw_vxinglvchi",
+    "line": 189,
+    "code": "V_produced = flow.Q_design * 3600.0 * T_filter"
+  },
+  {
+    "mod": "kw_ziwai",
+    "line": 96,
+    "code": "Q_single = flow.Q_design / n"
+  },
+  {
+    "mod": "kw_ziwai",
+    "line": 117,
+    "code": "v_actual = Q_single / A_channel"
+  },
+  {
+    "mod": "kw_ziwai",
+    "line": 123,
+    "code": "v_if_single = flow.Q_design / A_channel"
+  },
+  {
+    "mod": "kw_ziwai",
+    "line": 126,
+    "code": "f\"当前渠道数 n={n}，单渠流量仅 {Q_single:.3f} m³/s。\""
+  },
+  {
+    "mod": "kw_ziwai",
+    "line": 218,
+    "code": "if flow.Q_design <= 0:"
+  },
+  {
+    "mod": "kw_ziwai",
+    "line": 235,
+    "code": "Q_single = flow.Q_design / n"
+  },
+  {
+    "mod": "kw_ziwai",
+    "line": 242,
+    "code": "v_actual = Q_single / A_channel"
+  },
+  {
+    "mod": "peishuijing",
+    "line": 52,
+    "code": "Q_single = flow.Q_design"
+  },
+  {
+    "mod": "peishuijing",
+    "line": 55,
+    "code": "b_weir = Q_single / (n_out * m * math.sqrt(2 * GRAVITY) * h_weir ** 1.5) if h_weir > 0 else 0"
+  },
+  {
+    "mod": "peishuijing",
+    "line": 78,
+    "code": "Q_single = flow.Q_design"
+  },
+  {
+    "mod": "peishuijing",
+    "line": 80,
+    "code": "b_weir = np.where(h_weir > 0, Q_single / (n_out * m * np.sqrt(2 * GRAVITY) * h_weir ** 1.5), 0.0)"
+  },
+  {
+    "mod": "peishuiqu",
+    "line": 62,
+    "code": "Q_single = flow.Q_design"
+  },
+  {
+    "mod": "peishuiqu",
+    "line": 63,
+    "code": "A_channel = Q_single / v_channel if v_channel > 0 else 0"
+  },
+  {
+    "mod": "peishuiqu",
+    "line": 89,
+    "code": "Q_single = flow.Q_design"
+  },
+  {
+    "mod": "peishuiqu",
+    "line": 90,
+    "code": "A_channel = np.where(v_channel > 0, Q_single / v_channel, 0.0)"
+  },
+  {
+    "mod": "tiaojiechi",
+    "line": 8,
+    "code": "(3-1): Q_single = Q_avg / n"
+  },
+  {
+    "mod": "tiaojiechi",
+    "line": 9,
+    "code": "(3-2): V_eff = Q_single * HRT"
+  },
+  {
+    "mod": "tiaojiechi",
+    "line": 99,
+    "code": "1. 单池设计流量 Q_per_pool = Q_avg_hourly / n"
+  },
+  {
+    "mod": "tiaojiechi",
+    "line": 100,
+    "code": "2. 有效容积 V_eff = Q_per_pool * HRT"
+  },
+  {
+    "mod": "tiaojiechi",
+    "line": 124,
+    "code": "Q_per_pool = Q_avg_h / n"
+  },
+  {
+    "mod": "tiaojiechi",
+    "line": 128,
+    "code": "V_eff = Q_per_pool * HRT  # m³"
+  },
+  {
+    "mod": "tiaojiechi",
+    "line": 147,
+    "code": "HRT_actual = V_actual / Q_per_pool  # h"
+  },
+  {
+    "mod": "tiaojiechi",
+    "line": 192,
+    "code": "result.add_dimension(\"单池设计流量\", round(Q_per_pool, 2), \"m³/h\")"
+  },
+  {
+    "mod": "tiaojiechi",
+    "line": 226,
+    "code": "Q_per_pool = Q_avg_h / n  # m³/h"
+  },
+  {
+    "mod": "tiaojiechi",
+    "line": 229,
+    "code": "V_eff = Q_per_pool * HRT  # m³"
+  },
+  {
+    "mod": "tiaojiechi",
+    "line": 242,
+    "code": "HRT_actual = V_actual / Q_per_pool  # h"
+  },
+  {
+    "mod": "tiaojiechi",
+    "line": 272,
+    "code": "(\"Q_per_pool\", np.float64),"
+  },
+  {
+    "mod": "tiaojiechi",
+    "line": 291,
+    "code": "result[\"Q_per_pool\"] = Q_per_pool"
+  },
+  {
+    "mod": "vxinglvchi",
+    "line": 102,
+    "code": "Q_d = flow.Q_avg_daily * k_self  # m³/d (含自用水)"
+  },
+  {
+    "mod": "vxinglvchi",
+    "line": 131,
+    "code": "f_single = F_total / n  # m²"
+  },
+  {
+    "mod": "vxinglvchi",
+    "line": 194,
+    "code": "V_daily_per_cell = Q_d / n  # m³/d per cell"
+  },
+  {
+    "mod": "vxinglvchi",
+    "line": 244,
+    "code": "Q_cell = Q_d / n / 3600.0 / 24.0  # m³/s → 按日平均"
+  },
+  {
+    "mod": "vxinglvchi",
+    "line": 258,
+    "code": "Q_filtered = Q_d / n / 24.0  # m³/h"
+  },
+  {
+    "mod": "vxinglvchi",
+    "line": 320,
+    "code": "if flow.Q_avg_daily <= 0:"
+  },
+  {
+    "mod": "vxinglvchi",
+    "line": 340,
+    "code": "Q_d = flow.Q_avg_daily * k_self  # m³/d"
+  },
+  {
+    "mod": "vxinglvchi",
+    "line": 349,
+    "code": "f_single = F_total / n"
+  },
+  {
+    "mod": "vxinglvchi",
+    "line": 371,
+    "code": "V_daily = Q_d / n"
+  },
+  {
+    "mod": "vxinglvchi",
+    "line": 391,
+    "code": "Q_cell = Q_d / n / 3600.0 / 24.0"
+  },
+  {
+    "mod": "vxinglvchi",
+    "line": 396,
+    "code": "Q_filtered_m3s = Q_d / n / 24.0 / 3600.0"
+  },
+  {
+    "mod": "wuni_nongsuo",
+    "line": 86,
+    "code": "A_single = A_total / n"
+  },
+  {
+    "mod": "wuni_nongsuo",
+    "line": 104,
+    "code": "V_single = Q_wet_in * (T_thicken / 24) / n"
+  },
+  {
+    "mod": "wuni_nongsuo",
+    "line": 169,
+    "code": "A_single = A_total / n"
+  },
+  {
+    "mod": "wuni_nongsuo",
+    "line": 179,
+    "code": "V_single = Q_wet_in * (T_thicken / 24) / n"
+  },
+  {
+    "mod": "wuni_xiaohua",
+    "line": 84,
+    "code": "V_single = V_total / n"
+  },
+  {
+    "mod": "wuni_xiaohua",
+    "line": 161,
+    "code": "V_total = Q_wet_in * theta_digest; V_single = V_total / n"
+  },
+  {
+    "mod": "xigeshan",
+    "line": 85,
+    "code": "q = flow.Q_design / n  # m³/s"
+  },
+  {
+    "mod": "xigeshan",
+    "line": 130,
+    "code": "W = flow.Q_design * 86400 * self._W1 / (flow.Kz * 1000)"
+  },
+  {
+    "mod": "xigeshan",
+    "line": 200,
+    "code": "q = flow.Q_design / n  # 单台流量 m³/s"
+  },
+  {
+    "mod": "xigeshan",
+    "line": 243,
+    "code": "W = flow.Q_design * 86400 * cls._W1 / (flow.Kz * 1000)"
+  },
+  {
+    "mod": "ziwai",
+    "line": 95,
+    "code": "Q_single = flow.Q_design / n"
+  },
+  {
+    "mod": "ziwai",
+    "line": 116,
+    "code": "v_actual = Q_single / A_channel"
+  },
+  {
+    "mod": "ziwai",
+    "line": 122,
+    "code": "v_if_single = flow.Q_design / A_channel"
+  },
+  {
+    "mod": "ziwai",
+    "line": 125,
+    "code": "f\"当前渠道数 n={n}，单渠流量仅 {Q_single:.3f} m³/s。\""
+  },
+  {
+    "mod": "ziwai",
+    "line": 219,
+    "code": "if flow.Q_design <= 0:"
+  },
+  {
+    "mod": "ziwai",
+    "line": 236,
+    "code": "Q_single = flow.Q_design / n"
+  },
+  {
+    "mod": "ziwai",
+    "line": 243,
+    "code": "v_actual = Q_single / A_channel"
+  }
+]

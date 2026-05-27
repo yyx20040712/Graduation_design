@@ -1,0 +1,179 @@
+{
+  "id": "erchunchi",
+  "name": "辐流式二沉池",
+  "version": "5.1.0",
+  "author": "yyx",
+  "description": "辐流式二次沉淀池，用于生物处理后的泥水分离。适用表面负荷 0.8~1.5 m³/(m²·h)，中心进水周边出水。",
+  "category": "市政污水处理",
+  "process_stage": "secondary",
+  "icon": "🟤",
+  "node_type": "erchunchi",
+  "node_class": "ErchunchiNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    },
+    {
+      "type": "SLUDGE",
+      "name": "排泥"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "池数量",
+      "unit": "座",
+      "default": 2,
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "description": "并联二沉池数量 (≥2)"
+    },
+    {
+      "key": "q_prime",
+      "symbol": "q'",
+      "name": "表面负荷 q'",
+      "unit": "m³/(m²·h)",
+      "default": 1.0,
+      "min": 0.6,
+      "max": 1.5,
+      "step": 0.1,
+      "description": "GB50014 §6.5: 活性污泥法后 0.6~1.5"
+    },
+    {
+      "key": "solid_load",
+      "symbol": "G",
+      "name": "固体负荷",
+      "unit": "kgMLSS/(m²·d)",
+      "default": 120,
+      "min": 80,
+      "max": 150,
+      "step": 5,
+      "description": "GB50014 §6.5: ≤150 kgMLSS/(m²·d)"
+    },
+    {
+      "key": "T_settle",
+      "symbol": "T",
+      "name": "沉淀时间 T",
+      "unit": "h",
+      "default": 2.5,
+      "min": 1.5,
+      "max": 4.0,
+      "step": 0.5,
+      "description": "GB50014: 1.5~4.0h"
+    },
+    {
+      "key": "P_sludge",
+      "symbol": "P_sludge",
+      "name": "污泥含水率",
+      "unit": "kW",
+      "default": 0.992,
+      "min": 0.496,
+      "max": 1.984,
+      "step": 0.09920000000000001
+    },
+    {
+      "key": "R1",
+      "symbol": "R1",
+      "name": "泥斗上口半径",
+      "unit": "-",
+      "default": 1.8,
+      "min": 0.9,
+      "max": 3.6,
+      "step": 0.18000000000000002
+    },
+    {
+      "key": "R2",
+      "symbol": "R2",
+      "name": "泥斗下口半径",
+      "unit": "-",
+      "default": 0.8,
+      "min": 0.4,
+      "max": 1.6,
+      "step": 0.08000000000000002
+    },
+    {
+      "key": "RAS_ratio",
+      "symbol": "RAS_ratio",
+      "name": "回流比",
+      "unit": "-",
+      "default": 0.5,
+      "min": 0.25,
+      "max": 1.0,
+      "step": 0.05
+    },
+    {
+      "key": "X_MLSS",
+      "symbol": "X_MLSS",
+      "name": "MLSS浓度",
+      "unit": "mg/L",
+      "default": 3.5,
+      "min": 1.75,
+      "max": 7.0,
+      "step": 0.35000000000000003
+    },
+    {
+      "key": "h3",
+      "symbol": "h3",
+      "name": "缓冲层",
+      "unit": "-",
+      "default": 0.3,
+      "min": 0.15,
+      "max": 0.6,
+      "step": 0.03
+    },
+    {
+      "key": "h5",
+      "symbol": "h5",
+      "name": "泥斗高度",
+      "unit": "-",
+      "default": 1.5,
+      "min": 0.75,
+      "max": 3.0,
+      "step": 0.15000000000000002
+    },
+    {
+      "key": "i_slope",
+      "symbol": "i_slope",
+      "name": "池底坡度",
+      "unit": "-",
+      "default": 0.05,
+      "min": 0.025,
+      "max": 0.1,
+      "step": 0.005000000000000001
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.25,
+    "COD": 0.2,
+    "SS": 0.7,
+    "NH3N": 0.05,
+    "TN": 0.08,
+    "TP": 0.1
+  },
+  "formula": "F = Q_max / (n × q')",
+  "formula_detail": "F:单池面积(m²) Q_max:最大设计流量(m³/h) n:池数 q':表面负荷",
+  "dependencies": [],
+  "tags": [
+    "二级处理",
+    "沉淀",
+    "泥水分离"
+  ],
+  "references": [
+    "GB50014-2021 §6.5",
+    "CJJ 131-2009"
+  ],
+  "elevation_loss": {
+    "value": 0.5,
+    "formula": "经验值: 0.5m"
+  }
+}

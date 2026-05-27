@@ -1,0 +1,6 @@
+{
+  "allow": {
+    "ui_contract": "q_prime(7), T_settle(5) expanded for solution diversity",
+    "con_mismatch": "表面负荷 hardcoded overridden by runtime dynamic check"
+  }
+}

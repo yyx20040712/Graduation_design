@@ -1,0 +1,200 @@
+{
+  "id": "kw_cifenli",
+  "name": "磁盘分离机",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "稀土永磁盘高梯度磁分离设备。含吸附面积、流道停留时间、流速、表面负荷、线速度、设备外形全流程设计。SS去除≥90%。",
+  "category": "矿井水处理",
+  "icon": "🧲",
+  "node_type": "kw_cifenli",
+  "process_stage": "mine_water",
+  "node_class": "KwCifenliNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "N_units",
+      "symbol": "N",
+      "name": "设备台数 N",
+      "unit": "台",
+      "default": 2,
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "description": "单台50~700 m³/h"
+    },
+    {
+      "key": "D_disk",
+      "symbol": "D",
+      "name": "磁盘直径 D",
+      "unit": "m",
+      "default": 1.0,
+      "min": 0.6,
+      "max": 1.5,
+      "step": 0.1,
+      "description": "0.6~1.5m，典型1.0m"
+    },
+    {
+      "key": "delta",
+      "symbol": "δ",
+      "name": "磁盘间距 δ",
+      "unit": "m",
+      "default": 0.025,
+      "min": 0.02,
+      "max": 0.03,
+      "step": 0.005,
+      "description": "20~30mm"
+    },
+    {
+      "key": "eta_immerse",
+      "symbol": "η",
+      "name": "浸没率 η",
+      "unit": "-",
+      "default": 0.4,
+      "min": 0.35,
+      "max": 0.45,
+      "step": 0.05,
+      "description": "0.35~0.45"
+    },
+    {
+      "key": "omega",
+      "symbol": "ω",
+      "name": "转速 ω",
+      "unit": "r/min",
+      "default": 3,
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "description": "通常2~3 r/min"
+    },
+    {
+      "key": "q_design",
+      "symbol": "q",
+      "name": "设计表面负荷",
+      "unit": "m³/(m²·h)",
+      "default": 30,
+      "min": 20,
+      "max": 40,
+      "step": 5,
+      "description": "20~40 m³/(m²·h)"
+    },
+    {
+      "key": "eta_SS",
+      "symbol": "η_SS",
+      "name": "SS去除率 η_SS",
+      "unit": "-",
+      "default": 0.95,
+      "min": 0.9,
+      "max": 0.98,
+      "step": 0.01,
+      "description": "≥90%，实际95~97.5%"
+    },
+    {
+      "key": "B0",
+      "symbol": "B0",
+      "name": "磁场强度",
+      "unit": "-",
+      "default": 0.6,
+      "min": 0.3,
+      "max": 1.2,
+      "step": 0.06
+    },
+    {
+      "key": "P_sludge",
+      "symbol": "P_sludge",
+      "name": "污泥含水率",
+      "unit": "kW",
+      "default": 0.92,
+      "min": 0.46,
+      "max": 1.84,
+      "step": 0.09200000000000001
+    },
+    {
+      "key": "delta_bottom",
+      "symbol": "delta_bottom",
+      "name": "底部间隙",
+      "unit": "m",
+      "default": 0.4,
+      "min": 0.2,
+      "max": 0.8,
+      "step": 0.04000000000000001
+    },
+    {
+      "key": "delta_end",
+      "symbol": "delta_end",
+      "name": "端部间隙",
+      "unit": "m",
+      "default": 0.6,
+      "min": 0.3,
+      "max": 1.2,
+      "step": 0.06
+    },
+    {
+      "key": "delta_side",
+      "symbol": "delta_side",
+      "name": "侧面间隙",
+      "unit": "m",
+      "default": 0.3,
+      "min": 0.15,
+      "max": 0.6,
+      "step": 0.03
+    },
+    {
+      "key": "delta_top",
+      "symbol": "delta_top",
+      "name": "顶部间隙",
+      "unit": "m",
+      "default": 0.6,
+      "min": 0.3,
+      "max": 1.2,
+      "step": 0.06
+    },
+    {
+      "key": "rho_sludge",
+      "symbol": "rho_sludge",
+      "name": "湿泥密度",
+      "unit": "kg/m³",
+      "default": 1.1,
+      "min": 0.55,
+      "max": 2.2,
+      "step": 0.11000000000000001
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.1,
+    "COD": 0.2,
+    "SS": 0.85,
+    "NH3N": 0.05,
+    "TN": 0.05,
+    "TP": 0.7
+  },
+  "formula": "A_total = 2×n×πD²/4×η; t_disk = A_ch×L_ch/Q₁",
+  "formula_detail": "磁盘分离机: 表面负荷20~40 m³/(m²·h), 流道v≤0.1m/s, t=30~60s, v_line≤0.3m/s",
+  "elevation_formula": "下游水面标高 = 上游水面标高 - 0.20m",
+  "elevation_loss": {
+    "value": 0.2,
+    "formula": "经验值: 0.20m"
+  },
+  "dependencies": [],
+  "tags": [
+    "矿井水",
+    "深度处理",
+    "磁盘分离",
+    "磁分离"
+  ],
+  "references": [
+    "煤炭矿井水处理设计规范",
+    "磁混凝沉淀技术规程"
+  ]
+}

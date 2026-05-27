@@ -1,0 +1,241 @@
+{
+  "id": "ziwai",
+  "name": "紫外消毒池",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "紫外消毒池，利用UV-C波段灭活水中病原微生物。渠内流速0.15~0.7m/s，渠道数不少于2条。",
+  "category": "市政污水处理",
+  "icon": "☀️",
+  "node_type": "ziwai",
+  "process_stage": "tertiary",
+  "node_class": "ZiwaiNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "渠道数",
+      "unit": "条",
+      "default": 2,
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "description": "渠道数不少于2条，以便检修"
+    },
+    {
+      "key": "D_UV",
+      "symbol": "D_UV",
+      "name": "紫外剂量",
+      "unit": "mJ/cm2",
+      "default": 20,
+      "min": 30,
+      "max": 50,
+      "step": 5
+    },
+    {
+      "key": "T254",
+      "symbol": "T₂₅₄",
+      "name": "紫外透光率",
+      "unit": "%",
+      "default": 65,
+      "min": 55,
+      "max": 75,
+      "step": 5
+    },
+    {
+      "key": "h_channel",
+      "symbol": "h_ch",
+      "name": "有效水深",
+      "unit": "m",
+      "default": 1.0,
+      "min": 0.8,
+      "max": 1.5,
+      "step": 0.1
+    },
+    {
+      "key": "k_aging",
+      "symbol": "k_aging",
+      "name": "老化系数",
+      "unit": "-",
+      "default": 0.7,
+      "min": 0.6,
+      "max": 0.8,
+      "step": 0.05
+    },
+    {
+      "key": "k_foul",
+      "symbol": "k_foul",
+      "name": "结垢系数",
+      "unit": "-",
+      "default": 0.8,
+      "min": 0.7,
+      "max": 0.9,
+      "step": 0.05
+    },
+    {
+      "key": "v_channel",
+      "symbol": "v",
+      "name": "渠道流速",
+      "unit": "m/s",
+      "default": 0.4,
+      "min": 0.3,
+      "max": 0.5,
+      "step": 0.05
+    },
+    {
+      "key": "L_in",
+      "symbol": "L_in",
+      "name": "进水区长度",
+      "unit": "m",
+      "default": 1.0,
+      "min": 0.5,
+      "max": 2.0,
+      "step": 0.1
+    },
+    {
+      "key": "L_lamp",
+      "symbol": "L_lamp",
+      "name": "灯管长度",
+      "unit": "m",
+      "default": 1.5,
+      "min": 0.75,
+      "max": 3.0,
+      "step": 0.15000000000000002
+    },
+    {
+      "key": "L_out",
+      "symbol": "L_out",
+      "name": "出水区长度",
+      "unit": "m",
+      "default": 1.0,
+      "min": 0.5,
+      "max": 2.0,
+      "step": 0.1
+    },
+    {
+      "key": "N_layer",
+      "symbol": "N_layer",
+      "name": "灯管层数",
+      "unit": "个",
+      "default": 4,
+      "min": 2.0,
+      "max": 8.0,
+      "step": 0.4
+    },
+    {
+      "key": "P_lamp",
+      "symbol": "P_lamp",
+      "name": "单灯功率",
+      "unit": "kW",
+      "default": 250.0,
+      "min": 125.0,
+      "max": 500.0,
+      "step": 25.0
+    },
+    {
+      "key": "d_long",
+      "symbol": "d_long",
+      "name": "灯管纵向间距",
+      "unit": "m",
+      "default": 0.12,
+      "min": 0.075,
+      "max": 0.3,
+      "step": 0.015
+    },
+    {
+      "key": "d_vert",
+      "symbol": "d_vert",
+      "name": "灯管垂直间距",
+      "unit": "m",
+      "default": 0.1,
+      "min": 0.1,
+      "max": 0.4,
+      "step": 0.020000000000000004
+    },
+    {
+      "key": "eta_geo",
+      "symbol": "eta_geo",
+      "name": "几何效率",
+      "unit": "-",
+      "default": 0.7,
+      "min": 0.35,
+      "max": 1.4,
+      "step": 0.06999999999999999
+    },
+    {
+      "key": "gap",
+      "symbol": "gap",
+      "name": "灯管间隙",
+      "unit": "m",
+      "default": 0.1,
+      "min": 0.05,
+      "max": 0.2,
+      "step": 0.010000000000000002
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_super",
+      "name": "超高",
+      "unit": "m",
+      "default": 0.3,
+      "min": 0.15,
+      "max": 0.6,
+      "step": 0.03
+    },
+    {
+      "key": "n_T",
+      "symbol": "n_T",
+      "name": "透光率指数",
+      "unit": "-",
+      "default": 1.5,
+      "min": 1.0,
+      "max": 4.0,
+      "step": 0.2
+    },
+    {
+      "key": "xi_total",
+      "symbol": "xi_total",
+      "name": "总阻力系数",
+      "unit": "-",
+      "default": 2.0,
+      "min": 0.25,
+      "max": 1.0,
+      "step": 0.05
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.0,
+    "COD": 0.0,
+    "SS": 0.0,
+    "NH3N": 0.0,
+    "TN": 0.0,
+    "TP": 0.0
+  },
+  "formula": "N_rows = ceil(D_UV / dose_per_row)",
+  "formula_detail": "N_rows: 紫外灯模块排数, D_UV: 所需UV剂量(mJ/cm²), dose_per_row: 单排灯模块剂量(mJ/cm²)",
+  "dependencies": [],
+  "tags": [
+    "消毒",
+    "深度处理",
+    "UV"
+  ],
+  "references": [
+    "GB50014-2021 §6.9"
+  ],
+  "elevation_loss": {
+    "value": 0.25,
+    "formula": "经验值: 0.25m"
+  }
+}

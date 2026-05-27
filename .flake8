@@ -1,0 +1,50 @@
+[flake8]
+max-line-length = 100
+max-complexity = 15
+statistics = True
+exclude =
+    .git,__pycache__,.venv,venv,env,build,dist,.eggs,*.egg,
+    .tox,.mypy_cache,.pytest_cache,.sisyphus,archive,
+    node_modules,htmlcov,.coverage,coverage.xml,
+    ddesign_tool.exe_extracted,output,cache,knowledge
+
+# 全局忽略: E203/W503 (black冲突), E501 (行长度), E226 (成本公式运算符可读性),
+#            E304 (装饰器空行), E741 (变量名l在管道长度计算中是行业惯例),
+#            F841 (未使用局部变量, 非功能性), F824 (未使用全局声明, 非功能性)
+ignore = E203, W503, E501, E226, E304, E741, F841, F824
+
+# per-file 忽略
+# E402: PyInstaller setup_import_paths() 必须在其他import之前
+# C901: 函数复杂度是已知架构债务 (将在T3 God Class拆分中解决)
+# F601: dimension_formulas 重复键是故意的多路复用设计
+# F821: 字符串类型注解在 from __future__ import annotations 下安全
+per-file-ignores =
+    ddesign_tool/src/models/dimension_formulas.py: F601
+    ddesign_tool/src/ui/dimension_data.py: F601
+    ddesign_tool/src/ui/main_window.py: E402, C901, F821
+    ddesign_tool/src/ui/canvas_view.py: E402, C901
+    ddesign_tool/src/ui/constraint_panel.py: E402, C901
+    ddesign_tool/src/ui/dimension_labels.py: E402, C901
+    ddesign_tool/src/ui/solution_browser.py: E402, C901
+    ddesign_tool/src/ui/file_manager.py: E402, C901
+    ddesign_tool/src/ui/export_handlers.py: E402, C901
+    ddesign_tool/src/controller/graph_executor.py: E402, C901
+    ddesign_tool/src/models/solution_space.py: E402, C901, F821
+    ddesign_tool/src/models/elevation_calculator.py: E402, C901
+    ddesign_tool/src/models/cost/*.py: E402, C901, F821
+    ddesign_tool/src/models/sludge_mixin.py: F821
+    ddesign_tool/src/models/input_node.py: E402
+    ddesign_tool/src/models/node_registry.py: E402
+    ddesign_tool/src/models/pipe_network.py: E402
+    ddesign_tool/src/models/param_mixin.py: F401
+    ddesign_tool/src/validator/*.py: E402, C901
+    ddesign_tool/src/output_writer.py: E402, C901
+    ddesign_tool/src/pipe_hydraulic.py: E402, C901
+    ddesign_tool/src/data_loader.py: E402, C901
+    ddesign_tool/src/design_engine.py: E402, C901
+    ddesign_tool/src/result_writer.py: E402, C901
+    ddesign_tool/src/task_manager.py: E402, C901
+    ddesign_tool/src/bootstrap.py: E402, C901
+    ddesign_tool/*/__init__.py: F401
+    ddesign_tool/main.py: E402, F401
+

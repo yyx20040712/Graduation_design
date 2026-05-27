@@ -1,0 +1,14 @@
+{
+  "free": {},
+  "fixed": {
+    "Z_water_inlet": 100.0,
+    "Z_ground": 102.0,
+    "DN_inlet": 800.0
+  },
+  "constraint_keys": [],
+  "constraint_names": [],
+  "constraint_limits": {},
+  "display_name": "进厂污水水面标高",
+  "estimator_type": "none",
+  "constraint_types": {}
+}

@@ -1,0 +1,47 @@
+{
+  "free": {
+    "n": [
+      1,
+      2,
+      3
+    ],
+    "theta_digest": [
+      15,
+      20,
+      25,
+      30
+    ],
+    "eta_VS": [
+      0.35,
+      0.4,
+      0.45,
+      0.5
+    ],
+    "biogas_rate": [
+      0.8,
+      0.9,
+      1.0
+    ]
+  },
+  "fixed": {
+    "T_digest": 35
+  },
+  "constraint_keys": [
+    "D_min",
+    "vol_load"
+  ],
+  "constraint_names": [
+    "池径 D >= 8",
+    "容积负荷"
+  ],
+  "constraint_limits": {
+    "池径 D >= 8": ">= 8",
+    "容积负荷": "1.0~4.0"
+  },
+  "display_name": "污泥消化池",
+  "estimator_type": "circular",
+  "constraint_types": {
+    "池径 D >= 8": "result",
+    "容积负荷": "result"
+  }
+}

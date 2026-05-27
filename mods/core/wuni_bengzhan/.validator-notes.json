@@ -1,0 +1,5 @@
+{
+  "allow": {
+    "calc_fail": "sludge mod requires SludgeFlow input; WaterFlow produces no dims"
+  }
+}

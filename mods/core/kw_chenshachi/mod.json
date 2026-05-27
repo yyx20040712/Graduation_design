@@ -1,0 +1,192 @@
+{
+  "id": "kw_chenshachi",
+  "name": "平流沉砂池",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "平流式沉砂池，适用于矿井水处理。有效水深≤1.2m，水平流速0.20~0.25m/s，多斗式棱台砂斗，含流速/宽深比/堰负荷全流程校核。",
+  "category": "矿井水处理",
+  "icon": "🏖️",
+  "node_type": "kw_chenshachi",
+  "process_stage": "mine_water",
+  "node_class": "KwChenshachiNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "格数 n",
+      "unit": "格",
+      "default": 2,
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "description": "沉砂池格数，≥2"
+    },
+    {
+      "key": "v_h",
+      "symbol": "v",
+      "name": "水平流速 v",
+      "unit": "m/s",
+      "default": 0.22,
+      "min": 0.2,
+      "max": 0.25,
+      "step": 0.01,
+      "description": "最大流量时水平流速 0.20~0.25m/s"
+    },
+    {
+      "key": "t_stay",
+      "symbol": "t",
+      "name": "停留时间 t",
+      "unit": "s",
+      "default": 50,
+      "min": 30,
+      "max": 60,
+      "step": 5,
+      "description": "≥30s，一般30~60s"
+    },
+    {
+      "key": "h_eff",
+      "symbol": "H",
+      "name": "有效水深 H",
+      "unit": "m",
+      "default": 0.8,
+      "min": 0.25,
+      "max": 1.0,
+      "step": 0.05,
+      "description": "≤1.2m，一般0.25~1.0m"
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_free",
+      "name": "超高",
+      "unit": "m",
+      "default": 0.3,
+      "min": 0.3,
+      "max": 0.5,
+      "step": 0.1,
+      "description": "≥0.3m"
+    },
+    {
+      "key": "slope",
+      "symbol": "i",
+      "name": "池底坡度 i",
+      "unit": "-",
+      "default": 0.02,
+      "min": 0.01,
+      "max": 0.02,
+      "step": 0.005
+    },
+    {
+      "key": "hopper_angle",
+      "symbol": "α",
+      "name": "砂斗倾角 α",
+      "unit": "°",
+      "default": 55,
+      "min": 55,
+      "max": 60,
+      "step": 1,
+      "description": "≥55°，一般55°~60°"
+    },
+    {
+      "key": "hopper_bottom",
+      "symbol": "b₂",
+      "name": "砂斗下口宽 b₂",
+      "unit": "m",
+      "default": 0.4,
+      "min": 0.3,
+      "max": 0.6,
+      "step": 0.1
+    },
+    {
+      "key": "kappa",
+      "symbol": "κ",
+      "name": "沉砂量系数 κ",
+      "unit": "L/m³",
+      "default": 0.03,
+      "min": 0.03,
+      "max": 0.05,
+      "step": 0.01,
+      "description": "矿井水 0.03~0.05 L/m³"
+    },
+    {
+      "key": "T_sand",
+      "symbol": "T_sand",
+      "name": "贮砂时间 T",
+      "unit": "d",
+      "default": 2,
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "description": "一般按2d计"
+    },
+    {
+      "key": "P_sand",
+      "symbol": "P_sand",
+      "name": "沉砂含水率",
+      "unit": "-",
+      "default": 0.6,
+      "min": 0.55,
+      "max": 0.65,
+      "step": 0.05
+    },
+    {
+      "key": "rho_sand",
+      "symbol": "ρ_sand",
+      "name": "沉砂密度",
+      "unit": "kg/m³",
+      "default": 1500,
+      "min": 1400,
+      "max": 1600,
+      "step": 50
+    },
+    {
+      "key": "q_weir_design",
+      "symbol": "q_weir",
+      "name": "设计堰负荷",
+      "unit": "L/(s·m)",
+      "default": 2.5,
+      "min": 1.5,
+      "max": 2.9,
+      "step": 0.1,
+      "description": "1.5~2.9 L/(s·m)"
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.05,
+    "COD": 0.1,
+    "SS": 0.25,
+    "NH3N": 0.0,
+    "TN": 0.0,
+    "TP": 0.05
+  },
+  "formula": "L = v × t; A₁ = Q_max/(n×v); B = A₁/H",
+  "formula_detail": "L:池长(m), v:水平流速(m/s), t:停留时间(s), A₁:单格断面(m²), B:单格宽(m), H:有效水深(≤1.2m)",
+  "elevation_formula": "下游水面标高 = 上游水面标高 - 0.20m",
+  "elevation_loss": {
+    "value": 0.2,
+    "formula": "经验值: 0.20m"
+  },
+  "dependencies": [],
+  "tags": [
+    "矿井水",
+    "预处理",
+    "除砂",
+    "平流式"
+  ],
+  "references": [
+    "煤炭矿井水处理设计规范",
+    "GB50014-2021 §6.4"
+  ]
+}

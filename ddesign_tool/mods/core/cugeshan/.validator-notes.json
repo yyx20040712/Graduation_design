@@ -1,0 +1,5 @@
+{
+  "allow": {
+    "cfg_overlap": "bar_shape intentionally in both free and fixed for dual default/selection mode"
+  }
+}

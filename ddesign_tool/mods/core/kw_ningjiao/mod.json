@@ -1,0 +1,256 @@
+{
+  "id": "kw_ningjiao",
+  "name": "磁种混凝反应池",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "磁种混凝反应池，含混合区/磁种混合区/絮凝区/熟化区4个功能区。投加磁种(Fe₃O₄)+PAC+PAM，含磁种质量比校核、密度修正功率、GT分项校核、出水管设计。",
+  "category": "矿井水处理",
+  "icon": "⚗️",
+  "node_type": "kw_ningjiao",
+  "process_stage": "mine_water",
+  "node_class": "KwNingjiaoNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n",
+      "symbol": "n",
+      "name": "系列数 n",
+      "unit": "系列",
+      "default": 3,
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "description": "并联系列数"
+    },
+    {
+      "key": "t1",
+      "symbol": "t₁",
+      "name": "混合区 t₁",
+      "unit": "s",
+      "default": 60,
+      "min": 30,
+      "max": 60,
+      "step": 5,
+      "description": "30~60s"
+    },
+    {
+      "key": "t2",
+      "symbol": "t₂",
+      "name": "磁种混合区 t₂",
+      "unit": "min",
+      "default": 1.5,
+      "min": 1.0,
+      "max": 2.0,
+      "step": 0.5,
+      "description": "1~2min"
+    },
+    {
+      "key": "t3",
+      "symbol": "t₃",
+      "name": "絮凝区 t₃",
+      "unit": "min",
+      "default": 4.0,
+      "min": 3.0,
+      "max": 6.0,
+      "step": 1.0,
+      "description": "3~6min"
+    },
+    {
+      "key": "t4",
+      "symbol": "t₄",
+      "name": "熟化区 t₄",
+      "unit": "min",
+      "default": 1.5,
+      "min": 1.0,
+      "max": 2.0,
+      "step": 0.5,
+      "description": "1~2min"
+    },
+    {
+      "key": "G1",
+      "symbol": "G₁",
+      "name": "混合区 G₁",
+      "unit": "s⁻¹",
+      "default": 900,
+      "min": 600,
+      "max": 1000,
+      "step": 50,
+      "description": "600~1000 s⁻¹"
+    },
+    {
+      "key": "G2",
+      "symbol": "G₂",
+      "name": "磁种混合区 G₂",
+      "unit": "s⁻¹",
+      "default": 350,
+      "min": 200,
+      "max": 500,
+      "step": 50,
+      "description": "200~500 s⁻¹"
+    },
+    {
+      "key": "G3",
+      "symbol": "G₃",
+      "name": "絮凝区 G₃",
+      "unit": "s⁻¹",
+      "default": 75,
+      "min": 50,
+      "max": 100,
+      "step": 25,
+      "description": "50~100 s⁻¹"
+    },
+    {
+      "key": "h_eff",
+      "symbol": "H",
+      "name": "有效水深 H",
+      "unit": "m",
+      "default": 3.5,
+      "min": 2.5,
+      "max": 4.0,
+      "step": 0.5,
+      "description": "2.5~4.0m"
+    },
+    {
+      "key": "D_mag",
+      "symbol": "D_mag",
+      "name": "磁种保有浓度",
+      "unit": "mg/L",
+      "default": 1000,
+      "min": 500,
+      "max": 2000,
+      "step": 100,
+      "description": "0.5~2.0 g/L"
+    },
+    {
+      "key": "D_PAC",
+      "symbol": "D_PAC",
+      "name": "PAC投加量",
+      "unit": "mg/L",
+      "default": 80,
+      "min": 50,
+      "max": 100,
+      "step": 10,
+      "description": "50~100 mg/L"
+    },
+    {
+      "key": "D_PAM",
+      "symbol": "D_PAM",
+      "name": "PAM投加量",
+      "unit": "mg/L",
+      "default": 2.0,
+      "min": 0.1,
+      "max": 5.0,
+      "step": 0.5,
+      "description": "0.1~5.0 mg/L"
+    },
+    {
+      "key": "T_water",
+      "symbol": "T",
+      "name": "设计水温",
+      "unit": "°C",
+      "default": 15,
+      "min": 5,
+      "max": 30,
+      "step": 5,
+      "description": "用于查取动力粘度"
+    },
+    {
+      "key": "G4",
+      "symbol": "G4",
+      "name": "熟化区G值",
+      "unit": "-",
+      "default": 45,
+      "min": 22.5,
+      "max": 90.0,
+      "step": 4.5
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_super",
+      "name": "超高",
+      "unit": "m",
+      "default": 0.4,
+      "min": 0.2,
+      "max": 0.8,
+      "step": 0.04000000000000001
+    },
+    {
+      "key": "kappa_PAC",
+      "symbol": "kappa_PAC",
+      "name": "PAC产泥系数",
+      "unit": "-",
+      "default": 0.4,
+      "min": 0.2,
+      "max": 0.8,
+      "step": 0.04000000000000001
+    },
+    {
+      "key": "r_loss",
+      "symbol": "r_loss",
+      "name": "磁种损失率",
+      "unit": "-",
+      "default": 0.04,
+      "min": 0.02,
+      "max": 0.08,
+      "step": 0.004
+    },
+    {
+      "key": "rho_mag",
+      "symbol": "rho_mag",
+      "name": "磁种密度",
+      "unit": "kg/m³",
+      "default": 5000,
+      "min": 2500.0,
+      "max": 10000.0,
+      "step": 500.0
+    },
+    {
+      "key": "v_out",
+      "symbol": "v_out",
+      "name": "出水流速",
+      "unit": "m/s",
+      "default": 0.8,
+      "min": 0.4,
+      "max": 1.6,
+      "step": 0.08000000000000002
+    }
+  ],
+  "removal_rates": {
+    "BOD5": 0.15,
+    "COD": 0.4,
+    "SS": 0.7,
+    "NH3N": 0.05,
+    "TN": 0.05,
+    "TP": 0.6
+  },
+  "formula": "V_i = Q₁ × t_i; GT_i = G_i × t_i",
+  "formula_detail": "4分区设计: 混合→磁种混合→絮凝→熟化; 磁种密度修正 k_ρ; γ_mag=D_mag/(C₀+D_PAC×κ) ≥ 0.5",
+  "elevation_formula": "下游水面标高 = 上游水面标高 - 0.30m",
+  "elevation_loss": {
+    "value": 0.3,
+    "formula": "经验值: 0.30m"
+  },
+  "dependencies": [],
+  "tags": [
+    "矿井水",
+    "磁混凝",
+    "磁种",
+    "4区反应池"
+  ],
+  "references": [
+    "煤炭矿井水处理设计规范",
+    "磁混凝沉淀技术规程"
+  ]
+}

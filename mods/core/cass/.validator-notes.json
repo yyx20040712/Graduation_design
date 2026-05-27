@@ -1,0 +1,7 @@
+{
+  "allow": {
+    "ui_contract": "Ns, H_max have 5 values by design from constraint-audit expansion",
+    "con_mismatch": "充水比 uses tolerance check; runtime constraint_limits handles relaxation",
+    "calc_fail": "standard test flow may not satisfy all checks with default params"
+  }
+}

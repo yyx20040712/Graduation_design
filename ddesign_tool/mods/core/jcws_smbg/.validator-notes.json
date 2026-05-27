@@ -1,0 +1,5 @@
+{
+  "allow": {
+    "vec_no_grid": "elevation node, no free params needed"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "allow": {
+    "con_mismatch": "斜管流速 unit mismatch between m/s and mm/s; runtime uses constraint_limits"
+  }
+}

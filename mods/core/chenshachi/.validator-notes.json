@@ -1,0 +1,7 @@
+{
+  "allow": {
+    "cfg_overlap": "bar_shape intentionally in both free and fixed for dual default/selection mode",
+    "ui_contract": "t has 6 discrete values by design from constraint-audit expansion",
+    "calc_fail": "standard test flow may not satisfy h2/D ratio with default params"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "id": "peishuijing",
+  "name": "配水井",
+  "version": "5.1.0",
+  "author": "Graduation Design Team",
+  "description": "将上游来水均匀分配到下游各并联处理构筑物的配水构筑物。",
+  "category": "市政污水处理",
+  "icon": "🔀",
+  "node_type": "peishuijing",
+  "process_stage": "collection",
+  "node_class": "PeishuijingNode",
+  "module_path": "",
+  "inputs": [
+    {
+      "type": "MIXED",
+      "name": "进水"
+    }
+  ],
+  "outputs": [
+    {
+      "type": "MIXED",
+      "name": "出水"
+    }
+  ],
+  "parameters": [
+    {
+      "key": "n_out",
+      "symbol": "n_out",
+      "name": "出水方向数",
+      "unit": "个",
+      "default": 2,
+      "min": 1,
+      "max": 6,
+      "step": 1
+    },
+    {
+      "key": "h_weir",
+      "symbol": "h_weir",
+      "name": "堰上水头",
+      "unit": "m",
+      "default": 0.3,
+      "min": 0.1,
+      "max": 0.5,
+      "step": 0.05
+    },
+    {
+      "key": "HRT",
+      "symbol": "HRT",
+      "name": "水力停留时间",
+      "unit": "min",
+      "default": 3.0,
+      "min": 1.0,
+      "max": 10.0,
+      "step": 1.0,
+      "description": "GB50014: 配水井 1~10min"
+    },
+    {
+      "key": "h_eff",
+      "symbol": "h_eff",
+      "name": "有效水深",
+      "unit": "m",
+      "default": 2.5,
+      "min": 1.5,
+      "max": 4.0,
+      "step": 0.5
+    },
+    {
+      "key": "h_super",
+      "symbol": "h_free",
+      "name": "超高",
+      "unit": "m",
+      "default": 0.5,
+      "min": 0.3,
+      "max": 1.0,
+      "step": 0.1
+    }
+  ],
+  "removal_rates": {},
+  "formula": "b = Q / (n x m x sqrt(2g) x H^1.5)",
+  "dependencies": [],
+  "tags": [
+    "配水",
+    "薄壁堰"
+  ],
+  "references": [
+    "GB50014-2021"
+  ],
+  "elevation_loss": {
+    "value": 0.2,
+    "formula": "经验值: 0.2m"
+  }
+}

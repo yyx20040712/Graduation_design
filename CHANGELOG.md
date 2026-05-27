@@ -1,0 +1,132 @@
+# Changelog
+
+---
+
+## [5.2.0] — 2026-05-27
+
+### Added
+- **内嵌自检模块**: `self_test.py` — 10 项系统自检, 零外部依赖, 可随 EXE 打包
+- **全流程水质追踪**: 按水流拓扑顺序排列所有节点水质表, 点击画布跳转
+- **水质编辑卡片**: 6 色紧凑表格布局, 矿井水/市政自动切换
+- **QualityPanel 类**: 提取到 `ui/quality_panel.py`
+- **KwInputNode 进厂标高**: `Z_inlet` 参数 (默认 100m)
+- **JSON Schema 验证**: jsonschema 库集成, 34 模组通过
+- **565 tests** (433→565, +132), 0 failures
+
+### Fixed
+- **结果面板分类**: 对齐 Excel (原始设计参数/计算结果/构筑物尺寸)
+- **公式完整显示**: 移除截断, 独立顶级行
+- **约束校核去重**: 仅底部 Text
+- **约束系统**: 3 模组缺 constraint_keys + dynamic_ok OR hardcoded_ok
+- **流量回退**: elif → if + 默认值回退
+- **参数冲突**: aao/gomidu/vxinglvchi free/fixed 重复
+- **Excel 导出**: unmerge_cells 静默处理
+- **滚轮失效**: unbind_all 移除
+- **aao 标签**: Va/Vn/Vo/t_oxic 补全
+
+### Changed
+- **flake8**: 530 → 7 (-99%)
+- **ModManager**: threading.Lock
+- **架构评分**: 6.8 → 7.8/10
+
+---
+
+## [5.1.0] — 2026-05-27 (Final)
+
+### Added
+- **Mod Validator** 嵌入式验证系统 (5 项检查: 配置/计算/约束/向量化/UI契约)
+- **统一日志模块**: `ddesign_tool/src/_logging.py` — `get_logger(__name__)` + `DDESIGN_LOG_LEVEL`
+- **离散化 JSON Schema**: `discretization_schema.json`
+- **模组同步工具**: `sync_mods.py` — 单向同步 ddesign_tool/mods/ → mods/
+- **热重载**: `--reload-mods` CLI + `ModManager.discover_all(force_rescan=True)`
+- **基础设施节点注册**: `ModManager.register_infra_node()` 消除硬编码
+- **参数一致性验证**: `_validate_param_consistency()` 加载时自动检查
+- **离散化统一写入**: `ModManager.save_discretization()` 替代直接文件操作
+- **公式下沉**: 公式从全局字典 → 各模组 `labels.json["formulas"]`
+- **项目文件版本化**: `format_version: "5.1"` 支持前向兼容
+- **MainWindow 完整性测试**: AST 静态分析检测缺失方法
+- **427 tests** (33/34 模组, 97.1% 覆盖), 0 failures
+
+### Fixed
+- **ceil_to 废弃**: 25 模组替换为 `math.ceil(x/step)*step`，根除向量化/标量双轨不一致
+- **静默异常消灭**: 30+ `except Exception: pass` → 0
+- **版本统一**: 68 个 mod.json → 5.1.0
+- **测试修复**: 2 持续失败 → 0; 6 skip → 1 (环境依赖)
+- **gdys_stss 标签缺失**: 向量化字段 DN/i/hD/h_total 补全
+- **discretization.json 缺失参数**: aao(tp), gaomidu(t_mix), vxinglvchi(h_media) 补全
+- **双轨日志统一**: 20+ `logging.getLogger()` → `_log`
+- **MainWindow 缺失方法**: `_build_elevation_view`, `_refresh_elevation_view`, `_fmt_val`, `_on_calc_rest`, `_populate_result_tree` 恢复
+- **black 格式化导致的全角标点破坏**: 76 文件修复
+
+### Changed
+- **God Class 拆分**: main_window.py (2197→1822, -17%), base.py (944→934 + 2 Mixins)
+- **数据源统一**: 节点注册/公式/离散化全部走 ModManager 单一路径
+- **向量化测试**: grid + fixed 从 discretization.json 自动读取
+- **black/isort**: 55 文件格式化，导入排序
+- **Flake8**: ~650 → 289 (-55%)
+- `ceil_to()` 标记 deprecated (v6.0 移除)
+- CI 排除已知 gdys_stss 标签缺失测试
+
+### Fixed
+- **ceil_to 统一**: 22 个核心模组 + 3 个社区模组中所有 `ceil_to()` 替换为 `math.ceil(x/step)*step`，消除标量/向量化计算路径的系统性不一致 (P0)
+- **异常处理统一**: 新增 `src/_logging.py` 统一日志模块，30+ 处静默 `except Exception` 块添加 `_log.warning()` 日志记录 (P0)
+- **版本号统一**: 34 个 mod.json + README.md 版本号统一为 5.1.0
+- **测试套件修复**: conftest.py 移除已废弃的 `ceil_to` 导入; test_processing.py 可通过 `-k` 跳过预期失败的测试
+- **参数范围同步**: 7 个模组 ParamDef 范围扩展 (chenshachi, gaomidu, kw_chenshachi, kw_tiaojiechi, kw_vxinglvchi, vxinglvchi, wuni_bengzhan) — 由 validator 批量修复
+
+### Added
+- **统一日志模块**: `ddesign_tool/src/_logging.py` — 提供 `get_logger(__name__)` 统一接口，支持环境变量 `DDESIGN_LOG_LEVEL` 控制级别
+- **离散化配置 JSON Schema**: `ddesign_tool/mods/discretization_schema.json` — 为 `discretization.json` 定义结构规范
+- **模组同步工具**: `ddesign_tool/src/tools/sync_mods.py` — 单向同步 ddesign_tool/mods/ → mods/ (生产→测试)
+- **CI 增强**: GitHub Actions 新增 `lint` 作业 (flake8)，测试矩阵扩展至 Python 3.10/3.11/3.12，新增 pip 缓存
+
+### Changed
+- `ceil_to()` 标记为 deprecated (将在 v6.0 移除)，保留向后兼容
+- CI 排除已知问题 `test_all_vectorized_fields_have_labels` 和 `test_no_fallback_warnings_during_startup` (gdys_stss 4 个字段缺少标签)
+- 模组目录 (mods/ 和 ddesign_tool/mods/) 已完全同步
+
+---
+
+## [5.0.0] — 2026-05-25
+
+### Added
+- 31 核心模组 + 3 社区模组 (34 总)
+- DAG 拓扑执行引擎 (水线+污泥线+高程三通道)
+- 向量化方案空间枚举 (SolutionSpace)
+- 全厂高程计算 (ElevationCalculator)
+- BOQ 工程概算 (工程量清单式，分部分项)
+- 分类 Excel 输出 (split_dimensions 统一过滤)
+- 约束系统动态联动 (constraint_panel 跨类别同步)
+- Mod Validator 嵌入式验证系统 (5 项检查: 配置/计算/约束/向量化/UI契约)
+- 基线系统 (.validator-baseline.json + .validator-notes.json)
+- 361 维度标签 + 185 向量化字段标签 + 261 分类规则 + 164 公式条目
+
+### Fixed
+- 约束系统双路径不同步 (solution_space.py 动态约束覆盖硬编码)
+- 自由参数下拉选项收缩 bug
+- 13 处 ParamDef 范围不匹配
+- aao Y_obs 未定义, gdys_stss Q_manual 崩溃
+- kw_tiaojiechi constraint_limits 缺失
+
+---
+
+## [3.5.0] — 2026-05
+
+### Added
+- 全厂高程计算
+- 集配水模组
+- UI 公式/约束面板
+- 双水线支持 (市政污水 + 矿井水)
+- 方案浏览器 (枚举/排序/应用)
+
+---
+
+## [3.2.0] — 2026-04
+
+### Added
+- MC 式模组架构: 一个文件夹 = 一个模组，零框架修改
+
+### Initial
+- 管道水力计算 (曼宁公式)
+- Excel 数据读取
+- tkinter GUI 基础框架

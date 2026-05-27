@@ -1,0 +1,39 @@
+# 开发依赖 - 仅用于开发环境
+
+# 代码格式化
+black>=24.0.0
+isort>=5.13.0
+
+# 代码质量检查
+flake8>=7.0.0
+mypy>=1.8.0
+pylint>=3.0.0
+
+# 测试框架
+pytest>=8.0.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+
+# 文档生成
+sphinx>=7.2.0
+sphinx-rtd-theme>=2.0.0
+
+# 预提交钩子
+pre-commit>=3.6.0
+
+# Jupyter开发
+jupyter>=1.0.0
+ipython>=8.22.0
+
+# 开发工具
+ipdb>=0.13.13
+python-dotenv>=1.0.0
+
+# 数据科学工具（可选）
+pandas>=2.2.0
+numpy>=1.26.0
+matplotlib>=3.8.0
+scipy>=1.12.0
+
+# 安装命令：
+# pip install -r requirements-dev.txt

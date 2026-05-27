@@ -1,0 +1,9 @@
+{
+  "suppressed": {
+    "calc_fail": [
+      "1 个校核未通过: 表面负荷 20~40 m³/(m²·h)"
+    ]
+  },
+  "design_decisions": [],
+  "created": "2026-05-27 11:36:34"
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "排水工程设计工具 — 离散化配置 (discretization.json)",
+  "description": "每个模组的参数离散化配置，用于方案空间枚举。位于 mods/core/<mod_id>/discretization.json",
+  "type": "object",
+  "required": ["free", "fixed", "constraint_keys", "constraint_names",
+               "constraint_limits", "constraint_types"],
+  "properties": {
+    "free": {
+      "type": "object",
+      "description": "自由参数及其离散值列表 {param_key: [val1, val2, ...]}"
+    },
+    "fixed": {
+      "type": "object",
+      "description": "固定参数及其单值 {param_key: value}"
+    },
+    "constraint_keys": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 0,
+      "description": "约束键名列表，对应向量化输出中的 ok_<key> 和 val_<key> 字段"
+    },
+    "constraint_names": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 0,
+      "description": "约束显示名称列表，与 constraint_keys 一一对应"
+    },
+    "constraint_limits": {
+      "type": "object",
+      "description": "约束限值 {约束名称: \"min~max\" 或 \"≤ val\"}",
+      "patternProperties": {
+        ".*": { "type": "string" }
+      }
+    },
+    "constraint_types": {
+      "type": "object",
+      "description": "约束类型 {约束名称: \"hard\"|\"soft\"|\"cost\"}",
+      "patternProperties": {
+        ".*": { "type": "string", "enum": ["hard", "soft", "cost"] }
+      }
+    }
+  }
+}
