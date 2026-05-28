@@ -1,14 +1,47 @@
-# 🏭 排水工程设计工具 v5.4
+# 🏭 排水工程设计工具 v5.4-s6
 
 > **作者**: yyx | **毕业设计**: 哈尔滨工业大学 环境工程
-> **双线支持**: 市政污水 (Q=34,760 m³/d, GB18918-2002 一级A) + 矿井水 (Q=43,836 m³/d, GB3838-2002 III类)
-> **模组架构**: 🎮 Minecraft式 — 完全自包含, 一个文件夹 = 一个模组, 零框架修改
-> **测试覆盖**: 34/34 模组 (100%) | 640+ tests | 物理不变性 36 项 (0 skip)
-> **架构评分**: 8.1/10 | pre-commit 4 钩子 | PyInstaller 56MB EXE 验证通过
+> **双线支持**: 市政污水 (Q=34,760 m³/d, 一级A) + 矿井水 (Q=43,836 m³/d, III类)
+> **模组架构**: 🎮 Minecraft式 — 一个文件夹 = 一个模组, 零框架修改
+> **测试**: 34/34 模组 | 640+ tests | 物理不变性 36 项 (0 skip)
+> **下载**: [📥 ddesign_tool.exe](https://github.com/yyx20040712/Graduation_design/releases/latest)
+
+## 📂 项目结构
+
+```
+Graduation_design/
+├── ddesign_tool/          ← 主程序 (入口 + 源码)
+│   ├── main.py            # 程序入口
+│   └── src/               # 核心代码
+│       ├── ui/            # 界面层 (main_window, canvas, param_panel, result_panel...)
+│       ├── controller/    # 控制层 (DAG 执行引擎, 项目管理)
+│       └── models/        # 模型层 (节点基类, 方案枚举, 高程计算, 工程概算)
+├── mods/                  ← 🎮 模组系统 (34 模组)
+│   ├── core/              # 31 核心模组 (市政污水 + 矿井水 + 污泥 + 集配水)
+│   └── community/         # 3 社区模组 (二沉池/巴氏计量槽/污水提升泵房)
+├── tests/                 # 测试 (640+)
+├── data/                  # Excel 数据文件
+├── knowledge/             # 开发笔记 & 学习记录 (.sisyphus/notepads)
+├── release.bat            # 🔧 一键打包 + 发布脚本
+├── 使用方法.txt            # 用户手册
+├── MODS_GUIDE.md          # 模组编写规范
+└── MOD_SPEC.md            # 模组开发者文档
+```
 
 ## 概述
 
 基于 Python 的城镇污水处理厂全流程工艺设计一体化工具。采用 **DAG 有向无环图执行引擎** + **MC式自包含模组架构**，严格遵循 GB50014-2021《室外排水设计标准》和 CJJ 131-2009《城镇污水处理厂污泥处理技术规程》。
+
+### v5.4-s5 核心改进
+
+| 改进项 | 说明 |
+|--------|------|
+| 🛡️ **工业级防御体系** | 5 条自动化防线: CI全量、numpy警告→错误、运行时反射、兼容别名、死代码清理 |
+| 🔢 **安全除法** | 6 模块 10+ 处除零 RuntimeWarning 修复, np.divide/np.maximum 保护 |
+| 🔄 **向后兼容** | COMPAT_NODE_TYPES 别名映射 (wuni_tisheng→wushui_tisheng) |
+| 🏔️ **矿井水高程输入** | kw_input 界面新增水量(Q/Kz) + 高程(Z_water/Z_ground/DN)参数编辑 |
+| 🐛 **P_sludge 单位修复** | kw_cifenli 含水率 unit kW → - |
+| 📋 **标签常量** | RESULT_TREE_TAGS 运行时验证替代源码 grep |
 
 ### v5.4 核心改进
 
