@@ -465,7 +465,11 @@ class ConstraintPanel(tk.Frame):
 
     # ═══════════════ 事件回调 ═══════════════
     def _on_original_confirm(self, param_key: str, sv: tk.StringVar) -> None:
-        """原始约束"确定"按钮回调 — 更新 fixed 或 free 参数值"""
+        """原始约束"确定"按钮回调 — 更新 fixed 参数值 + 同步约束限值
+
+        v5.4 fix: 不再收缩 free 参数列表 (free 定义方案空间, 不应被修改).
+        只更新 fixed 参数和 constraint_limits.
+        """
         if not self._node_type:
             return
         try:
@@ -480,20 +484,11 @@ class ConstraintPanel(tk.Frame):
             # fixed 参数: 直接更新标量值
             if param_key in cfg.get("fixed", {}):
                 cfg["fixed"][param_key] = val
-                # ── 自动同步 constraint_limits ──
-                # 当 fixed 参数本身是约束边界时 (如 v_force),
-                # 自动更新对应的 constraint_limits,防止动态检查误杀方案
+                # 自动同步 constraint_limits
                 self._sync_param_to_constraint(param_key, val, cfg)
-            # free 参数: 确保值在允许列表中
             elif param_key in cfg.get("free", {}):
-                allowed = cfg["free"][param_key]
-                if isinstance(allowed, list):
-                    if val not in allowed:
-                        val = allowed[0]  # 回退到第一个值
-                    cfg["free"][param_key] = [val]  # 收缩为单值
-                # ── 自动同步 constraint_limits ──
-                # 当 free 参数值超出对应约束范围时 (如 HRT),
-                # 自动展开约束限值,防止方案被误杀
+                # v5.4: free 参数定义方案空间, 不应收缩列表
+                # 仅同步约束限值, 不修改 free 列表
                 self._sync_param_to_constraint(param_key, val, cfg)
         except (KeyError, ImportError):
             pass
@@ -683,10 +678,17 @@ class ConstraintPanel(tk.Frame):
 
             json_text = json.dumps(save_data, ensure_ascii=False, indent=2) + "\n"
 
-            # ── 通过 ModManager 统一写入 (同时同步运行时+测试目录) ──
+            # ── 通过 ModManager 统一写入 ──
             success = mgr.save_discretization(mod_info.id, save_data)
             if not success:
                 _log.warning("_persist_config: failed to save for %s", self._node_type)
+
+            # ── v5.4: 写入后刷新内存缓存, 避免下次加载读到旧数据 ──
+            try:
+                from models.discretization import _refresh_merged_configs
+                _refresh_merged_configs()
+            except ImportError:
+                pass
 
         except Exception as e:
             _log.warning("_persist_config: unexpected error: %s", e)

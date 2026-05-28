@@ -12,7 +12,6 @@ tiaojiechi.py — 调节池计算模块
   (3-11): P_total = P_density * V_total
 """
 
-import math
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -32,7 +31,7 @@ class TiaojiechiNode(NodeBase):
 
     设计参数:
       - n: 调节池个数 (2-8)
-      - HRT: 水力停留时间 (4-12 h)
+      - HRT: 水力停留时间 (2-12 h)
       - h_eff: 有效水深 (3-5 m)
       - h_super: 超高 (0.3-0.5 m)
       - ratio_LB: 长宽比 (1.5-3.0)
@@ -76,7 +75,7 @@ class TiaojiechiNode(NodeBase):
                 "HRT",
                 value=6,
                 default=6,
-                min_val=4,
+                min_val=2,
                 max_val=12,
                 step=0.5,
                 unit="h",
@@ -141,7 +140,7 @@ class TiaojiechiNode(NodeBase):
         }
 
     def calculate(self, flow: WaterFlow, quality: WaterQuality) -> NodeResult:
-        """执行调节池设计计算
+        """执行调节池设计计算 (v5.4: 通过 _vectorized_compute(N=1) 消除双路径)
 
         计算流程:
           1. 单池设计流量 Q_per_pool = Q_avg_hourly / n
@@ -159,84 +158,53 @@ class TiaojiechiNode(NodeBase):
         ratio_LB = self.get_param("ratio_LB")
         P_density = self.get_param("P_density")
 
+        # ── 通过向量化路径计算 (N=1) ──
+        grid, fixed = self._make_scalar_grid(
+            {"n": n, "HRT": HRT, "h_eff": h_eff, "ratio_LB": ratio_LB},
+            {"h_super": h_super, "P_density": P_density},
+        )
+        res = self._vectorized_compute(grid, flow, quality, fixed)
+        r = res[0]  # 单行结果
+
+        # ── 组装 NodeResult ──
         result = NodeResult(success=True)
         result.params = {
-            "n": n,
-            "HRT": HRT,
-            "h_eff": h_eff,
-            "h_super": h_super,
-            "ratio_LB": ratio_LB,
-            "P_density": P_density,
+            "n": n, "HRT": HRT, "h_eff": h_eff,
+            "h_super": h_super, "ratio_LB": ratio_LB, "P_density": P_density,
         }
 
-        # ── (1) 单池设计流量 (3-1) ──
-        # Q_single = Q_avg_hourly / n  (m³/h)
-        Q_avg_h = flow.Q_avg_hourly  # m³/h
-        Q_per_pool = Q_avg_h / n
-
-        # ── (2) 单池有效容积 (3-2) ──
-        # V_eff = Q * HRT
-        V_eff = Q_per_pool * HRT  # m³
-
-        # ── (3) 有效面积 (3-9) ──
-        # A_eff = V_eff / h_eff
-        A_eff = V_eff / h_eff  # m²
-
-        # ── (4) 平面尺寸 ──
-        # L/B = ratio_LB, L*B = A_eff
-        # → B = sqrt(A_eff / ratio_LB), L = ratio_LB * B
-        B_theory = math.sqrt(A_eff / ratio_LB)
-        L_theory = ratio_LB * B_theory
-
-        # 向上取整到 0.5m(便于施工)
-        B = math.ceil(B_theory / 0.5) * 0.5
-        L = math.ceil(L_theory / 0.5) * 0.5
-
-        # ── (5) 取整后校核 ──
-        # 实际有效容积
-        V_actual = L * B * h_eff  # m³ (单池)
-        HRT_actual = V_actual / Q_per_pool  # h
-
-        # 长宽比校核
-        ratio_actual = L / B
-        ratio_ok = 1.0 <= ratio_actual <= 2.0
-        result.add_check("长宽比 L/B", ratio_ok, round(ratio_actual, 2), "1.0~2.0", "")
-
-        # HRT 校核 (范围检查: 6~12h, GB50014 §6.2)
-        hrt_ok = 6.0 <= HRT_actual <= 12.0
-        result.add_check("实际 HRT", hrt_ok, round(HRT_actual, 2), "6~12", "h")
+        # 校核
+        result.add_check(
+            "长宽比 L/B", bool(r["ok_LB_ratio"]),
+            round(float(r["val_LB_ratio"]), 2), "1.0~2.0", "",
+        )
+        hrt_ok = bool(r["ok_HRT_actual"])
+        result.add_check(
+            "实际 HRT", hrt_ok,
+            round(float(r["val_HRT_actual"]), 2), "2~12", "h",
+        )
         if not hrt_ok:
             result.add_warning(
-                f"实际 HRT={HRT_actual:.1f}h 低于设计值 {HRT}h-0.5h,"
+                f"实际 HRT={r['val_HRT_actual']:.1f}h 低于设计值 {HRT}h-0.5h,"
                 f"建议增大池体尺寸或减少池数"
             )
 
-        # ── (6) 总高度 (3-10) ──
-        H_total = h_eff + h_super  # m
-        H_rounded = math.ceil(H_total / 0.1) * 0.1
-
-        # ── (7) 搅拌总功率 (3-11) ──
-        V_total = V_actual * n  # 总有效容积 m³
-        P_total = P_density * V_total  # W
-        P_total_kW = P_total / 1000  # kW
-        P_total_kW_rounded = math.ceil(P_total_kW * 10) / 10  # 向上取整到 0.1kW
-
-        # ── 组装结果 ──
+        # 尺寸
         result.add_dimension("池数", n, "座")
-        result.add_dimension("单池长度 L", L, "m")
-        result.add_dimension("单池宽度 B", B, "m")
+        result.add_dimension("单池长度 L", float(r["L"]), "m")
+        result.add_dimension("单池宽度 B", float(r["B"]), "m")
         result.add_dimension("有效水深 h_eff", h_eff, "m")
-        result.add_dimension("总高度 H", H_rounded, "m")
-        result.add_dimension("单池有效容积", round(V_actual, 1), "m³")
-        result.add_dimension("总有效容积", round(V_total, 1), "m³")
-        result.add_dimension("设计 HRT", round(HRT_actual, 2), "h")
-        result.add_dimension("长宽比 L/B", round(ratio_actual, 2), "")
-        result.add_dimension("搅拌总功率", P_total_kW_rounded, "kW")
-        result.add_dimension("单池设计流量", round(Q_per_pool, 2), "m³/h")
+        result.add_dimension("总高度 H", float(r["H"]), "m")
+        result.add_dimension("单池有效容积", round(float(r["V_actual"]), 1), "m³")
+        result.add_dimension("总有效容积", round(float(r["V_total"]), 1), "m³")
+        result.add_dimension("设计 HRT", round(float(r["HRT_actual"]), 2), "h")
+        result.add_dimension("长宽比 L/B", round(float(r["ratio_actual"]), 2), "")
+        result.add_dimension("搅拌总功率", float(r["P_kW"]), "kW")
+        result.add_dimension("单池设计流量", round(float(r["Q_per_pool"]), 2), "m³/h")
 
-        # 概算相关数据(供 cost/plant_cost.py 使用)
-        result.add_dimension("调节池总面积", round(L * B * n, 1), "m²")
-        result.add_dimension("混凝土量估算", round(V_total * 1.2, 1), "m³")
+        # 概算字段
+        result.add_dimension("调节池总面积", round(float(r["area_total"]), 1), "m²")
+        result.add_dimension("混凝土量估算", round(float(r["concrete_m3"]), 1), "m³")
 
         return result
 
@@ -279,14 +247,16 @@ class TiaojiechiNode(NodeBase):
         B = np.ceil(B_theory / 0.5) * 0.5
         L = np.ceil(L_theory / 0.5) * 0.5
 
-        # (5) 取整后校核
+        # (5) 取整后校核 (safe division)
         V_actual = L * B * h_eff  # 单池实际容积
-        HRT_actual = V_actual / Q_per_pool  # h
-        ratio_actual = L / B
+        HRT_actual = np.divide(V_actual, Q_per_pool, where=Q_per_pool > 0,
+                               out=np.full_like(V_actual, np.nan, dtype=np.float64))  # h
+        ratio_actual = np.divide(L, B, where=B > 0,
+                                 out=np.full_like(L, np.nan, dtype=np.float64))
 
         # 约束
         ok_ratio = (1.0 <= ratio_actual) & (ratio_actual <= 2.0)
-        ok_hrt = (6.0 <= HRT_actual) & (HRT_actual <= 12.0)
+        ok_hrt = (2.0 <= HRT_actual) & (HRT_actual <= 12.0)
 
         # (6) 总高度
         H_total = h_eff + h_super

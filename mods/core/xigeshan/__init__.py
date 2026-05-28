@@ -1,4 +1,3 @@
-import math
 from typing import Dict, List
 import numpy as np
 from models.base import (
@@ -165,7 +164,7 @@ class _BarScreenBase(NodeBase):
         h = self.get_param("h")
         v = self.get_param("v")
         v1 = self.get_param("v1")
-        s_mm = self.get_param("s")  # 栅条宽度 mm
+        s_mm = self.get_param("s")
         bar_shape = int(self.get_param("bar_shape"))
 
         result = NodeResult(success=True)
@@ -180,101 +179,65 @@ class _BarScreenBase(NodeBase):
             "bar_shape": bar_shape,
         }
 
-        # ── 单台流量 ──
-        q = flow.Q_design / n  # m³/s
+        grid = {
+            "n": np.array([n], dtype=np.int32),
+            "b": np.array([b_mm]),
+            "alpha": np.array([alpha_deg]),
+            "h": np.array([h]),
+            "bar_shape": np.array([bar_shape], dtype=np.int32),
+        }
+        fixed = {"v": v, "v1": v1, "s": s_mm}
 
-        # ── 栅条间隙数 (3-12) ──
-        b_m = b_mm / 1000.0  # mm → m
-        sin_alpha = math.sin(math.radians(alpha_deg))
-        n_gap = math.ceil(q * math.sqrt(sin_alpha) / (b_m * h * v))
+        r = self._vectorized_compute(grid, flow, quality, fixed)
 
-        # ── 栅槽宽度 (3-13) ──
-        s_m = s_mm / 1000.0  # mm → m
-        B = s_m * (n_gap - 1) + b_m * n_gap + 0.2
-        B_rounded = math.ceil(B / 0.1) * 0.1
-
-        # ── 进水渠宽 ──
-        B1 = q / (h * v1)
-        B1_rounded = math.ceil(B1 / 0.1) * 0.1
-
-        # ── 校核流速 ──
-        v_checked = q * math.sqrt(sin_alpha) / (b_m * h * n_gap)
-        v1_checked = q / (h * B1_rounded)
-
-        # ── 水头损失 (3-14)(3-15) ──
-        beta_val = self._get_beta(bar_shape)
         bar_name = self._BAR_SHAPE_NAMES.get(bar_shape, "未知")
-        ratio_sb = (s_mm / b_mm) if b_mm > 0 else 0.0
-        sb_factor = ratio_sb ** (4.0 / 3.0)
-        xi = beta_val * sb_factor
-        h0 = xi * v_checked**2 / (2 * GRAVITY) * sin_alpha
-        h1 = h0 * 3.0  # k=3 堵塞系数
-
-        # 参数回写 β (用于 results.params 显示)
-        result.params["bar_shape"] = bar_shape
         result.params["bar_shape_name"] = bar_name
 
-        # ── 栅后总高 (3-16) ──
-        H = h + h1 + 0.3
-        H_rounded = math.ceil(H / 0.1) * 0.1
+        cleaning = "机械清渣" if r["W_slag"][0] > 0.2 else "人工清渣"
 
-        # ── 栅槽总长 (3-17)(3-18)(3-19) ──
-        tan_alpha = math.tan(math.radians(alpha_deg))
-        L1 = (B_rounded - B1_rounded) / (2 * tan_alpha) if B_rounded > B1_rounded else 0
-        L2 = L1 / 2
-        L = L1 + L2 + 1.0 + 0.5 + (0.2 + h) / tan_alpha
-        L_rounded = math.ceil(L / 0.1) * 0.1
-
-        # ── 每日栅渣量 (3-20) ──
-        W = flow.Q_design * 86400 * self._W1 / (flow.Kz * 1000)
-
-        # ── 清渣方式 ──
-        cleaning = "机械清渣" if W > 0.2 else "人工清渣"
-
-        # ── 组装结果 ──
         result.add_dimension("格栅台数", n, "台")
-        result.add_dimension("单台流量", round(q * 1000, 2), "L/s")
-        result.add_dimension("栅条间隙数", n_gap, "个")
-        result.add_dimension("栅槽宽度 B", B_rounded, "m")
-        result.add_dimension("进水渠宽 B1", B1_rounded, "m")
-        result.add_dimension("校核过栅流速", round(v_checked, 3), "m/s")
-        result.add_dimension("校核渠内流速", round(v1_checked, 3), "m/s")
-        result.add_dimension("过栅水头损失 h1", round(h1, 3), "m")
-        result.add_dimension("栅条形状系数 β", beta_val, "")
-        result.add_dimension("阻力系数 ξ", round(xi, 4), "")
-        result.add_dimension("(s/b)^(4/3)", round(sb_factor, 4), "")
-        result.add_dimension("栅后总高 H", H_rounded, "m")
-        result.add_dimension("栅槽总长 L", L_rounded, "m")
-        result.add_dimension("每日栅渣量", round(W, 4), "m³/d")
+        result.add_dimension("单台流量", round(r["q_single_Ls"][0], 2), "L/s")
+        result.add_dimension("栅条间隙数", int(r["n_gap"][0]), "个")
+        result.add_dimension("栅槽宽度 B", r["B"][0], "m")
+        result.add_dimension("进水渠宽 B1", r["B1"][0], "m")
+        result.add_dimension("校核过栅流速", round(r["v_checked"][0], 3), "m/s")
+        result.add_dimension("校核渠内流速", round(r["v1_checked"][0], 3), "m/s")
+        result.add_dimension("过栅水头损失 h1", round(r["h1_loss"][0], 3), "m")
+        result.add_dimension("栅条形状系数 β", r["beta_val"][0], "")
+        result.add_dimension("阻力系数 ξ", round(r["xi"][0], 4), "")
+        result.add_dimension("(s/b)^(4/3)", round(r["sb_factor"][0], 4), "")
+        result.add_dimension("栅后总高 H", r["H_total"][0], "m")
+        result.add_dimension("栅槽总长 L", r["L_total"][0], "m")
+        result.add_dimension("每日栅渣量", round(r["W_slag"][0], 4), "m³/d")
         result.add_dimension("清渣方式", cleaning, "")
 
-        # ── 校核 ──
         result.add_check(
             "B1 < B",
-            B1_rounded < B_rounded,
-            round(B_rounded - B1_rounded, 2),
+            bool(r["ok_B1_B"][0]),
+            round(r["val_B1_B"][0], 2),
             "> 0",
             "m",
         )
         result.add_check(
-            "过栅流速 v", 0.6 <= v_checked <= 1.0, round(v_checked, 3), "0.6~1.0", "m/s"
+            "过栅流速 v", bool(r["ok_v"][0]), round(r["val_v"][0], 3), "0.6~1.0", "m/s"
         )
         result.add_check(
             "渠内流速 v1",
-            0.4 <= v1_checked <= 0.9,
-            round(v1_checked, 3),
+            bool(r["ok_v1"][0]),
+            round(r["val_v1"][0], 3),
             "0.4~0.9",
             "m/s",
         )
-        result.add_check("水头损失 h1", h1 <= 0.3, round(h1, 3), "<= 0.3", "m")
+        result.add_check(
+            "水头损失 h1", bool(r["ok_h1_loss"][0]), round(r["val_h1_loss"][0], 3), "<= 0.3", "m"
+        )
 
-        if not (B1_rounded < B_rounded):
+        if not r["ok_B1_B"][0]:
             result.add_warning("进水渠宽 B1 不小于栅槽宽 B,需调整参数")
 
-        # ── 栅渣输出 (SLUDGE 端口) ──
-        # 栅渣含水率 ~80%, 有机质含量高 (VS~85%)
+        W = r["W_slag"][0]
         P_slag = 0.80
-        DS_slag = W * (1 - P_slag) * 1000.0  # kg/d (密度≈1000kg/m³)
+        DS_slag = W * (1 - P_slag) * 1000.0
         self._sludge_output = SludgeFlow(
             Q_wet=W,
             DS=DS_slag,
@@ -322,9 +285,11 @@ class _BarScreenBase(NodeBase):
         B1 = q / (h * v1_design)
         B1_rounded = np.ceil(B1 / 0.1) * 0.1
 
-        # 校核流速
-        v_checked = q * np.sqrt(sin_alpha) / (b_m * h * n_gap)
-        v1_checked = q / (h * B1_rounded)
+        # 校核流速 (safe division)
+        denom_v = np.maximum(b_m * h * n_gap, 1e-10)
+        v_checked = q * np.sqrt(sin_alpha) / denom_v
+        denom_v1 = np.maximum(h * B1_rounded, 1e-10)
+        v1_checked = q / denom_v1
 
         # 水头损失
         bar_shape_arr = grid.get(

@@ -203,7 +203,9 @@ class TestPanelContract:
         assert "8.00" in result
 
     def test_section_header_tag_registered(self):
-        """section_banner 标签在代码中注册"""
-        with open(_FP, encoding="utf-8") as f:
+        """section_banner 标签在代码中注册 (v5.4: 移至 result_panel.py)"""
+        fp = os.path.join(os.path.dirname(__file__), "..",
+                          "ddesign_tool", "src", "ui", "result_panel.py")
+        with open(fp, encoding="utf-8") as f:
             content = f.read()
         assert "section_banner" in content, "缺少 section_banner 标签"

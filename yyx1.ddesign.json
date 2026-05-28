@@ -1,0 +1,4030 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "name": "未命名项目",
+    "author": "",
+    "created": "2026-05-18T22:35:41.231180",
+    "modified": "2026-05-18T22:35:41.231187",
+    "description": ""
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "pipe_network-45e82552",
+        "type": "pipe_network",
+        "name": "管网输入",
+        "category": "输入/输出",
+        "position": {
+          "x": 55.1,
+          "y": 74.7
+        },
+        "params": {
+          "Q_design_override": 0.57
+        },
+        "removal_rates": {},
+        "ports": {
+          "input": [
+            {
+              "port_id": "pipe_network-45e82552-qin",
+              "name": "水质(可选)",
+              "port_type": "QUALITY",
+              "direction": "input",
+              "node_id": "pipe_network-45e82552",
+              "connections": []
+            }
+          ],
+          "output": [
+            {
+              "port_id": "pipe_network-45e82552-wout",
+              "name": "水量",
+              "port_type": "WATER",
+              "direction": "output",
+              "node_id": "pipe_network-45e82552",
+              "connections": [
+                "combiner-82895fd1-win"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "excel_path": "D:\\python_code\\Graduation_design\\ddesign_tool\\data\\pipe_final2.xlsx",
+            "pipe_type": "污水",
+            "Q_design": 0.57,
+            "Q_avg_daily": NaN
+          },
+          "dimensions": {
+            "管网类型": [
+              0,
+              "污水"
+            ],
+            "Excel文件": [
+              0,
+              "pipe_final2.xlsx"
+            ],
+            "总管设计流量": [
+              570.0,
+              "L/s"
+            ],
+            "估算平均日流量": [
+              NaN,
+              "m³/d"
+            ],
+            "DN300管道长度": [
+              16094.7,
+              "m"
+            ],
+            "DN400管道长度": [
+              10913.6,
+              "m"
+            ],
+            "DN500管道长度": [
+              9372.5,
+              "m"
+            ],
+            "DN600管道长度": [
+              8552.4,
+              "m"
+            ],
+            "DN700管道长度": [
+              2556.3,
+              "m"
+            ],
+            "DN800管道长度": [
+              7790.3,
+              "m"
+            ],
+            "DN1000管道长度": [
+              5490.0,
+              "m"
+            ],
+            "DN1100管道长度": [
+              2819.9,
+              "m"
+            ],
+            "DN1400管道长度": [
+              1511.1,
+              "m"
+            ],
+            "进水BOD5": [
+              200.0,
+              "mg/L"
+            ],
+            "出水BOD5": [
+              200.0,
+              "mg/L"
+            ],
+            "BOD5去除率": [
+              0.0,
+              "%"
+            ],
+            "进水COD": [
+              400.0,
+              "mg/L"
+            ],
+            "出水COD": [
+              400.0,
+              "mg/L"
+            ],
+            "COD去除率": [
+              0.0,
+              "%"
+            ],
+            "进水SS": [
+              220.0,
+              "mg/L"
+            ],
+            "出水SS": [
+              220.0,
+              "mg/L"
+            ],
+            "SS去除率": [
+              0.0,
+              "%"
+            ],
+            "进水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "出水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "出水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "TN去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "出水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "TP去除率": [
+              0.0,
+              "%"
+            ]
+          },
+          "checks": {},
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": null,
+          "inlet_quality": {
+            "BOD5": 200.0,
+            "COD": 400.0,
+            "SS": 220.0,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 200.0,
+            "COD": 400.0,
+            "SS": 220.0,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN",
+        "excel_path": "D:\\python_code\\Graduation_design\\ddesign_tool\\data\\pipe_final2.xlsx",
+        "pipe_type": "污水"
+      },
+      {
+        "id": "water_quality-79e3a69f",
+        "type": "water_quality",
+        "name": "进水水质",
+        "category": "输入/输出",
+        "position": {
+          "x": 50.0,
+          "y": 242.8
+        },
+        "params": {
+          "BOD5": 198.0,
+          "COD": 344.0,
+          "SS": 237.0,
+          "NH3N": 26.0,
+          "TN": 43.0,
+          "TP": 6.5
+        },
+        "removal_rates": {},
+        "ports": {
+          "input": [],
+          "output": [
+            {
+              "port_id": "water_quality-79e3a69f-qout",
+              "name": "进水水质",
+              "port_type": "QUALITY",
+              "direction": "output",
+              "node_id": "water_quality-79e3a69f",
+              "connections": [
+                "combiner-82895fd1-qin"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "BOD5": 198.0,
+            "COD": 344.0,
+            "SS": 237.0,
+            "NH3N": 26.0,
+            "TN": 43.0,
+            "TP": 6.5,
+            "pH": 7.0
+          },
+          "dimensions": {
+            "进水BOD5": [
+              200.0,
+              "mg/L"
+            ],
+            "进水COD": [
+              400.0,
+              "mg/L"
+            ],
+            "进水SS": [
+              220.0,
+              "mg/L"
+            ],
+            "进水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "进水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "进水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "进水pH": [
+              7.0,
+              ""
+            ],
+            "出水BOD5": [
+              200.0,
+              "mg/L"
+            ],
+            "BOD5去除率": [
+              0.0,
+              "%"
+            ],
+            "出水COD": [
+              400.0,
+              "mg/L"
+            ],
+            "COD去除率": [
+              0.0,
+              "%"
+            ],
+            "出水SS": [
+              220.0,
+              "mg/L"
+            ],
+            "SS去除率": [
+              0.0,
+              "%"
+            ],
+            "出水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              0.0,
+              "%"
+            ],
+            "出水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "TN去除率": [
+              0.0,
+              "%"
+            ],
+            "出水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "TP去除率": [
+              0.0,
+              "%"
+            ]
+          },
+          "checks": {},
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": null,
+          "inlet_quality": {
+            "BOD5": 200.0,
+            "COD": 400.0,
+            "SS": 220.0,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 200.0,
+            "COD": 400.0,
+            "SS": 220.0,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN",
+        "water_quality": {
+          "BOD5": 198.0,
+          "COD": 344.0,
+          "SS": 237.0,
+          "NH3N": 26.0,
+          "TN": 43.0,
+          "TP": 6.5,
+          "pH": 7.0
+        }
+      },
+      {
+        "id": "combiner-82895fd1",
+        "type": "combiner",
+        "name": "水量水质合并",
+        "category": "输入/输出",
+        "position": {
+          "x": 364.3,
+          "y": 162.1
+        },
+        "params": {
+          "Kz": 1.4
+        },
+        "removal_rates": {},
+        "ports": {
+          "input": [
+            {
+              "port_id": "combiner-82895fd1-win",
+              "name": "水量",
+              "port_type": "WATER",
+              "direction": "input",
+              "node_id": "combiner-82895fd1",
+              "connections": [
+                "pipe_network-45e82552-wout"
+              ]
+            },
+            {
+              "port_id": "combiner-82895fd1-qin",
+              "name": "水质",
+              "port_type": "QUALITY",
+              "direction": "input",
+              "node_id": "combiner-82895fd1",
+              "connections": [
+                "water_quality-79e3a69f-qout"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "combiner-82895fd1-mout",
+              "name": "出水(水量+水质)",
+              "port_type": "MIXED",
+              "direction": "output",
+              "node_id": "combiner-82895fd1",
+              "connections": [
+                "cugeshan-f239ef03-in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "Kz": 1.4
+          },
+          "dimensions": {
+            "设计流量": [
+              570.0,
+              "L/s"
+            ],
+            "平均日流量": [
+              34760.7,
+              "m³/d"
+            ],
+            "变化系数": [
+              1.4,
+              ""
+            ],
+            "进水BOD5": [
+              200.0,
+              "mg/L"
+            ],
+            "进水COD": [
+              400.0,
+              "mg/L"
+            ],
+            "进水SS": [
+              220.0,
+              "mg/L"
+            ],
+            "进水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "进水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "进水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "出水BOD5": [
+              200.0,
+              "mg/L"
+            ],
+            "BOD5去除率": [
+              0.0,
+              "%"
+            ],
+            "出水COD": [
+              400.0,
+              "mg/L"
+            ],
+            "COD去除率": [
+              0.0,
+              "%"
+            ],
+            "出水SS": [
+              220.0,
+              "mg/L"
+            ],
+            "SS去除率": [
+              0.0,
+              "%"
+            ],
+            "出水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              0.0,
+              "%"
+            ],
+            "出水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "TN去除率": [
+              0.0,
+              "%"
+            ],
+            "出水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "TP去除率": [
+              0.0,
+              "%"
+            ]
+          },
+          "checks": {},
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": null,
+          "inlet_quality": {
+            "BOD5": 200.0,
+            "COD": 400.0,
+            "SS": 220.0,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 200.0,
+            "COD": 400.0,
+            "SS": 220.0,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "tiaojiechi-6f53d4ff",
+        "type": "tiaojiechi",
+        "name": "调节池",
+        "category": "一级处理",
+        "position": {
+          "x": 652.6,
+          "y": 516.3
+        },
+        "params": {
+          "n": 6.0,
+          "HRT": 10.0,
+          "h_eff": 4.0,
+          "h_super": 0.5,
+          "ratio_LB": 2.5,
+          "P_density": 12.0
+        },
+        "removal_rates": {
+          "BOD5": 0.0,
+          "COD": 0.0,
+          "SS": 0.0,
+          "NH3N": 0.0,
+          "TN": 0.0,
+          "TP": 0.0
+        },
+        "ports": {
+          "input": [
+            {
+              "port_id": "tiaojiechi-6f53d4ff-in",
+              "name": "进水",
+              "port_type": "MIXED",
+              "direction": "input",
+              "node_id": "tiaojiechi-6f53d4ff",
+              "connections": [
+                "xigeshan-777cc241-out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "tiaojiechi-6f53d4ff-out",
+              "name": "出水",
+              "port_type": "MIXED",
+              "direction": "output",
+              "node_id": "tiaojiechi-6f53d4ff",
+              "connections": [
+                "chenshachi-44bdffeb-in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "n": 6,
+            "HRT": 10.0,
+            "h_eff": 4.0,
+            "h_super": 0.5,
+            "ratio_LB": 2.5,
+            "P_density": 12.0
+          },
+          "dimensions": {
+            "池数": [
+              6,
+              "座"
+            ],
+            "单池长度 L": [
+              39.0,
+              "m"
+            ],
+            "单池宽度 B": [
+              16.0,
+              "m"
+            ],
+            "有效水深 h_eff": [
+              4.0,
+              "m"
+            ],
+            "总高度 H": [
+              4.5,
+              "m"
+            ],
+            "单池有效容积": [
+              2496.0,
+              "m³"
+            ],
+            "总有效容积": [
+              14976.0,
+              "m³"
+            ],
+            "设计 HRT": [
+              10.34,
+              "h"
+            ],
+            "长宽比 L/B": [
+              2.44,
+              ""
+            ],
+            "搅拌总功率": [
+              179.8,
+              "kW"
+            ],
+            "单池设计流量": [
+              241.39,
+              "m³/h"
+            ],
+            "调节池总面积": [
+              3744.0,
+              "m²"
+            ],
+            "混凝土量估算": [
+              17971.2,
+              "m³"
+            ],
+            "进水BOD5": [
+              174.8,
+              "mg/L"
+            ],
+            "出水BOD5": [
+              174.8,
+              "mg/L"
+            ],
+            "BOD5去除率": [
+              0.0,
+              "%"
+            ],
+            "进水COD": [
+              349.6,
+              "mg/L"
+            ],
+            "出水COD": [
+              349.6,
+              "mg/L"
+            ],
+            "COD去除率": [
+              0.0,
+              "%"
+            ],
+            "进水SS": [
+              192.28,
+              "mg/L"
+            ],
+            "出水SS": [
+              192.28,
+              "mg/L"
+            ],
+            "SS去除率": [
+              0.0,
+              "%"
+            ],
+            "进水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "出水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "出水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "TN去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "出水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "TP去除率": [
+              0.0,
+              "%"
+            ]
+          },
+          "checks": {
+            "长宽比 L/B": [
+              true,
+              2.44,
+              "1.5~3.0",
+              ""
+            ],
+            "实际 HRT": [
+              true,
+              10.34,
+              ">= 9.5",
+              "h"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": null,
+          "inlet_quality": {
+            "BOD5": 174.8,
+            "COD": 349.6,
+            "SS": 192.28,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 174.8,
+            "COD": 349.6,
+            "SS": 192.28,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "cugeshan-f239ef03",
+        "type": "cugeshan",
+        "name": "粗格栅",
+        "category": "一级处理",
+        "position": {
+          "x": 652.4,
+          "y": 50.0
+        },
+        "params": {
+          "n": 3.0,
+          "b": 65.0,
+          "alpha": 75.0,
+          "h": 0.6,
+          "v": 0.8,
+          "v1": 0.7
+        },
+        "removal_rates": {
+          "BOD5": 0.05,
+          "COD": 0.05,
+          "SS": 0.05,
+          "NH3N": 0.0,
+          "TN": 0.0,
+          "TP": 0.0
+        },
+        "ports": {
+          "input": [
+            {
+              "port_id": "cugeshan-f239ef03-in",
+              "name": "进水",
+              "port_type": "MIXED",
+              "direction": "input",
+              "node_id": "cugeshan-f239ef03",
+              "connections": [
+                "combiner-82895fd1-mout"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "cugeshan-f239ef03-out",
+              "name": "出水",
+              "port_type": "MIXED",
+              "direction": "output",
+              "node_id": "cugeshan-f239ef03",
+              "connections": [
+                "wuni_tisheng-680b01be-in"
+              ]
+            },
+            {
+              "port_id": "cugeshan-f239ef03-slag",
+              "name": "栅渣",
+              "port_type": "SLUDGE",
+              "direction": "output",
+              "node_id": "cugeshan-f239ef03",
+              "connections": [
+                "wuni_hebing-14c00c33-s_in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "n": 3,
+            "b": 65.0,
+            "alpha": 75.0,
+            "h": 0.6,
+            "v": 0.8,
+            "v1": 0.7
+          },
+          "dimensions": {
+            "格栅台数": [
+              3,
+              "台"
+            ],
+            "单台流量": [
+              190.0,
+              "L/s"
+            ],
+            "栅条间隙数": [
+              6,
+              "个"
+            ],
+            "栅槽宽度 B": [
+              0.7000000000000001,
+              "m"
+            ],
+            "进水渠宽 B1": [
+              0.5,
+              "m"
+            ],
+            "校核过栅流速": [
+              0.798,
+              "m/s"
+            ],
+            "校核渠内流速": [
+              0.633,
+              "m/s"
+            ],
+            "过栅水头损失 h1": [
+              0.019,
+              "m"
+            ],
+            "栅后总高 H": [
+              1.0,
+              "m"
+            ],
+            "栅槽总长 L": [
+              1.8,
+              "m"
+            ],
+            "每日栅渣量": [
+              0.7035,
+              "m³/d"
+            ],
+            "清渣方式": [
+              "机械清渣",
+              ""
+            ],
+            "进水BOD5": [
+              200.0,
+              "mg/L"
+            ],
+            "出水BOD5": [
+              190.0,
+              "mg/L"
+            ],
+            "BOD5去除率": [
+              5.0,
+              "%"
+            ],
+            "进水COD": [
+              400.0,
+              "mg/L"
+            ],
+            "出水COD": [
+              380.0,
+              "mg/L"
+            ],
+            "COD去除率": [
+              5.0,
+              "%"
+            ],
+            "进水SS": [
+              220.0,
+              "mg/L"
+            ],
+            "出水SS": [
+              209.0,
+              "mg/L"
+            ],
+            "SS去除率": [
+              5.0,
+              "%"
+            ],
+            "进水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "出水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "出水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "TN去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "出水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "TP去除率": [
+              0.0,
+              "%"
+            ]
+          },
+          "checks": {
+            "B1 < B": [
+              true,
+              0.2,
+              "> 0",
+              "m"
+            ],
+            "过栅流速 v": [
+              true,
+              0.798,
+              "0.6~1.0",
+              "m/s"
+            ],
+            "渠内流速 v1": [
+              true,
+              0.633,
+              "0.4~0.9",
+              "m/s"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": {
+            "Q_wet": 0.7035428571428571,
+            "DS": 140.70857142857142,
+            "P_moisture": 0.8,
+            "VS_ratio": 0.85
+          },
+          "inlet_quality": {
+            "BOD5": 200.0,
+            "COD": 400.0,
+            "SS": 220.0,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 190.0,
+            "COD": 380.0,
+            "SS": 209.0,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "xigeshan-777cc241",
+        "type": "xigeshan",
+        "name": "细格栅",
+        "category": "一级处理",
+        "position": {
+          "x": 664.7,
+          "y": 360.3
+        },
+        "params": {
+          "n": 3.0,
+          "b": 1.5,
+          "alpha": 70.0,
+          "h": 0.5,
+          "v": 0.8,
+          "v1": 0.7
+        },
+        "removal_rates": {
+          "BOD5": 0.08,
+          "COD": 0.08,
+          "SS": 0.08,
+          "NH3N": 0.0,
+          "TN": 0.0,
+          "TP": 0.0
+        },
+        "ports": {
+          "input": [
+            {
+              "port_id": "xigeshan-777cc241-in",
+              "name": "进水",
+              "port_type": "MIXED",
+              "direction": "input",
+              "node_id": "xigeshan-777cc241",
+              "connections": [
+                "wuni_tisheng-680b01be-out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "xigeshan-777cc241-out",
+              "name": "出水",
+              "port_type": "MIXED",
+              "direction": "output",
+              "node_id": "xigeshan-777cc241",
+              "connections": [
+                "tiaojiechi-6f53d4ff-in"
+              ]
+            },
+            {
+              "port_id": "xigeshan-777cc241-slag",
+              "name": "栅渣",
+              "port_type": "SLUDGE",
+              "direction": "output",
+              "node_id": "xigeshan-777cc241",
+              "connections": [
+                "wuni_hebing-14c00c33-s_in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "n": 3,
+            "b": 1.5,
+            "alpha": 70.0,
+            "h": 0.5,
+            "v": 0.8,
+            "v1": 0.7
+          },
+          "dimensions": {
+            "格栅台数": [
+              3,
+              "台"
+            ],
+            "单台流量": [
+              190.0,
+              "L/s"
+            ],
+            "栅条间隙数": [
+              307,
+              "个"
+            ],
+            "栅槽宽度 B": [
+              3.8000000000000003,
+              "m"
+            ],
+            "进水渠宽 B1": [
+              0.6000000000000001,
+              "m"
+            ],
+            "校核过栅流速": [
+              0.8,
+              "m/s"
+            ],
+            "校核渠内流速": [
+              0.633,
+              "m/s"
+            ],
+            "过栅水头损失 h1": [
+              2.792,
+              "m"
+            ],
+            "栅后总高 H": [
+              3.6,
+              "m"
+            ],
+            "栅槽总长 L": [
+              2.7,
+              "m"
+            ],
+            "每日栅渣量": [
+              2.8142,
+              "m³/d"
+            ],
+            "清渣方式": [
+              "机械清渣",
+              ""
+            ],
+            "进水BOD5": [
+              190.0,
+              "mg/L"
+            ],
+            "出水BOD5": [
+              174.8,
+              "mg/L"
+            ],
+            "BOD5去除率": [
+              8.0,
+              "%"
+            ],
+            "进水COD": [
+              380.0,
+              "mg/L"
+            ],
+            "出水COD": [
+              349.6,
+              "mg/L"
+            ],
+            "COD去除率": [
+              8.0,
+              "%"
+            ],
+            "进水SS": [
+              209.0,
+              "mg/L"
+            ],
+            "出水SS": [
+              192.28,
+              "mg/L"
+            ],
+            "SS去除率": [
+              8.0,
+              "%"
+            ],
+            "进水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "出水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "出水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "TN去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "出水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "TP去除率": [
+              0.0,
+              "%"
+            ]
+          },
+          "checks": {
+            "B1 < B": [
+              true,
+              3.2,
+              "> 0",
+              "m"
+            ],
+            "过栅流速 v": [
+              true,
+              0.8,
+              "0.6~1.0",
+              "m/s"
+            ],
+            "渠内流速 v1": [
+              true,
+              0.633,
+              "0.4~0.9",
+              "m/s"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": {
+            "Q_wet": 2.8141714285714285,
+            "DS": 562.8342857142857,
+            "P_moisture": 0.8,
+            "VS_ratio": 0.85
+          },
+          "inlet_quality": {
+            "BOD5": 190.0,
+            "COD": 380.0,
+            "SS": 209.0,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 174.8,
+            "COD": 349.6,
+            "SS": 192.28,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "chenshachi-44bdffeb",
+        "type": "chenshachi",
+        "name": "旋流沉砂池",
+        "category": "一级处理",
+        "position": {
+          "x": 926.9,
+          "y": 71.3
+        },
+        "params": {
+          "n": 2.0,
+          "q_surf": 150.0,
+          "t": 35.0,
+          "h1": 0.3,
+          "X": 30.0,
+          "T_clean": 2.0,
+          "theta": 55.0,
+          "dr": 0.5
+        },
+        "removal_rates": {
+          "SS": 0.1,
+          "BOD5": 0.05,
+          "COD": 0.05,
+          "NH3N": 0.0,
+          "TN": 0.0,
+          "TP": 0.0
+        },
+        "ports": {
+          "input": [
+            {
+              "port_id": "chenshachi-44bdffeb-in",
+              "name": "进水",
+              "port_type": "MIXED",
+              "direction": "input",
+              "node_id": "chenshachi-44bdffeb",
+              "connections": [
+                "tiaojiechi-6f53d4ff-out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "chenshachi-44bdffeb-out",
+              "name": "出水",
+              "port_type": "MIXED",
+              "direction": "output",
+              "node_id": "chenshachi-44bdffeb",
+              "connections": [
+                "chuchenchi-683a9b95-in"
+              ]
+            },
+            {
+              "port_id": "chenshachi-44bdffeb-grit",
+              "name": "沉砂",
+              "port_type": "SLUDGE",
+              "direction": "output",
+              "node_id": "chenshachi-44bdffeb",
+              "connections": [
+                "wuni_hebing-14c00c33-s_in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "n": 2,
+            "q_surf": 150.0,
+            "t": 35.0,
+            "h1": 0.3,
+            "X": 30.0,
+            "T_clean": 2.0,
+            "theta": 55.0,
+            "dr": 0.5
+          },
+          "dimensions": {
+            "池数": [
+              2,
+              "座"
+            ],
+            "池径 D": [
+              3.0,
+              "m"
+            ],
+            "有效水深 h2": [
+              1.46,
+              "m"
+            ],
+            "径深比": [
+              2.06,
+              ""
+            ],
+            "有效容积": [
+              9.97,
+              "m³"
+            ],
+            "实际停留时间": [
+              35.0,
+              "s"
+            ],
+            "每日沉砂量": [
+              1.0428,
+              "m³/d"
+            ],
+            "砂斗上口直径": [
+              1.5,
+              "m"
+            ],
+            "锥体高度 h4": [
+              0.35,
+              "m"
+            ],
+            "圆柱段高度": [
+              0.72,
+              "m"
+            ],
+            "总高度 H": [
+              3.4000000000000004,
+              "m"
+            ],
+            "进水渠断面积": [
+              0.36,
+              "m²"
+            ],
+            "砂斗所需容积": [
+              1.564,
+              "m³"
+            ],
+            "锥体实际容积": [
+              0.298,
+              "m³"
+            ],
+            "圆柱储砂容积": [
+              1.266,
+              "m³"
+            ],
+            "砂斗总容积": [
+              1.564,
+              "m³"
+            ],
+            "进水BOD5": [
+              174.8,
+              "mg/L"
+            ],
+            "出水BOD5": [
+              166.06,
+              "mg/L"
+            ],
+            "BOD5去除率": [
+              5.0,
+              "%"
+            ],
+            "进水COD": [
+              349.6,
+              "mg/L"
+            ],
+            "出水COD": [
+              332.12,
+              "mg/L"
+            ],
+            "COD去除率": [
+              5.0,
+              "%"
+            ],
+            "进水SS": [
+              192.28,
+              "mg/L"
+            ],
+            "出水SS": [
+              173.05,
+              "mg/L"
+            ],
+            "SS去除率": [
+              10.0,
+              "%"
+            ],
+            "进水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "出水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "出水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "TN去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "出水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "TP去除率": [
+              0.0,
+              "%"
+            ]
+          },
+          "checks": {
+            "径深比 D/h2": [
+              true,
+              2.06,
+              "1.5~5.0",
+              ""
+            ],
+            "停留时间 t": [
+              true,
+              35.0,
+              "25~60",
+              "s"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": {
+            "Q_wet": 1.0428209999999998,
+            "DS": 667.4054399999999,
+            "P_moisture": 0.6,
+            "VS_ratio": 0.05
+          },
+          "inlet_quality": {
+            "BOD5": 174.8,
+            "COD": 349.6,
+            "SS": 192.28,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 166.06,
+            "COD": 332.12,
+            "SS": 173.052,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "chuchenchi-683a9b95",
+        "type": "chuchenchi",
+        "name": "辐流式初沉池",
+        "category": "一级处理",
+        "position": {
+          "x": 920.6,
+          "y": 238.5
+        },
+        "params": {
+          "n": 2.0,
+          "q_prime": 2.8,
+          "T_settle": 2.0,
+          "h1": 0.3,
+          "h3": 0.3,
+          "i_slope": 0.05,
+          "R1": 1.8,
+          "R2": 0.8,
+          "h5": 1.5,
+          "P_sludge": 0.96,
+          "T_sludge": 4.0,
+          "v_center": 0.3
+        },
+        "removal_rates": {
+          "SS": 0.5,
+          "BOD5": 0.3,
+          "COD": 0.3,
+          "NH3N": 0.05,
+          "TN": 0.05,
+          "TP": 0.05
+        },
+        "ports": {
+          "input": [
+            {
+              "port_id": "chuchenchi-683a9b95-in",
+              "name": "进水",
+              "port_type": "MIXED",
+              "direction": "input",
+              "node_id": "chuchenchi-683a9b95",
+              "connections": [
+                "chenshachi-44bdffeb-out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "chuchenchi-683a9b95-out",
+              "name": "出水",
+              "port_type": "MIXED",
+              "direction": "output",
+              "node_id": "chuchenchi-683a9b95",
+              "connections": [
+                "cass-c810b356-in"
+              ]
+            },
+            {
+              "port_id": "chuchenchi-683a9b95-sludge",
+              "name": "排泥",
+              "port_type": "SLUDGE",
+              "direction": "output",
+              "node_id": "chuchenchi-683a9b95",
+              "connections": [
+                "wuni_hebing-14c00c33-s_in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "n": 2,
+            "q_prime": 2.8,
+            "T_settle": 2.0,
+            "h1": 0.3,
+            "h3": 0.3,
+            "i_slope": 0.05,
+            "R1": 1.8,
+            "R2": 0.8,
+            "h5": 1.5,
+            "P_sludge": 0.96,
+            "T_sludge": 4.0,
+            "v_center": 0.3
+          },
+          "dimensions": {
+            "池数": [
+              2,
+              "座"
+            ],
+            "池径 D": [
+              22.0,
+              "m"
+            ],
+            "沉淀面积 F": [
+              380.1,
+              "m²"
+            ],
+            "有效水深 h2": [
+              5.4,
+              "m"
+            ],
+            "径深比": [
+              4.08,
+              ""
+            ],
+            "总高度 H": [
+              8.0,
+              "m"
+            ],
+            "池底坡降 h4": [
+              0.5,
+              "m"
+            ],
+            "泥斗高度 h5": [
+              1.5,
+              "m"
+            ],
+            "中心管径": [
+              1.1,
+              "m"
+            ],
+            "出水堰长": [
+              131.9,
+              "m"
+            ],
+            "堰负荷": [
+              2.16,
+              "L/(s·m)"
+            ],
+            "每日干污泥": [
+              3007.7,
+              "kg/d"
+            ],
+            "每日湿污泥": [
+              75.19,
+              "m³/d"
+            ],
+            "单池需贮泥容积": [
+              6.27,
+              "m³"
+            ],
+            "污泥区总容积": [
+              83.78,
+              "m³"
+            ],
+            "刮泥机线速": [
+              1.15,
+              "m/min"
+            ],
+            "实际表面负荷": [
+              2.7,
+              "m³/(m²·h)"
+            ],
+            "进水BOD5": [
+              166.06,
+              "mg/L"
+            ],
+            "出水BOD5": [
+              116.24,
+              "mg/L"
+            ],
+            "BOD5去除率": [
+              30.0,
+              "%"
+            ],
+            "进水COD": [
+              332.12,
+              "mg/L"
+            ],
+            "出水COD": [
+              232.48,
+              "mg/L"
+            ],
+            "COD去除率": [
+              30.0,
+              "%"
+            ],
+            "进水SS": [
+              173.05,
+              "mg/L"
+            ],
+            "出水SS": [
+              86.53,
+              "mg/L"
+            ],
+            "SS去除率": [
+              50.0,
+              "%"
+            ],
+            "进水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "出水NH3N": [
+              33.25,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              5.0,
+              "%"
+            ],
+            "进水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "出水TN": [
+              42.75,
+              "mg/L"
+            ],
+            "TN去除率": [
+              5.0,
+              "%"
+            ],
+            "进水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "出水TP": [
+              4.75,
+              "mg/L"
+            ],
+            "TP去除率": [
+              5.0,
+              "%"
+            ]
+          },
+          "checks": {
+            "池径 D>=16": [
+              true,
+              22.0,
+              ">= 16",
+              "m"
+            ],
+            "实际表面负荷 q'": [
+              true,
+              2.7,
+              "1.5~3.0",
+              "m³/(m²·h)"
+            ],
+            "有效水深 h2 >= 2.0": [
+              true,
+              5.4,
+              ">= 2.0",
+              "m"
+            ],
+            "径深比 D/h2": [
+              true,
+              4.08,
+              "4~15",
+              ""
+            ],
+            "污泥区容积足够": [
+              true,
+              77.51,
+              ">= 0",
+              "m³"
+            ],
+            "堰负荷": [
+              true,
+              2.16,
+              "<= 2.9",
+              "L/(s·m)"
+            ],
+            "刮泥机线速": [
+              true,
+              1.15,
+              "<= 3.0",
+              "m/min"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": {
+            "Q_wet": 75.19260820499993,
+            "DS": 3007.7043281999995,
+            "P_moisture": 0.96,
+            "VS_ratio": 0.6
+          },
+          "inlet_quality": {
+            "BOD5": 166.06,
+            "COD": 332.12,
+            "SS": 173.052,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 116.24199999999999,
+            "COD": 232.48399999999998,
+            "SS": 86.526,
+            "NH3N": 33.25,
+            "TN": 42.75,
+            "TP": 4.75,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "cass-c810b356",
+        "type": "cass",
+        "name": "CASS反应器",
+        "category": "二级处理",
+        "position": {
+          "x": 932.1,
+          "y": 403.7
+        },
+        "params": {
+          "n": 8.0,
+          "Ns": 0.12,
+          "X_MLSS": 3000.0,
+          "f": 0.75,
+          "theta_c": 15.0,
+          "Y": 0.6,
+          "Kd20": 0.05,
+          "theta_t": 1.04,
+          "T_design": 12.0,
+          "Tc": 4.0,
+          "lam": 0.35,
+          "H_max": 6.0,
+          "h_super": 0.5,
+          "r_selector": 0.15,
+          "SVI": 120.0,
+          "delta_H_safe": 0.5,
+          "a_prime": 0.5,
+          "b_prime": 0.12,
+          "t_d": 1.0
+        },
+        "removal_rates": {
+          "BOD5": 0.92,
+          "COD": 0.88,
+          "SS": 0.7,
+          "NH3N": 0.9,
+          "TN": 0.75,
+          "TP": 0.65
+        },
+        "ports": {
+          "input": [
+            {
+              "port_id": "cass-c810b356-in",
+              "name": "进水",
+              "port_type": "MIXED",
+              "direction": "input",
+              "node_id": "cass-c810b356",
+              "connections": [
+                "chuchenchi-683a9b95-out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "cass-c810b356-out",
+              "name": "出水",
+              "port_type": "MIXED",
+              "direction": "output",
+              "node_id": "cass-c810b356",
+              "connections": [
+                "gaomidu-d0703acb-in"
+              ]
+            },
+            {
+              "port_id": "cass-c810b356-sludge",
+              "name": "剩余污泥",
+              "port_type": "SLUDGE",
+              "direction": "output",
+              "node_id": "cass-c810b356",
+              "connections": [
+                "wuni_hebing-14c00c33-s_in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "n": 8,
+            "Ns": 0.12,
+            "X_MLSS": 3000.0,
+            "f": 0.75,
+            "theta_c": 15.0,
+            "Y": 0.6,
+            "Kd20": 0.05,
+            "theta_t": 1.04,
+            "T_design": 12.0,
+            "Tc": 4.0,
+            "lam": 0.35,
+            "H_max": 6.0,
+            "h_super": 0.5,
+            "r_selector": 0.15,
+            "SVI": 120.0,
+            "delta_H_safe": 0.5,
+            "a_prime": 0.5,
+            "b_prime": 0.12,
+            "t_d": 1.0
+          },
+          "dimensions": {
+            "池数": [
+              8,
+              "座"
+            ],
+            "主反应区总容积": [
+              13677.9,
+              "m³"
+            ],
+            "单池主反应区容积": [
+              1709.7,
+              "m³"
+            ],
+            "选择区容积": [
+              256.5,
+              "m³"
+            ],
+            "单池总有效容积": [
+              2016.0,
+              "m³"
+            ],
+            "池长 L": [
+              28.0,
+              "m"
+            ],
+            "池宽 B": [
+              12.0,
+              "m"
+            ],
+            "长宽比 L/B": [
+              2.33,
+              ""
+            ],
+            "宽高比 B/H": [
+              2.0,
+              ""
+            ],
+            "有效水深 H_max": [
+              6.0,
+              "m"
+            ],
+            "总高度": [
+              6.5,
+              "m"
+            ],
+            "滗水高度": [
+              2.1,
+              "m"
+            ],
+            "污泥层高度": [
+              2.16,
+              "m"
+            ],
+            "安全距离": [
+              1.74,
+              "m"
+            ],
+            "充水比 λ": [
+              0.35,
+              ""
+            ],
+            "进水BOD5": [
+              116.24,
+              "mg/L"
+            ],
+            "出水BOD5": [
+              9.3,
+              "mg/L"
+            ],
+            "BOD负荷 Ns": [
+              0.12,
+              "kgBOD5/(kgMLSS·d)"
+            ],
+            "实际污泥龄": [
+              29.5,
+              "d"
+            ],
+            "剩余生物污泥": [
+              1091.5,
+              "kgVSS/d"
+            ],
+            "剩余非生物污泥": [
+              300.8,
+              "kg/d"
+            ],
+            "剩余污泥总量": [
+              1392.2,
+              "kg/d"
+            ],
+            "碳化需氧量": [
+              5539.6,
+              "kgO2/d"
+            ],
+            "硝化需氧量": [
+              3869.2,
+              "kgO2/d"
+            ],
+            "反硝化产氧": [
+              2371.7,
+              "kgO2/d"
+            ],
+            "总需氧量": [
+              7037.0,
+              "kgO2/d"
+            ],
+            "单池滗水流量": [
+              705.6,
+              "m³/h"
+            ],
+            "设计水温衰减系数 KdT": [
+              0.0365,
+              "d⁻¹"
+            ],
+            "BOD5去除率": [
+              92.0,
+              "%"
+            ],
+            "进水COD": [
+              232.48,
+              "mg/L"
+            ],
+            "出水COD": [
+              27.9,
+              "mg/L"
+            ],
+            "COD去除率": [
+              88.0,
+              "%"
+            ],
+            "进水SS": [
+              86.53,
+              "mg/L"
+            ],
+            "出水SS": [
+              25.96,
+              "mg/L"
+            ],
+            "SS去除率": [
+              70.0,
+              "%"
+            ],
+            "进水NH3N": [
+              33.25,
+              "mg/L"
+            ],
+            "出水NH3N": [
+              3.32,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              90.0,
+              "%"
+            ],
+            "进水TN": [
+              42.75,
+              "mg/L"
+            ],
+            "出水TN": [
+              10.69,
+              "mg/L"
+            ],
+            "TN去除率": [
+              75.0,
+              "%"
+            ],
+            "进水TP": [
+              4.75,
+              "mg/L"
+            ],
+            "出水TP": [
+              1.66,
+              "mg/L"
+            ],
+            "TP去除率": [
+              65.0,
+              "%"
+            ]
+          },
+          "checks": {
+            "长宽比 L/B": [
+              true,
+              2.33,
+              "1.5~5",
+              ""
+            ],
+            "宽高比 B/H": [
+              true,
+              2.0,
+              "1~2",
+              ""
+            ],
+            "充水比一致性": [
+              true,
+              2.6,
+              "< 15%",
+              "%偏差"
+            ],
+            "安全距离": [
+              true,
+              1.74,
+              ">= 0.5",
+              "m"
+            ],
+            "污泥龄 θc": [
+              true,
+              29.5,
+              ">= 15.0",
+              "d"
+            ],
+            "总需氧量 > 0": [
+              true,
+              7037.0,
+              "> 0",
+              "kgO2/d"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": {
+            "Q_wet": 174.0293200635674,
+            "DS": 1392.2345605085404,
+            "P_moisture": 0.992,
+            "VS_ratio": 0.7839656898689991
+          },
+          "inlet_quality": {
+            "BOD5": 116.24199999999999,
+            "COD": 232.48399999999998,
+            "SS": 86.526,
+            "NH3N": 33.25,
+            "TN": 42.75,
+            "TP": 4.75,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 9.299359999999995,
+            "COD": 27.898079999999997,
+            "SS": 25.957800000000002,
+            "NH3N": 3.3249999999999993,
+            "TN": 10.6875,
+            "TP": 1.6624999999999999,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "gaomidu-d0703acb",
+        "type": "gaomidu",
+        "name": "高密度沉淀池",
+        "category": "深度处理",
+        "position": {
+          "x": 1152.4,
+          "y": 63.4
+        },
+        "params": {
+          "n": 2.0,
+          "t_mix": 1.5,
+          "t_floc": 12.0,
+          "R_sludge": 0.05,
+          "q_surf": 6.0,
+          "L_tube": 1.0,
+          "alpha_tube": 60.0,
+          "h_clear": 1.0,
+          "h_dist": 1.5,
+          "h_super": 0.5,
+          "t_thicken": 8.0,
+          "P_out": 0.96,
+          "D_PAC": 20.0,
+          "k_PAC": 0.5
+        },
+        "removal_rates": {
+          "SS": 0.9,
+          "COD": 0.6,
+          "BOD5": 0.2,
+          "NH3N": 0.0,
+          "TN": 0.0,
+          "TP": 0.7
+        },
+        "ports": {
+          "input": [
+            {
+              "port_id": "gaomidu-d0703acb-in",
+              "name": "进水",
+              "port_type": "MIXED",
+              "direction": "input",
+              "node_id": "gaomidu-d0703acb",
+              "connections": [
+                "cass-c810b356-out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "gaomidu-d0703acb-out",
+              "name": "出水",
+              "port_type": "MIXED",
+              "direction": "output",
+              "node_id": "gaomidu-d0703acb",
+              "connections": [
+                "vxinglvchi-05efcf33-in"
+              ]
+            },
+            {
+              "port_id": "gaomidu-d0703acb-sludge",
+              "name": "排泥",
+              "port_type": "SLUDGE",
+              "direction": "output",
+              "node_id": "gaomidu-d0703acb",
+              "connections": [
+                "wuni_hebing-14c00c33-s_in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "n": 2,
+            "t_mix": 1.5,
+            "t_floc": 12.0,
+            "R_sludge": 0.05,
+            "q_surf": 6.0,
+            "L_tube": 1.0,
+            "alpha_tube": 60.0,
+            "h_clear": 1.0,
+            "h_dist": 1.5,
+            "h_super": 0.5,
+            "t_thicken": 8.0,
+            "D_PAC": 20.0,
+            "k_PAC": 0.5
+          },
+          "dimensions": {
+            "池数": [
+              2,
+              "座"
+            ],
+            "混合区容积": [
+              25.6,
+              "m³"
+            ],
+            "絮凝区容积": [
+              215.5,
+              "m³"
+            ],
+            "沉淀区面积": [
+              171.0,
+              "m²"
+            ],
+            "池长 L": [
+              16.0,
+              "m"
+            ],
+            "池宽 B": [
+              11.0,
+              "m"
+            ],
+            "斜管轴向流速": [
+              0.0019,
+              "m/s"
+            ],
+            "总高度": [
+              4.4,
+              "m"
+            ],
+            "SS去除干污泥": [
+              812.1,
+              "kg/d"
+            ],
+            "化学干污泥": [
+              347.6,
+              "kg/d"
+            ],
+            "总干污泥": [
+              1159.7,
+              "kg/d"
+            ],
+            "日湿污泥量": [
+              23.2,
+              "m³/d"
+            ],
+            "浓缩区高度": [
+              0.5,
+              "m"
+            ],
+            "固体通量": [
+              6.6,
+              "kgDS/(m²·d)"
+            ],
+            "PAC日耗量": [
+              695.2,
+              "kg/d"
+            ],
+            "进水BOD5": [
+              9.3,
+              "mg/L"
+            ],
+            "出水BOD5": [
+              7.44,
+              "mg/L"
+            ],
+            "BOD5去除率": [
+              20.0,
+              "%"
+            ],
+            "进水COD": [
+              27.9,
+              "mg/L"
+            ],
+            "出水COD": [
+              11.16,
+              "mg/L"
+            ],
+            "COD去除率": [
+              60.0,
+              "%"
+            ],
+            "进水SS": [
+              25.96,
+              "mg/L"
+            ],
+            "出水SS": [
+              2.6,
+              "mg/L"
+            ],
+            "SS去除率": [
+              90.0,
+              "%"
+            ],
+            "进水NH3N": [
+              3.32,
+              "mg/L"
+            ],
+            "出水NH3N": [
+              3.32,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TN": [
+              10.69,
+              "mg/L"
+            ],
+            "出水TN": [
+              10.69,
+              "mg/L"
+            ],
+            "TN去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TP": [
+              1.66,
+              "mg/L"
+            ],
+            "出水TP": [
+              0.5,
+              "mg/L"
+            ],
+            "TP去除率": [
+              70.0,
+              "%"
+            ]
+          },
+          "checks": {
+            "斜管轴向流速 < 5mm/s": [
+              true,
+              0.0019,
+              "< 0.005",
+              "m/s"
+            ],
+            "固体通量 <= 150": [
+              true,
+              6.6,
+              "<= 150",
+              "kgDS/(m²·d)"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": {
+            "Q_wet": 23.193743372279975,
+            "DS": 1159.6871686139998,
+            "P_moisture": 0.95,
+            "VS_ratio": 0.4
+          },
+          "inlet_quality": {
+            "BOD5": 9.299359999999995,
+            "COD": 27.898079999999997,
+            "SS": 25.957800000000002,
+            "NH3N": 3.3249999999999993,
+            "TN": 10.6875,
+            "TP": 1.6624999999999999,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 7.439487999999996,
+            "COD": 11.159232,
+            "SS": 2.5957799999999995,
+            "NH3N": 3.3249999999999993,
+            "TN": 10.6875,
+            "TP": 0.49875,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "vxinglvchi-05efcf33",
+        "type": "vxinglvchi",
+        "name": "V型滤池",
+        "category": "深度处理",
+        "position": {
+          "x": 1174.3,
+          "y": 238.1
+        },
+        "params": {
+          "n": 6.0,
+          "v_filter": 5.0,
+          "v_force": 10.0,
+          "T_filter": 24.0,
+          "k_self": 1.05,
+          "h_media": 1.0,
+          "h_water": 1.2,
+          "h_super": 0.5,
+          "h_plate": 0.1,
+          "h_under": 0.9,
+          "rho_head": 55.0
+        },
+        "removal_rates": {
+          "SS": 0.65,
+          "BOD5": 0.15,
+          "COD": 0.25,
+          "NH3N": 0.0,
+          "TN": 0.0,
+          "TP": 0.5
+        },
+        "ports": {
+          "input": [
+            {
+              "port_id": "vxinglvchi-05efcf33-in",
+              "name": "进水",
+              "port_type": "MIXED",
+              "direction": "input",
+              "node_id": "vxinglvchi-05efcf33",
+              "connections": [
+                "gaomidu-d0703acb-out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "vxinglvchi-05efcf33-out",
+              "name": "出水",
+              "port_type": "MIXED",
+              "direction": "output",
+              "node_id": "vxinglvchi-05efcf33",
+              "connections": [
+                "ziwai-ccfbbcce-in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "n": 6,
+            "v_filter": 5.0,
+            "v_force": 10.0,
+            "T_filter": 24.0,
+            "k_self": 1.05,
+            "h_media": 1.0,
+            "h_water": 1.2,
+            "h_super": 0.5,
+            "h_plate": 0.1,
+            "h_under": 0.9,
+            "rho_head": 55.0
+          },
+          "dimensions": {
+            "滤池格数": [
+              6,
+              "格"
+            ],
+            "总过滤面积": [
+              430.9,
+              "m²"
+            ],
+            "单格面积": [
+              72.0,
+              "m²"
+            ],
+            "单格长度 L": [
+              16.0,
+              "m"
+            ],
+            "单格宽度 B": [
+              4.5,
+              "m"
+            ],
+            "滤池总高度": [
+              3.7,
+              "m"
+            ],
+            "设计滤速": [
+              5.0,
+              "m/h"
+            ],
+            "实际强制滤速": [
+              6.0,
+              "m/h"
+            ],
+            "单次反冲洗水量": [
+              254.9,
+              "m³"
+            ],
+            "冲洗水占比": [
+              0.5,
+              "%"
+            ],
+            "滤头数量": [
+              3960,
+              "个"
+            ],
+            "进水BOD5": [
+              7.44,
+              "mg/L"
+            ],
+            "出水BOD5": [
+              6.32,
+              "mg/L"
+            ],
+            "BOD5去除率": [
+              15.0,
+              "%"
+            ],
+            "进水COD": [
+              11.16,
+              "mg/L"
+            ],
+            "出水COD": [
+              8.37,
+              "mg/L"
+            ],
+            "COD去除率": [
+              25.0,
+              "%"
+            ],
+            "进水SS": [
+              2.6,
+              "mg/L"
+            ],
+            "出水SS": [
+              0.91,
+              "mg/L"
+            ],
+            "SS去除率": [
+              65.0,
+              "%"
+            ],
+            "进水NH3N": [
+              3.32,
+              "mg/L"
+            ],
+            "出水NH3N": [
+              3.32,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TN": [
+              10.69,
+              "mg/L"
+            ],
+            "出水TN": [
+              10.69,
+              "mg/L"
+            ],
+            "TN去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TP": [
+              0.5,
+              "mg/L"
+            ],
+            "出水TP": [
+              0.25,
+              "mg/L"
+            ],
+            "TP去除率": [
+              50.0,
+              "%"
+            ]
+          },
+          "checks": {
+            "强制滤速": [
+              true,
+              6.0,
+              "<= 10.0",
+              "m/h"
+            ],
+            "冲洗水占比 < 5%": [
+              true,
+              0.5,
+              "< 5",
+              "%"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": null,
+          "inlet_quality": {
+            "BOD5": 7.439487999999996,
+            "COD": 11.159232,
+            "SS": 2.5957799999999995,
+            "NH3N": 3.3249999999999993,
+            "TN": 10.6875,
+            "TP": 0.49874999999999997,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 6.323564799999997,
+            "COD": 8.369423999999999,
+            "SS": 0.9085229999999997,
+            "NH3N": 3.3249999999999993,
+            "TN": 10.6875,
+            "TP": 0.24937499999999999,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "ziwai-ccfbbcce",
+        "type": "ziwai",
+        "name": "紫外消毒池",
+        "category": "深度处理",
+        "position": {
+          "x": 1172.5,
+          "y": 392.3
+        },
+        "params": {
+          "n": 2.0,
+          "D_UV": 30.0,
+          "k_aging": 0.7,
+          "k_foul": 0.8,
+          "T254": 65.0,
+          "n_T": 2.0,
+          "eta_geo": 0.7,
+          "v_channel": 0.3,
+          "h_channel": 0.8,
+          "h_super": 0.3,
+          "L_lamp": 1.5,
+          "gap": 0.1,
+          "N_layer": 4,
+          "d_vert": 0.2,
+          "d_long": 0.15,
+          "P_lamp": 250.0,
+          "L_in": 1.0,
+          "L_out": 1.0,
+          "xi_total": 0.5
+        },
+        "removal_rates": {
+          "BOD5": 0.0,
+          "COD": 0.0,
+          "SS": 0.0,
+          "NH3N": 0.0,
+          "TN": 0.0,
+          "TP": 0.0
+        },
+        "ports": {
+          "input": [
+            {
+              "port_id": "ziwai-ccfbbcce-in",
+              "name": "进水",
+              "port_type": "MIXED",
+              "direction": "input",
+              "node_id": "ziwai-ccfbbcce",
+              "connections": [
+                "vxinglvchi-05efcf33-out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "ziwai-ccfbbcce-out",
+              "name": "出水",
+              "port_type": "MIXED",
+              "direction": "output",
+              "node_id": "ziwai-ccfbbcce",
+              "connections": [
+                "bashi_jiliangcao-a231507f-in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "n": 2,
+            "D_UV": 30.0,
+            "k_aging": 0.7,
+            "k_foul": 0.8,
+            "T254": 65.0,
+            "n_T": 2.0,
+            "eta_geo": 0.7,
+            "v_channel": 0.3,
+            "h_channel": 0.8,
+            "h_super": 0.3,
+            "L_lamp": 1.5,
+            "gap": 0.1,
+            "N_layer": 4,
+            "d_vert": 0.2,
+            "d_long": 0.15,
+            "P_lamp": 250.0,
+            "L_in": 1.0,
+            "L_out": 1.0,
+            "xi_total": 0.5
+          },
+          "dimensions": {
+            "渠道数": [
+              2,
+              "条"
+            ],
+            "渠宽": [
+              1.7,
+              "m"
+            ],
+            "有效水深": [
+              1.0,
+              "m"
+            ],
+            "实际流速": [
+              0.168,
+              "m/s"
+            ],
+            "综合衰减系数": [
+              0.56,
+              ""
+            ],
+            "有效透光率": [
+              0.423,
+              ""
+            ],
+            "平均光强": [
+              1104.1,
+              "W/m²"
+            ],
+            "灯管排数": [
+              1,
+              "排"
+            ],
+            "灯管总数": [
+              4,
+              "支"
+            ],
+            "接触时间": [
+              0.89,
+              "s"
+            ],
+            "设计剂量": [
+              30.0,
+              "mJ/cm²"
+            ],
+            "实际剂量": [
+              98.8,
+              "mJ/cm²"
+            ],
+            "渠道总长": [
+              2.15,
+              "m"
+            ],
+            "水头损失": [
+              0.001,
+              "m"
+            ],
+            "总高度": [
+              1.3,
+              "m"
+            ],
+            "进水BOD5": [
+              6.32,
+              "mg/L"
+            ],
+            "出水BOD5": [
+              6.32,
+              "mg/L"
+            ],
+            "BOD5去除率": [
+              0.0,
+              "%"
+            ],
+            "进水COD": [
+              8.37,
+              "mg/L"
+            ],
+            "出水COD": [
+              8.37,
+              "mg/L"
+            ],
+            "COD去除率": [
+              0.0,
+              "%"
+            ],
+            "进水SS": [
+              0.91,
+              "mg/L"
+            ],
+            "出水SS": [
+              0.91,
+              "mg/L"
+            ],
+            "SS去除率": [
+              0.0,
+              "%"
+            ],
+            "进水NH3N": [
+              3.32,
+              "mg/L"
+            ],
+            "出水NH3N": [
+              3.32,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TN": [
+              10.69,
+              "mg/L"
+            ],
+            "出水TN": [
+              10.69,
+              "mg/L"
+            ],
+            "TN去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TP": [
+              0.25,
+              "mg/L"
+            ],
+            "出水TP": [
+              0.25,
+              "mg/L"
+            ],
+            "TP去除率": [
+              0.0,
+              "%"
+            ]
+          },
+          "checks": {
+            "渠内流速": [
+              true,
+              0.168,
+              "0.15~0.7",
+              "m/s"
+            ],
+            "紫外剂量": [
+              true,
+              98.8,
+              ">= 30.0",
+              "mJ/cm²"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": null,
+          "inlet_quality": {
+            "BOD5": 6.323564799999997,
+            "COD": 8.369423999999999,
+            "SS": 0.9085229999999997,
+            "NH3N": 3.3249999999999993,
+            "TN": 10.6875,
+            "TP": 0.24937499999999999,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 6.323564799999997,
+            "COD": 8.369423999999999,
+            "SS": 0.9085229999999997,
+            "NH3N": 3.3249999999999993,
+            "TN": 10.6875,
+            "TP": 0.24937499999999999,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "wuni_bengzhan-72cdda30",
+        "type": "wuni_bengzhan",
+        "name": "污泥泵站",
+        "category": "污泥处理",
+        "position": {
+          "x": 1437.9,
+          "y": 261.6
+        },
+        "params": {
+          "n_pumps": 1.0,
+          "Q_pump": 15.0,
+          "H_pump": 20.0,
+          "v_pipe": 1.5
+        },
+        "removal_rates": {},
+        "ports": {
+          "input": [
+            {
+              "port_id": "wuni_bengzhan-72cdda30-s_in",
+              "name": "污泥进",
+              "port_type": "SLUDGE",
+              "direction": "input",
+              "node_id": "wuni_bengzhan-72cdda30",
+              "connections": [
+                "wuni_hebing-14c00c33-s_out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "wuni_bengzhan-72cdda30-s_out",
+              "name": "污泥出",
+              "port_type": "SLUDGE",
+              "direction": "output",
+              "node_id": "wuni_bengzhan-72cdda30",
+              "connections": [
+                "wuni_nongsuo-9f1f8798-s_in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "n_pumps": 1,
+            "Q_pump": 15.0,
+            "H_pump": 20.0,
+            "v_pipe": 1.5
+          },
+          "dimensions": {
+            "泵台数": [
+              1,
+              "台"
+            ],
+            "单泵流量": [
+              15.0,
+              "m³/h"
+            ],
+            "总泵送能力": [
+              15.0,
+              "m³/h"
+            ],
+            "扬程": [
+              20.0,
+              "m"
+            ],
+            "管道流速": [
+              1.5,
+              "m/s"
+            ],
+            "管径": [
+              0.1,
+              "m"
+            ],
+            "单泵功率": [
+              5.5,
+              "kW"
+            ],
+            "总装机功率": [
+              11.0,
+              "kW"
+            ],
+            "进泥湿泥量": [
+              276.98,
+              "m³/d"
+            ],
+            "进泥干固量": [
+              6930.6,
+              "kg/d"
+            ]
+          },
+          "checks": {
+            "泵送能力充足": [
+              true,
+              3.46,
+              ">= 0",
+              "m³/h"
+            ],
+            "管道流速经济": [
+              true,
+              1.5,
+              "1.0~2.0 (GB50014)",
+              "m/s"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": null
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "wuni_hebing-14c00c33",
+        "type": "wuni_hebing",
+        "name": "污泥合并",
+        "category": "污泥处理",
+        "position": {
+          "x": 1439.9,
+          "y": 96.6
+        },
+        "params": {},
+        "removal_rates": {},
+        "ports": {
+          "input": [
+            {
+              "port_id": "wuni_hebing-14c00c33-s_in",
+              "name": "污泥进(可多连)",
+              "port_type": "SLUDGE",
+              "direction": "input",
+              "node_id": "wuni_hebing-14c00c33",
+              "connections": [
+                "chenshachi-44bdffeb-grit",
+                "xigeshan-777cc241-slag",
+                "cugeshan-f239ef03-slag",
+                "gaomidu-d0703acb-sludge",
+                "chuchenchi-683a9b95-sludge",
+                "cass-c810b356-sludge"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "wuni_hebing-14c00c33-s_out",
+              "name": "合并污泥",
+              "port_type": "SLUDGE",
+              "direction": "output",
+              "node_id": "wuni_hebing-14c00c33",
+              "connections": [
+                "wuni_bengzhan-72cdda30-s_in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {},
+          "dimensions": {
+            "合并湿泥量": [
+              276.98,
+              "m3/d"
+            ],
+            "合并干固量": [
+              6930.6,
+              "kg/d"
+            ],
+            "合并含水率": [
+              0.914,
+              ""
+            ],
+            "合并VS比": [
+              0.576,
+              ""
+            ]
+          },
+          "checks": {},
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": null
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "wuni_nongsuo-9f1f8798",
+        "type": "wuni_nongsuo",
+        "name": "污泥浓缩池",
+        "category": "污泥处理",
+        "position": {
+          "x": 1433.4,
+          "y": 409.1
+        },
+        "params": {
+          "n": 1.0,
+          "q_solid": 50.0,
+          "T_thicken": 24.0,
+          "P_out": 0.96,
+          "h_eff": 4.0
+        },
+        "removal_rates": {},
+        "ports": {
+          "input": [
+            {
+              "port_id": "wuni_nongsuo-9f1f8798-s_in",
+              "name": "污泥进",
+              "port_type": "SLUDGE",
+              "direction": "input",
+              "node_id": "wuni_nongsuo-9f1f8798",
+              "connections": [
+                "wuni_bengzhan-72cdda30-s_out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "wuni_nongsuo-9f1f8798-s_out",
+              "name": "浓缩污泥",
+              "port_type": "SLUDGE",
+              "direction": "output",
+              "node_id": "wuni_nongsuo-9f1f8798",
+              "connections": [
+                "wuni_tuoshui-9f0718e2-s_in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "n": 1,
+            "q_solid": 50.0,
+            "T_thicken": 24.0,
+            "P_out": 0.96
+          },
+          "dimensions": {
+            "池数": [
+              1,
+              "座"
+            ],
+            "池径 D": [
+              13.5,
+              "m"
+            ],
+            "浓缩面积(单池)": [
+              143.1,
+              "m²"
+            ],
+            "有效水深": [
+              3.0,
+              "m"
+            ],
+            "总高度": [
+              3.5,
+              "m"
+            ],
+            "固体负荷(实际)": [
+              48.4,
+              "kgDS/(m²·d)"
+            ],
+            "浓缩时间": [
+              24.0,
+              "h"
+            ],
+            "进泥湿泥量": [
+              276.98,
+              "m³/d"
+            ],
+            "进泥含水率": [
+              0.914,
+              ""
+            ],
+            "出泥湿泥量": [
+              173.26,
+              "m³/d"
+            ],
+            "出泥含水率": [
+              0.96,
+              ""
+            ],
+            "分离液量": [
+              103.71,
+              "m³/d"
+            ],
+            "干固体量": [
+              6930.6,
+              "kg/d"
+            ],
+            "固体回收率": [
+              95.0,
+              "%"
+            ]
+          },
+          "checks": {
+            "池径 D >= 5": [
+              true,
+              13.5,
+              ">= 5",
+              "m"
+            ],
+            "固体负荷合理": [
+              true,
+              48.4,
+              "30~60 (GB50014 §8.2.1)",
+              "kgDS/(m²·d)"
+            ],
+            "有效水深": [
+              true,
+              3.0,
+              "3.0~5.0 (GB50014: 宜4m)",
+              "m"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": null
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "wuni_tuoshui-9f0718e2",
+        "type": "wuni_tuoshui",
+        "name": "污泥脱水间",
+        "category": "污泥处理",
+        "position": {
+          "x": 1691.9,
+          "y": 332.9
+        },
+        "params": {
+          "equip_type": 1.0,
+          "q_capacity": 40.0,
+          "n_machines": 4.0,
+          "P_out": 0.7,
+          "dosage_PAM": 4.0
+        },
+        "removal_rates": {},
+        "ports": {
+          "input": [
+            {
+              "port_id": "wuni_tuoshui-9f0718e2-s_in",
+              "name": "污泥进",
+              "port_type": "SLUDGE",
+              "direction": "input",
+              "node_id": "wuni_tuoshui-9f0718e2",
+              "connections": [
+                "wuni_nongsuo-9f1f8798-s_out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "wuni_tuoshui-9f0718e2-s_out",
+              "name": "脱水污泥",
+              "port_type": "SLUDGE",
+              "direction": "output",
+              "node_id": "wuni_tuoshui-9f0718e2",
+              "connections": [
+                "wuni_ganhua-0d384551-s_in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "equip_type": 1,
+            "q_capacity": 40.0,
+            "n_machines": 4,
+            "P_out": 0.7,
+            "dosage_PAM": 4.0
+          },
+          "dimensions": {
+            "设备类型": [
+              "离心脱水机",
+              ""
+            ],
+            "脱水机台数": [
+              4,
+              "台"
+            ],
+            "单机处理量": [
+              40.0,
+              "m³/h"
+            ],
+            "日运行时间": [
+              1.1,
+              "h/d"
+            ],
+            "进泥湿泥量": [
+              173.26,
+              "m³/d"
+            ],
+            "进泥含水率": [
+              0.96,
+              ""
+            ],
+            "出泥湿泥量": [
+              21.95,
+              "m³/d"
+            ],
+            "出泥含水率": [
+              0.7,
+              ""
+            ],
+            "分离液量": [
+              151.32,
+              "m³/d"
+            ],
+            "干固体量": [
+              6584.0,
+              "kg/d"
+            ],
+            "PAM日耗量": [
+              26.3,
+              "kg/d"
+            ],
+            "PAM溶液流量": [
+              13.17,
+              "m³/d"
+            ],
+            "固体回收率": [
+              97.0,
+              "%"
+            ]
+          },
+          "checks": {
+            "日运行时间 <= 20h": [
+              true,
+              1.1,
+              "<= 20",
+              "h/d"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": null
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "wuni_ganhua-0d384551",
+        "type": "wuni_ganhua",
+        "name": "污泥干化",
+        "category": "污泥处理",
+        "position": {
+          "x": 1698.4,
+          "y": 136.6
+        },
+        "params": {
+          "method": 1.0,
+          "P_out": 0.3,
+          "T_air": 180,
+          "eta_thermal": 0.75,
+          "q_evap": 10.0
+        },
+        "removal_rates": {},
+        "ports": {
+          "input": [
+            {
+              "port_id": "wuni_ganhua-0d384551-s_in",
+              "name": "污泥进",
+              "port_type": "SLUDGE",
+              "direction": "input",
+              "node_id": "wuni_ganhua-0d384551",
+              "connections": [
+                "wuni_tuoshui-9f0718e2-s_out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "wuni_ganhua-0d384551-s_out",
+              "name": "干化污泥",
+              "port_type": "SLUDGE",
+              "direction": "output",
+              "node_id": "wuni_ganhua-0d384551",
+              "connections": []
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "method": 1,
+            "P_out": 0.3,
+            "T_air": 180,
+            "eta_thermal": 0.75,
+            "q_evap": 10.0
+          },
+          "dimensions": {
+            "干化方式": [
+              "太阳能干化",
+              ""
+            ],
+            "进泥湿泥量": [
+              21.95,
+              "m³/d"
+            ],
+            "进泥含水率": [
+              0.7,
+              ""
+            ],
+            "出泥湿泥量": [
+              9.41,
+              "m³/d"
+            ],
+            "出泥含水率": [
+              0.3,
+              ""
+            ],
+            "蒸发水量": [
+              12541.0,
+              "kg/d"
+            ],
+            "干固体量": [
+              6386.5,
+              "kg/d"
+            ],
+            "减量率": [
+              57.1,
+              "%"
+            ],
+            "干化面积": [
+              52.3,
+              "m²"
+            ]
+          },
+          "checks": {
+            "蒸发速率合理": [
+              true,
+              10.0,
+              "4~15",
+              "kgH2O/(m²·h)"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": null
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "wuni_tisheng-680b01be",
+        "type": "wuni_tisheng",
+        "name": "污水提升泵房",
+        "category": "社区模组",
+        "position": {
+          "x": 650.1,
+          "y": 204.8
+        },
+        "params": {
+          "n_work": 4.0,
+          "H_st": 12.0,
+          "v_suction": 1.2,
+          "v_discharge": 1.5
+        },
+        "removal_rates": {
+          "BOD5": 0.0,
+          "COD": 0.0,
+          "SS": 0.0,
+          "NH3N": 0.0,
+          "TN": 0.0,
+          "TP": 0.0
+        },
+        "ports": {
+          "input": [
+            {
+              "port_id": "wuni_tisheng-680b01be-in",
+              "name": "进水",
+              "port_type": "MIXED",
+              "direction": "input",
+              "node_id": "wuni_tisheng-680b01be",
+              "connections": [
+                "cugeshan-f239ef03-out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "wuni_tisheng-680b01be-out",
+              "name": "出水",
+              "port_type": "MIXED",
+              "direction": "output",
+              "node_id": "wuni_tisheng-680b01be",
+              "connections": [
+                "xigeshan-777cc241-in"
+              ]
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "n_work": 4.0,
+            "H_st": 12.0,
+            "v_suction": 1.2,
+            "v_discharge": 1.5
+          },
+          "dimensions": {
+            "工作泵台数": [
+              4,
+              "台"
+            ],
+            "备用泵台数": [
+              1,
+              "台"
+            ],
+            "水泵总台数": [
+              5,
+              "台"
+            ],
+            "单泵流量": [
+              0.1425,
+              "m³/s"
+            ],
+            "吸水管径 D_suction": [
+              0.389,
+              "m"
+            ],
+            "出水管径 D_discharge": [
+              0.348,
+              "m"
+            ],
+            "静扬程": [
+              12.0,
+              "m"
+            ],
+            "吸水管水头损失": [
+              0.065,
+              "m"
+            ],
+            "出水管水头损失": [
+              0.592,
+              "m"
+            ],
+            "总扬程 H": [
+              14.16,
+              "m"
+            ],
+            "轴功率": [
+              26.4,
+              "kW"
+            ],
+            "池长 L": [
+              3.5,
+              "m"
+            ],
+            "池宽 B": [
+              5.0,
+              "m"
+            ],
+            "有效水深": [
+              2.5,
+              "m"
+            ],
+            "总高度 H": [
+              3.0,
+              "m"
+            ],
+            "集水池容积": [
+              43.8,
+              "m³"
+            ],
+            "最小集水池容积": [
+              42.7,
+              "m³"
+            ],
+            "进水BOD5": [
+              190.0,
+              "mg/L"
+            ],
+            "出水BOD5": [
+              190.0,
+              "mg/L"
+            ],
+            "BOD5去除率": [
+              0.0,
+              "%"
+            ],
+            "进水COD": [
+              380.0,
+              "mg/L"
+            ],
+            "出水COD": [
+              380.0,
+              "mg/L"
+            ],
+            "COD去除率": [
+              0.0,
+              "%"
+            ],
+            "进水SS": [
+              209.0,
+              "mg/L"
+            ],
+            "出水SS": [
+              209.0,
+              "mg/L"
+            ],
+            "SS去除率": [
+              0.0,
+              "%"
+            ],
+            "进水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "出水NH3N": [
+              35.0,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "出水TN": [
+              45.0,
+              "mg/L"
+            ],
+            "TN去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "出水TP": [
+              5.0,
+              "mg/L"
+            ],
+            "TP去除率": [
+              0.0,
+              "%"
+            ]
+          },
+          "checks": {
+            "吸水管流速 v_suction": [
+              true,
+              1.2,
+              "0.7~1.5 (GB50014 §6.4.4)",
+              "m/s"
+            ],
+            "出水管流速 v_discharge": [
+              true,
+              1.5,
+              "0.8~2.5 (GB50014 §6.4.4)",
+              "m/s"
+            ],
+            "总扬程 H_total": [
+              true,
+              14.2,
+              "5~30 m",
+              "m"
+            ],
+            "集水池容积 V_sump": [
+              true,
+              43.8,
+              ">= 42.7 m³ (GB50014 §6.3.1)",
+              "m³"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": null,
+          "inlet_quality": {
+            "BOD5": 190.0,
+            "COD": 380.0,
+            "SS": 209.0,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 190.0,
+            "COD": 380.0,
+            "SS": 209.0,
+            "NH3N": 35.0,
+            "TN": 45.0,
+            "TP": 5.0,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN"
+      },
+      {
+        "id": "bashi_jiliangcao-a231507f",
+        "type": "bashi_jiliangcao",
+        "name": "巴氏计量槽",
+        "category": "社区模组",
+        "position": {
+          "x": 1203.1,
+          "y": 541.8
+        },
+        "params": {
+          "b": 0.152
+        },
+        "removal_rates": {
+          "BOD5": 0.0,
+          "COD": 0.0,
+          "SS": 0.0,
+          "NH3N": 0.0,
+          "TN": 0.0,
+          "TP": 0.0
+        },
+        "ports": {
+          "input": [
+            {
+              "port_id": "bashi_jiliangcao-a231507f-in",
+              "name": "进水",
+              "port_type": "MIXED",
+              "direction": "input",
+              "node_id": "bashi_jiliangcao-a231507f",
+              "connections": [
+                "ziwai-ccfbbcce-out"
+              ]
+            }
+          ],
+          "output": [
+            {
+              "port_id": "bashi_jiliangcao-a231507f-out",
+              "name": "出水",
+              "port_type": "MIXED",
+              "direction": "output",
+              "node_id": "bashi_jiliangcao-a231507f",
+              "connections": []
+            }
+          ]
+        },
+        "cached_result": {
+          "success": true,
+          "params": {
+            "b": 0.152
+          },
+          "dimensions": {
+            "喉道宽度 b": [
+              0.152,
+              "m"
+            ],
+            "流量系数 C": [
+              0.381,
+              ""
+            ],
+            "指数 n": [
+              1.58,
+              ""
+            ],
+            "上游水深 h_a": [
+              1.29,
+              "m"
+            ],
+            "下游水深 h_b": [
+              0.774,
+              "m"
+            ],
+            "淹没度 S": [
+              0.6,
+              ""
+            ],
+            "渠道宽度": [
+              0.5,
+              "m"
+            ],
+            "行进流速": [
+              0.883,
+              "m/s"
+            ],
+            "弗劳德数 Fr": [
+              0.248,
+              ""
+            ],
+            "上游直段长度": [
+              5.0,
+              "m"
+            ],
+            "下游直段长度": [
+              2.5,
+              "m"
+            ],
+            "渠道总长": [
+              7.5,
+              "m"
+            ],
+            "设计流量": [
+              0.57,
+              "m³/s"
+            ],
+            "设计流量(L/s)": [
+              570.0,
+              "L/s"
+            ],
+            "进水BOD5": [
+              6.32,
+              "mg/L"
+            ],
+            "出水BOD5": [
+              6.32,
+              "mg/L"
+            ],
+            "BOD5去除率": [
+              0.0,
+              "%"
+            ],
+            "进水COD": [
+              8.37,
+              "mg/L"
+            ],
+            "出水COD": [
+              8.37,
+              "mg/L"
+            ],
+            "COD去除率": [
+              0.0,
+              "%"
+            ],
+            "进水SS": [
+              0.91,
+              "mg/L"
+            ],
+            "出水SS": [
+              0.91,
+              "mg/L"
+            ],
+            "SS去除率": [
+              0.0,
+              "%"
+            ],
+            "进水NH3N": [
+              3.32,
+              "mg/L"
+            ],
+            "出水NH3N": [
+              3.32,
+              "mg/L"
+            ],
+            "NH3N去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TN": [
+              10.69,
+              "mg/L"
+            ],
+            "出水TN": [
+              10.69,
+              "mg/L"
+            ],
+            "TN去除率": [
+              0.0,
+              "%"
+            ],
+            "进水TP": [
+              0.25,
+              "mg/L"
+            ],
+            "出水TP": [
+              0.25,
+              "mg/L"
+            ],
+            "TP去除率": [
+              0.0,
+              "%"
+            ]
+          },
+          "checks": {
+            "标准喉宽 b": [
+              true,
+              0.152,
+              "∈{0.152,0.228,0.30,0.45,0.60} (CJ/T3008.5-93)",
+              "m"
+            ],
+            "弗劳德数 Fr": [
+              true,
+              0.248,
+              "< 1.0 (亚临界流)",
+              ""
+            ],
+            "行进流速 v_approach": [
+              true,
+              0.883,
+              "0.3~2.0 m/s",
+              "m/s"
+            ]
+          },
+          "warnings": [],
+          "error_msg": "",
+          "removal_rates": {},
+          "robustness": 0.0,
+          "sludge_output": null,
+          "inlet_quality": {
+            "BOD5": 6.323564799999997,
+            "COD": 8.369423999999999,
+            "SS": 0.9085229999999997,
+            "NH3N": 3.3249999999999993,
+            "TN": 10.6875,
+            "TP": 0.24937499999999999,
+            "pH": 7.0
+          },
+          "outlet_quality": {
+            "BOD5": 6.323564799999997,
+            "COD": 8.369423999999999,
+            "SS": 0.9085229999999997,
+            "NH3N": 3.3249999999999993,
+            "TN": 10.6875,
+            "TP": 0.24937499999999999,
+            "pH": 7.0
+          }
+        },
+        "state": "CLEAN"
+      }
+    ],
+    "connections": [
+      {
+        "from": "chenshachi-44bdffeb-grit",
+        "to": "wuni_hebing-14c00c33-s_in"
+      },
+      {
+        "from": "ziwai-ccfbbcce-out",
+        "to": "bashi_jiliangcao-a231507f-in"
+      },
+      {
+        "from": "wuni_hebing-14c00c33-s_out",
+        "to": "wuni_bengzhan-72cdda30-s_in"
+      },
+      {
+        "from": "cass-c810b356-sludge",
+        "to": "wuni_hebing-14c00c33-s_in"
+      },
+      {
+        "from": "chuchenchi-683a9b95-out",
+        "to": "cass-c810b356-in"
+      },
+      {
+        "from": "wuni_nongsuo-9f1f8798-s_out",
+        "to": "wuni_tuoshui-9f0718e2-s_in"
+      },
+      {
+        "from": "gaomidu-d0703acb-sludge",
+        "to": "wuni_hebing-14c00c33-s_in"
+      },
+      {
+        "from": "xigeshan-777cc241-out",
+        "to": "tiaojiechi-6f53d4ff-in"
+      },
+      {
+        "from": "tiaojiechi-6f53d4ff-out",
+        "to": "chenshachi-44bdffeb-in"
+      },
+      {
+        "from": "water_quality-79e3a69f-qout",
+        "to": "combiner-82895fd1-qin"
+      },
+      {
+        "from": "xigeshan-777cc241-slag",
+        "to": "wuni_hebing-14c00c33-s_in"
+      },
+      {
+        "from": "cugeshan-f239ef03-slag",
+        "to": "wuni_hebing-14c00c33-s_in"
+      },
+      {
+        "from": "chuchenchi-683a9b95-sludge",
+        "to": "wuni_hebing-14c00c33-s_in"
+      },
+      {
+        "from": "cugeshan-f239ef03-out",
+        "to": "wuni_tisheng-680b01be-in"
+      },
+      {
+        "from": "pipe_network-45e82552-wout",
+        "to": "combiner-82895fd1-win"
+      },
+      {
+        "from": "cass-c810b356-out",
+        "to": "gaomidu-d0703acb-in"
+      },
+      {
+        "from": "wuni_tuoshui-9f0718e2-s_out",
+        "to": "wuni_ganhua-0d384551-s_in"
+      },
+      {
+        "from": "wuni_bengzhan-72cdda30-s_out",
+        "to": "wuni_nongsuo-9f1f8798-s_in"
+      },
+      {
+        "from": "combiner-82895fd1-mout",
+        "to": "cugeshan-f239ef03-in"
+      },
+      {
+        "from": "gaomidu-d0703acb-out",
+        "to": "vxinglvchi-05efcf33-in"
+      },
+      {
+        "from": "chenshachi-44bdffeb-out",
+        "to": "chuchenchi-683a9b95-in"
+      },
+      {
+        "from": "wuni_tisheng-680b01be-out",
+        "to": "xigeshan-777cc241-in"
+      },
+      {
+        "from": "vxinglvchi-05efcf33-out",
+        "to": "ziwai-ccfbbcce-in"
+      }
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-"""test_wuni_tisheng.py — 污水提升泵房 测试 (v5.3)"""
+"""test_wushui_tisheng.py — 污水提升泵房 测试 (v5.3)"""
 
 import sys
 from pathlib import Path
@@ -17,8 +17,8 @@ from mods.mod_manager import get_mod_manager
 def _get_node():
     mgr = get_mod_manager()
     mgr.load_all()
-    cls = mgr.get_node_class("wuni_tisheng")
-    assert cls is not None, "wuni_tisheng not registered"
+    cls = mgr.get_node_class("wushui_tisheng")
+    assert cls is not None, "wushui_tisheng not registered"
     return cls()
 
 
@@ -27,7 +27,7 @@ class TestWuniTisheng:
 
     def test_node_identity(self):
         node = _get_node()
-        assert node.NODE_TYPE == "wuni_tisheng"
+        assert node.NODE_TYPE == "wushui_tisheng"
         assert node.NODE_NAME == "污水提升泵房"
 
     def test_calculate_success(self):
@@ -52,7 +52,7 @@ class TestWuniTisheng:
         scalar, _, _ = node.execute(flow, quality)
         from models.discretization import get_config
 
-        cfg = get_config("wuni_tisheng")
+        cfg = get_config("wushui_tisheng")
         grid = {k: np.array([cfg["free"][k][0]]) for k in cfg["free"]}
         fixed = {}
         vec = type(node)._vectorized_compute(grid, flow, quality, fixed)
@@ -66,7 +66,7 @@ class TestWuniTisheng:
 
         flow, quality = WaterFlow(), WaterQuality()
         engine = get_engine()
-        sols = engine.enumerate("wuni_tisheng", flow, quality)
+        sols = engine.enumerate("wushui_tisheng", flow, quality)
         assert len(sols) > 0, "无可行方案"
         assert sols[0].robustness > 0, "robustness 应为正数"
         assert sols[0].cost_wan_yuan > 0, "cost 应为正数"
@@ -86,7 +86,7 @@ class TestWuniTisheng:
         node = _get_node()
         from models.discretization import get_config
 
-        cfg = get_config("wuni_tisheng")
+        cfg = get_config("wushui_tisheng")
         flow, quality = WaterFlow(), WaterQuality()
         grid = {k: np.array([cfg["free"][k][0]]) for k in cfg["free"]}
         fixed = cfg.get("fixed", {})

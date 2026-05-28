@@ -1,5 +1,5 @@
 {
-  "id": "wuni_tisheng",
+  "id": "wushui_tisheng",
   "name": "污水提升泵房",
   "version": "5.1.0",
   "author": "yyx",
@@ -7,8 +7,8 @@
   "category": "社区模组",
   "process_stage": "primary",
   "icon": "🏗️",
-  "node_type": "wuni_tisheng",
-  "node_class": "WuniTishengNode",
+  "node_type": "wushui_tisheng",
+  "node_class": "WushuiTishengNode",
   "module_path": "",
   "inputs": [
     {

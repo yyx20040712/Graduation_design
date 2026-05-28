@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import importlib
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -92,21 +93,44 @@ def discover_mods(
     schema_validate_fn: Callable[[Path], list],
     force_rescan: bool = False,
     already_loaded: bool = False,
+    extra_roots: Optional[List[Path]] = None,
 ) -> bool:
     """扫描 core/ 和 community/ 目录, 发现所有模组.
+
+    支持多目录扫描: 从 mods_root (主目录) 和 extra_roots (回退目录) 中
+    发现模组, 按 mod_id 去重 (同名模组以先发现的为准).
+
+    Args:
+        mods_root: 主模组根目录
+        extra_roots: 额外的模组根目录列表 (可选, 用于多路径回退)
 
     Returns:
         True 如果扫描完成 (loaded 标志)
     """
-    core_dir = mods_root / "core"
-    community_dir = mods_root / "community"
+    # 构建所有扫描根目录 (去重)
+    all_roots = [mods_root]
+    if extra_roots:
+        seen = {os.path.abspath(str(mods_root))}
+        for root in extra_roots:
+            abs_path = os.path.abspath(str(root))
+            if abs_path not in seen and root.exists():
+                all_roots.append(root)
+                seen.add(abs_path)
 
     if not already_loaded or force_rescan:
-        if core_dir.exists():
-            scan_directory(core_dir, mods, errors, validate_fn, schema_validate_fn)
+        for root in all_roots:
+            core_dir = root / "core"
+            if core_dir.exists():
+                scan_directory(
+                    core_dir, mods, errors, validate_fn, schema_validate_fn
+                )
 
-    if community_dir.exists():
-        scan_directory(community_dir, mods, errors, validate_fn, schema_validate_fn)
+        for root in all_roots:
+            community_dir = root / "community"
+            if community_dir.exists():
+                scan_directory(
+                    community_dir, mods, errors, validate_fn, schema_validate_fn
+                )
 
     return True
 

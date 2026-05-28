@@ -1,6 +1,5 @@
 """wuni_ganhua.py — 污泥干化 (Sludge Drying)"""
 
-import math
 from typing import Dict, List, Tuple, Optional
 
 import numpy as np
@@ -117,7 +116,58 @@ class WuniGanhuaNode(NodeBase):
         ]
 
     def calculate(self, flow, quality) -> NodeResult:
-        return NodeResult(success=True)
+        method = int(self.get_param("method"))
+        P_out = self.get_param("P_out")
+        T_air = self.get_param("T_air")
+        eta_thermal = self.get_param("eta_thermal")
+        q_evap = self.get_param("q_evap")
+        method_name = "热干化" if method == 0 else "太阳能干化"
+
+        grid, fixed = self._make_scalar_grid(
+            {"method": method, "P_out": P_out, "q_evap": q_evap, "eta_thermal": eta_thermal},
+            {"T_air": T_air, "_sludge_DS": 4000.0, "_sludge_Q_wet": 100.0, "_sludge_P": 0.80},
+        )
+        res = self._vectorized_compute(grid, flow, quality, fixed)
+        r = res[0]
+
+        DS = 4000.0
+        Q_wet_in = 100.0
+        P_in = 0.80
+        water_evap = float(r["water_evap"])
+        Q_wet_out_val = float(r["Q_wet_out"])
+
+        result = NodeResult(success=True)
+        result.params = {
+            "method": method, "P_out": P_out, "T_air": T_air,
+            "eta_thermal": eta_thermal, "q_evap": q_evap,
+        }
+        result.add_dimension("干化方式", method_name, "")
+        result.add_dimension("进泥湿泥量", round(Q_wet_in, 2), "m³/d")
+        result.add_dimension("进泥含水率", round(P_in, 3), "")
+        result.add_dimension("出泥湿泥量", round(Q_wet_out_val, 2), "m³/d")
+        result.add_dimension("出泥含水率", P_out, "")
+        result.add_dimension("蒸发水量", round(water_evap, 1), "kg/d")
+        result.add_dimension("干固体量", round(DS, 1), "kg/d")
+        result.add_dimension(
+            "减量率",
+            round((Q_wet_in - Q_wet_out_val) / max(Q_wet_in, 0.01) * 100, 1), "%",
+        )
+        if method == 0:
+            result.add_dimension("热风温度", T_air, "°C")
+            result.add_dimension("热效率", eta_thermal * 100, "%")
+            result.add_dimension("总热耗", round(float(r["heat_total"]), 1), "MJ/d")
+            coal_equiv = float(r["heat_total"]) / 29307.0
+            result.add_dimension("折合标煤", round(coal_equiv, 3), "tce/d")
+        result.add_dimension("干化面积", round(float(r["A_dry"]), 1), "m²")
+        if method == 0:
+            result.add_check(
+                "蒸发速率合理", bool(r["ok_evap_rate"]), q_evap, "4~15", "kgH2O/(m²·h)",
+            )
+        else:
+            result.add_check(
+                "蒸发速率合理", bool(r["ok_evap_rate"]), q_evap, "5~15", "kgH2O/(m²·d)",
+            )
+        return result
 
     def execute_sludge(
         self, sludge: SludgeFlow

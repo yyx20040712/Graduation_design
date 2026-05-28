@@ -477,7 +477,67 @@ class SolutionSpace:
                 _log.error("  ❌ 约束字段缺失: %s (dtype中没有 %s)", name, ok_field)
                 _log.error("     dtype 实际字段: %s", list(results.dtype.names))
 
+        # ── v5.4: 计算最紧约束并给出建议 ──
+        suggestion = self._suggest_relaxation(
+            results, constraint_keys, constraint_names, cfg
+        )
+        if suggestion:
+            _log.warning("  💡 建议: %s", suggestion)
+
         _log.warning("=== 诊断结束 ===")
+
+    def _suggest_relaxation(
+        self,
+        results: np.ndarray,
+        constraint_keys: List[str],
+        constraint_names: List[str],
+        cfg: dict,
+    ) -> str:
+        """当无可行解时, 计算最紧约束并建议调整方向"""
+        tightest_name = ""
+        tightest_ratio = 1.1  # 通过率 < 10% 即为最紧
+        tightest_median = 0.0
+        tightest_limit = ""
+
+        for i, ckey in enumerate(constraint_keys):
+            ok_field = "ok_" + ckey
+            val_field = "val_" + ckey
+            if ok_field not in results.dtype.names:
+                continue
+            if val_field not in results.dtype.names:
+                continue
+
+            total = len(results)
+            passed = int(results[ok_field].sum())
+            ratio = passed / total if total > 0 else 0
+
+            if ratio < tightest_ratio:
+                tightest_ratio = ratio
+                tightest_name = constraint_names[i] if i < len(constraint_names) else ckey
+                tightest_median = float(np.median(results[val_field]))
+                limits = cfg.get("constraint_limits", {})
+                tightest_limit = limits.get(tightest_name, "")
+
+        if not tightest_name:
+            return ""
+
+        # 解析限值, 给出调整建议
+        lo, hi = _parse_limit(tightest_limit) if tightest_limit else (None, None)
+        if lo is not None and tightest_median < lo:
+            return (
+                f"最紧约束「{tightest_name}」中位数 {tightest_median:.2f} "
+                f"低于下限 {lo}, 建议调大相关参数或放宽约束限值"
+            )
+        elif hi is not None and tightest_median > hi:
+            return (
+                f"最紧约束「{tightest_name}」中位数 {tightest_median:.2f} "
+                f"超过上限 {hi}, 建议调小相关参数或放宽约束限值"
+            )
+        else:
+            return (
+                f"最紧约束「{tightest_name}」通过率仅 {tightest_ratio:.0%}, "
+                f"建议调整对应参数"
+            )
 
     def _estimate_cost(
         self,

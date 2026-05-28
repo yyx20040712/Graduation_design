@@ -1,6 +1,5 @@
 """gaomidu.py — 高密度沉淀池 (High-Density Sedimentation Tank)"""
 
-import math
 from typing import Dict, List
 
 import numpy as np
@@ -169,309 +168,181 @@ class GaomiduNode(NodeBase):
     def calculate(self, flow: WaterFlow, quality: WaterQuality) -> NodeResult:
         # ── 读取参数 ──
         n = int(self.get_param("n"))
-        t_mix = self.get_param("t_mix")  # min
-        t_floc = self.get_param("t_floc")  # min
+        t_mix = self.get_param("t_mix")
+        t_floc = self.get_param("t_floc")
         R_sludge = self.get_param("R_sludge")
-        q_surf = self.get_param("q_surf")  # m³/(m²·h)
-        L_tube = self.get_param("L_tube")  # m
-        alpha_tube = self.get_param("alpha_tube")  # °
-        h_clear = self.get_param("h_clear")  # m
-        h_dist = self.get_param("h_dist")  # m
-        h_super = self.get_param("h_super")  # m
-        t_thicken = self.get_param("t_thicken")  # h
-        D_PAC = self.get_param("D_PAC")  # mg/L
-        k_PAC = self.get_param("k_PAC")  # kgDS/kgPAC
-        G_mix = self.get_param("G_mix")  # s⁻¹
-        G_floc = self.get_param("G_floc")  # s⁻¹
-        X_r_assumed = self.get_param("X_r_assumed")  # g/L
-
-        result = NodeResult(success=True)
+        q_surf = self.get_param("q_surf")
+        L_tube = self.get_param("L_tube")
+        alpha_tube = self.get_param("alpha_tube")
+        h_clear = self.get_param("h_clear")
+        h_dist = self.get_param("h_dist")
+        h_super = self.get_param("h_super")
+        t_thicken = self.get_param("t_thicken")
+        D_PAC = self.get_param("D_PAC")
+        k_PAC = self.get_param("k_PAC")
+        G_mix = self.get_param("G_mix")
+        G_floc = self.get_param("G_floc")
+        X_r_assumed = self.get_param("X_r_assumed")
         P_out = self.get_param("P_out")
+
+        # ── 通过向量化路径计算 (N=1) ──
+        grid, fixed = self._make_scalar_grid(
+            {"n": n, "t_mix": t_mix, "t_floc": t_floc, "q_surf": q_surf},
+            {
+                "R_sludge": R_sludge, "L_tube": L_tube, "alpha_tube": alpha_tube,
+                "h_clear": h_clear, "h_dist": h_dist, "h_super": h_super,
+                "t_thicken": t_thicken, "D_PAC": D_PAC, "k_PAC": k_PAC,
+                "G_mix": G_mix, "G_floc": G_floc, "X_r_assumed": X_r_assumed,
+            },
+        )
+        res = self._vectorized_compute(grid, flow, quality, fixed)
+        r = res[0]
+
+        # ── 组装 NodeResult ──
+        result = NodeResult(success=True)
         result.params = {
-            "n": n,
-            "t_mix": t_mix,
-            "t_floc": t_floc,
-            "R_sludge": R_sludge,
-            "q_surf": q_surf,
-            "L_tube": L_tube,
-            "alpha_tube": alpha_tube,
-            "h_clear": h_clear,
-            "h_dist": h_dist,
-            "h_super": h_super,
-            "t_thicken": t_thicken,
-            "D_PAC": D_PAC,
-            "k_PAC": k_PAC,
-            "G_mix": G_mix,
-            "G_floc": G_floc,
-            "X_r_assumed": X_r_assumed,
-            "P_out": P_out,
+            "n": n, "t_mix": t_mix, "t_floc": t_floc,
+            "R_sludge": R_sludge, "q_surf": q_surf,
+            "L_tube": L_tube, "alpha_tube": alpha_tube,
+            "h_clear": h_clear, "h_dist": h_dist, "h_super": h_super,
+            "t_thicken": t_thicken, "D_PAC": D_PAC, "k_PAC": k_PAC,
+            "G_mix": G_mix, "G_floc": G_floc,
+            "X_r_assumed": X_r_assumed, "P_out": P_out,
         }
 
-        # 水的动力粘度 (20°C)
-        mu = 1.005e-3  # Pa·s
-
-        # ── 单池流量 ──
-        Q_single = flow.Q_design / n  # m³/s
-        Q_single_m3h = Q_single * 3600  # m³/h
-
-        # ═══════════════════════════════════════════════
-        # (A) 快速混合区 — 公式(4-77)(4-78)
-        # ═══════════════════════════════════════════════
-        V_mix = Q_single * t_mix * 60.0  # m³
-        P_mix = (G_mix**2) * mu * V_mix  # W
-        result.add_dimension(
-            "混合区容积",
-            round(V_mix, 2),
-            "m³",
-            formula="V_mix = Q_max × t_mix",
-            category="physical",
-        )
-        result.add_dimension(
-            "混合区功率 P_mix",
-            round(P_mix, 1),
-            "W",
-            formula="P_mix = G_mix² × μ × V_mix",
-            category="computed",
-        )
+        # ── 校核 ──
         result.add_check(
             "混合区 G_mix 500~1000 s⁻¹",
-            500 <= G_mix <= 1000,
-            round(G_mix, 0),
-            "500~1000",
-            "s⁻¹",
-        )
-
-        # ═══════════════════════════════════════════════
-        # (B) 絮凝区(带污泥循环)— 公式(4-79)~(4-82)
-        # ═══════════════════════════════════════════════
-        Q_r = Q_single * R_sludge  # m³/s 回流污泥量
-        Q_floc_total = Q_single + Q_r  # m³/s 进入絮凝区总流量
-        V_floc = Q_floc_total * t_floc * 60.0  # m³
-        P_floc = (G_floc**2) * mu * V_floc  # W
-        result.add_dimension(
-            "絮凝区容积",
-            round(V_floc, 2),
-            "m³",
-            formula="V_floc = (1+R)×Q_max × t_floc",
-            category="physical",
-        )
-        result.add_dimension(
-            "絮凝区功率 P_floc",
-            round(P_floc, 1),
-            "W",
-            formula="P_floc = G_floc² × μ × V_floc",
-            category="computed",
+            bool(r["ok_G_mix"]), round(G_mix, 0), "500~1000", "s⁻¹",
         )
         result.add_check(
             "絮凝区 G_floc 50~100 s⁻¹",
-            50 <= G_floc <= 100,
-            round(G_floc, 0),
-            "50~100",
-            "s⁻¹",
-        )
-
-        # ═══════════════════════════════════════════════
-        # (C) 斜管沉淀区 — 公式(4-83)(4-84)
-        # ═══════════════════════════════════════════════
-        A_settle = Q_single_m3h / q_surf  # m²
-        sin_alpha = math.sin(math.radians(alpha_tube))
-        # 斜管轴向流速 v₀ = Q_max / (A × sinθ) = q_surf / (3600 × sinθ)
-        v_axial_m_s = q_surf / (3600.0 * sin_alpha)  # m/s
-        v_axial = v_axial_m_s * 1000.0  # mm/s (便于显示)
-        result.add_dimension(
-            "沉淀区面积",
-            round(A_settle, 1),
-            "m²",
-            formula="A = Q_max(m³/h) / q_surf",
-            category="physical",
-        )
-        result.add_dimension(
-            "斜管轴向流速 v₀",
-            round(v_axial, 2),
-            "mm/s",
-            formula="v₀ = q_surf / (3600 × sinθ)",
-            category="computed",
+            bool(r["ok_G_floc"]), round(G_floc, 0), "50~100", "s⁻¹",
         )
         result.add_check(
-            "斜管轴向流速 ≤ 5 mm/s", v_axial <= 5.0, round(v_axial, 2), "≤ 5", "mm/s"
-        )
-
-        # ── 池体尺寸 ──
-        LB_ratio = 1.5
-        B_pool = math.ceil(math.sqrt(A_settle / LB_ratio) / 0.5) * 0.5
-        L_pool = math.ceil(A_settle / B_pool / 0.5) * 0.5
-        A_actual = L_pool * B_pool
-        ratio_LB = L_pool / B_pool
-        result.add_dimension(
-            "池长 L", L_pool, "m", formula="L = ceil(A / B, 0.5m)", category="physical"
-        )
-        result.add_dimension(
-            "池宽 B",
-            B_pool,
-            "m",
-            formula="B = ceil(√(A / 1.5), 0.5m)",
-            category="physical",
+            "斜管轴向流速 ≤ 5 mm/s",
+            bool(r["ok_axial_v"]), round(float(r["val_axial_v"]), 2), "≤ 5", "mm/s",
         )
         result.add_check(
-            "长宽比 L/B 1~2", 1.0 <= ratio_LB <= 2.0, round(ratio_LB, 2), "1~2", ""
-        )
-
-        # ═══════════════════════════════════════════════
-        # (D) 污泥产量 — 公式(4-85)~(4-88)
-        # ═══════════════════════════════════════════════
-        SS_removal = self._removal_rates.get("SS", 0.90)
-        SS_removed = quality.SS * SS_removal  # mg/L
-        # W_SS = Q_d × (C₀ - Cₑ) × 10⁻⁶  (t/d → ×1000 = kg/d),全厂总量
-        S_dry_SS_total = flow.Q_avg_daily * SS_removed / 1000.0  # kg/d (总)
-        S_dry_chem_total = flow.Q_avg_daily * (D_PAC / 1000.0) * k_PAC  # kg/d (总)
-        S_dry_total = S_dry_SS_total + S_dry_chem_total  # kg/d (总)
-
-        # 进入浓缩区污泥含水率 P_w,in = 99% (spec: 99~99.5%)
-        P_in = 0.99
-        V_sludge_wet_total = S_dry_total / ((1 - P_in) * 1000.0)  # m³/d (总)
-
-        # 单池污泥量 (每池下方独立浓缩区)
-        S_dry_per = S_dry_total / n
-        V_sludge_wet_per = V_sludge_wet_total / n
-
-        result.add_dimension(
-            "SS去除干污泥 W_SS(总)",
-            round(S_dry_SS_total, 1),
-            "kg/d",
-            formula="W_SS = Q_d × (C₀-Cₑ) × 10⁻³",
-            category="computed",
-        )
-        result.add_dimension(
-            "化学干污泥 W_chem(总)",
-            round(S_dry_chem_total, 1),
-            "kg/d",
-            formula="W_chem = Q_d × D_PAC × κ_PAC × 10⁻³",
-            category="computed",
-        )
-        result.add_dimension(
-            "总干污泥 W_s(总)",
-            round(S_dry_total, 1),
-            "kg/d",
-            formula="W_s = W_SS + W_chem",
-            category="computed",
-        )
-        result.add_dimension(
-            "单池干污泥 W_s(单池)",
-            round(S_dry_per, 1),
-            "kg/d",
-            formula="W_s(单池) = W_s(总) / n",
-            category="computed",
-        )
-        result.add_dimension(
-            "日湿污泥量 V_s,in(总)",
-            round(V_sludge_wet_total, 1),
-            "m³/d",
-            formula="V_s,in = W_s / ((1-P_in)×1000), P_in=0.99",
-            category="computed",
-        )
-
-        # ═══════════════════════════════════════════════
-        # (E) 污泥浓缩区(单池)— 公式(4-89)~(4-92)
-        # ═══════════════════════════════════════════════
-        # 每池下方独立浓缩区,使用单池污泥量和单池面积
-        V_thicken_per = V_sludge_wet_per * t_thicken / 24.0  # m³ (单池)
-        h_thicken = max(V_thicken_per / A_actual, 0.5) if A_actual > 0 else 0.5
-
-        # 固体通量 G = W_s(单池) / A(单池) ≤ G_lim (4-91)
-        solid_flux = S_dry_per / A_actual if A_actual > 0 else 0  # kgDS/(m²·d)
-        result.add_dimension(
-            "浓缩区高度 h_thick(单池)",
-            round(h_thicken, 2),
-            "m",
-            formula="h_thick = V_thicken(单池) / A(单池)",
-            category="physical",
-        )
-        result.add_dimension(
-            "固体通量 G(单池)",
-            round(solid_flux, 1),
-            "kgDS/(m²·d)",
-            formula="G = W_s(单池) / A(单池)",
-            category="computed",
+            "长宽比 L/B 1~2",
+            bool(r["ok_LB"]), round(float(r["val_LB"]), 2), "1~2", "",
         )
         result.add_check(
             "固体通量 G ≤ 150 kgDS/(m²·d)",
-            solid_flux <= 150,
-            round(solid_flux, 1),
-            "≤ 150",
-            "kgDS/(m²·d)",
-        )
-
-        # 回流污泥浓度校核 X_r = W_s(单池) / Q_r  (4-92)
-        Q_r_daily = Q_r * 86400.0  # m³/d (单池回流量)
-        X_r_calc = S_dry_per / Q_r_daily if Q_r_daily > 0 else 0  # kg/m³ = g/L
-        result.add_dimension(
-            "回流污泥浓度 X_r(单池)",
-            round(X_r_calc, 1),
-            "g/L",
-            formula="X_r = W_s(单池) / Q_r",
-            category="computed",
+            bool(r["ok_solid_flux"]), round(float(r["val_solid_flux"]), 1),
+            "≤ 150", "kgDS/(m²·d)",
         )
         result.add_check(
-            "回流污泥浓度 X_r ≥ 0 g/L", X_r_calc >= 0, round(X_r_calc, 1), "≥ 0", "g/L"
-        )
-        if X_r_calc < 1.0:
-            result.add_warning(
-                f"回流污泥浓度极低 X_r={X_r_calc:.1f} g/L (< 1.0),"
-                f"进水SS={quality.SS:.0f} mg/L偏低,深度处理段属正常现象"
-            )
-
-        # ═══════════════════════════════════════════════
-        # (F) 池体总高度 — 公式(4-93)
-        # ═══════════════════════════════════════════════
-        h_tube_vert = L_tube * sin_alpha
-        H_total = h_super + h_clear + h_dist + h_thicken + h_tube_vert
-        H_rounded = math.ceil(H_total / 0.1) * 0.1
-        result.add_dimension(
-            "总高度 H_t",
-            H_rounded,
-            "m",
-            formula="H_t = h_free+h_clear+h_tube+h_dist+h_thick",
-            category="physical",
-        )
-
-        # ═══════════════════════════════════════════════
-        # (G) 出水堰负荷 — 公式(4-94)
-        # ═══════════════════════════════════════════════
-        # 设双侧集水堰,堰长 ≈ 2 × (L+B) × 2 (双侧×2边)
-        weir_len = 2.0 * (L_pool + B_pool) * 2.0  # m (双侧堰, 每侧沿池周)
-        q_weir = Q_single * 1000.0 / weir_len if weir_len > 0 else 0  # L/(s·m)
-        result.add_dimension(
-            "出水堰总长 L_w",
-            round(weir_len, 1),
-            "m",
-            formula="L_w = 2×(L+B)×2 (双侧堰)",
-            category="physical",
-        )
-        result.add_dimension(
-            "堰负荷 q_堰",
-            round(q_weir, 2),
-            "L/(s·m)",
-            formula="q_堰 = Q_max(L/s) / L_w(m)",
-            category="computed",
+            "回流污泥浓度 X_r ≥ 0 g/L",
+            bool(r["ok_X_r"]), round(float(r["val_X_r"]), 1), "≥ 0", "g/L",
         )
         result.add_check(
             "堰负荷 1.5~2.9 L/(s·m)",
-            1.5 <= q_weir <= 2.9,
-            round(q_weir, 2),
-            "1.5~2.9",
-            "L/(s·m)",
+            bool(r["ok_weir"]), round(float(r["val_weir"]), 2), "1.5~2.9", "L/(s·m)",
+        )
+
+        X_r_calc_val = float(r["X_r_calc"])
+        if X_r_calc_val < 1.0:
+            result.add_warning(
+                f"回流污泥浓度极低 X_r={X_r_calc_val:.1f} g/L (< 1.0),"
+                f"进水SS={quality.SS:.0f} mg/L偏低,深度处理段属正常现象"
+            )
+
+        # ── 尺寸 ──
+        result.add_dimension(
+            "混合区容积", round(float(r["V_mix"]), 2), "m³",
+            formula="V_mix = Q_max × t_mix", category="physical",
+        )
+        result.add_dimension(
+            "混合区功率 P_mix", round(float(r["P_mix"]), 1), "W",
+            formula="P_mix = G_mix² × μ × V_mix", category="computed",
+        )
+        result.add_dimension(
+            "絮凝区容积", round(float(r["V_floc"]), 2), "m³",
+            formula="V_floc = (1+R)×Q_max × t_floc", category="physical",
+        )
+        result.add_dimension(
+            "絮凝区功率 P_floc", round(float(r["P_floc"]), 1), "W",
+            formula="P_floc = G_floc² × μ × V_floc", category="computed",
+        )
+        result.add_dimension(
+            "沉淀区面积", round(float(r["A_settle"]), 1), "m²",
+            formula="A = Q_max(m³/h) / q_surf", category="physical",
+        )
+        result.add_dimension(
+            "斜管轴向流速 v₀", round(float(r["v_axial"]), 2), "mm/s",
+            formula="v₀ = q_surf / (3600 × sinθ)", category="computed",
+        )
+        result.add_dimension(
+            "池长 L", float(r["L_pool"]), "m",
+            formula="L = ceil(A / B, 0.5m)", category="physical",
+        )
+        result.add_dimension(
+            "池宽 B", float(r["B_pool"]), "m",
+            formula="B = ceil(√(A / 1.5), 0.5m)", category="physical",
+        )
+
+        S_dry_total_val = float(r["S_dry_total"])
+        S_dry_per_val = S_dry_total_val / n
+        P_in = 0.99
+        V_sludge_wet_total = S_dry_total_val / ((1 - P_in) * 1000.0)
+
+        result.add_dimension(
+            "SS去除干污泥 W_SS(总)", round(float(r["S_dry_SS_total"]), 1),
+            "kg/d", formula="W_SS = Q_d × (C₀-Cₑ) × 10⁻³", category="computed",
+        )
+        result.add_dimension(
+            "化学干污泥 W_chem(总)", round(float(r["S_dry_chem_total"]), 1),
+            "kg/d", formula="W_chem = Q_d × D_PAC × κ_PAC × 10⁻³", category="computed",
+        )
+        result.add_dimension(
+            "总干污泥 W_s(总)", round(S_dry_total_val, 1),
+            "kg/d", formula="W_s = W_SS + W_chem", category="computed",
+        )
+        result.add_dimension(
+            "单池干污泥 W_s(单池)", round(S_dry_per_val, 1),
+            "kg/d", formula="W_s(单池) = W_s(总) / n", category="computed",
+        )
+        result.add_dimension(
+            "日湿污泥量 V_s,in(总)", round(V_sludge_wet_total, 1),
+            "m³/d", formula="V_s,in = W_s / ((1-P_in)×1000), P_in=0.99",
+            category="computed",
+        )
+        result.add_dimension(
+            "浓缩区高度 h_thick(单池)", round(float(r["h_thicken"]), 2),
+            "m", formula="h_thick = V_thicken(单池) / A(单池)", category="physical",
+        )
+        result.add_dimension(
+            "固体通量 G(单池)", round(float(r["solid_flux"]), 1),
+            "kgDS/(m²·d)", formula="G = W_s(单池) / A(单池)", category="computed",
+        )
+        result.add_dimension(
+            "回流污泥浓度 X_r(单池)", round(X_r_calc_val, 1),
+            "g/L", formula="X_r = W_s(单池) / Q_r", category="computed",
+        )
+        result.add_dimension(
+            "总高度 H_t", float(r["H_total"]), "m",
+            formula="H_t = h_free+h_clear+h_tube+h_dist+h_thick", category="physical",
+        )
+        result.add_dimension(
+            "出水堰总长 L_w", round(float(r["weir_len"]), 1),
+            "m", formula="L_w = 2×(L+B)×2 (双侧堰)", category="physical",
+        )
+        result.add_dimension(
+            "堰负荷 q_堰", round(float(r["q_weir"]), 2),
+            "L/(s·m)", formula="q_堰 = Q_max(L/s) / L_w(m)", category="computed",
         )
 
         # ── 汇总 ──
         result.add_dimension("池数", n, "座")
         result.add_dimension(
-            "PAC日耗量", round(D_PAC * flow.Q_avg_daily / 1000, 1), "kg/d"
+            "PAC日耗量", round(D_PAC * flow.Q_avg_daily / 1000, 1), "kg/d",
         )
 
-        # ── 污泥输出 (SLUDGE 端口, 化学污泥, 全厂总量) ──
+        # ── 污泥输出 ──
         self._sludge_output = SludgeFlow(
             Q_wet=V_sludge_wet_total,
-            DS=S_dry_total,
+            DS=S_dry_total_val,
             P_moisture=P_in,
             VS_ratio=0.40,
         )

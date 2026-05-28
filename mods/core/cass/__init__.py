@@ -1,6 +1,5 @@
 """cass.py — CASS 反应器 (Cyclic Activated Sludge System)"""
 
-import math
 from typing import Dict, List
 
 import numpy as np
@@ -228,11 +227,10 @@ class CASSNode(NodeBase):
         }
 
     def calculate(self, flow: WaterFlow, quality: WaterQuality) -> NodeResult:
-        # ── 读取参数 ──
         n = int(self.get_param("n"))
         Ns = self.get_param("Ns")
         X_MLSS = self.get_param("X_MLSS")
-        f = self.get_param("f")
+        f_param = self.get_param("f")
         theta_c_design = self.get_param("theta_c")
         Y = self.get_param("Y")
         Kd20 = self.get_param("Kd20")
@@ -249,12 +247,40 @@ class CASSNode(NodeBase):
         b_prime = self.get_param("b_prime")
         t_d = self.get_param("t_d")
 
+        grid, fixed = self._make_scalar_grid(
+            {
+                "n": n,
+                "Ns": Ns,
+                "X_MLSS": X_MLSS,
+                "theta_c": theta_c_design,
+                "Tc": Tc,
+                "lam": lam,
+                "H_max": H_max,
+            },
+            {
+                "f": f_param,
+                "Y": Y,
+                "Kd20": Kd20,
+                "theta_t": theta_t,
+                "T_design": T_design,
+                "h_super": h_super,
+                "r_selector": r_selector,
+                "SVI": SVI,
+                "delta_H_safe": delta_H_safe,
+                "a_prime": a_prime,
+                "b_prime": b_prime,
+                "t_d": t_d,
+            },
+        )
+        res = self._vectorized_compute(grid, flow, quality, fixed)
+        r = res[0]
+
         result = NodeResult(success=True)
         result.params = {
             "n": n,
             "Ns": Ns,
             "X_MLSS": X_MLSS,
-            "f": f,
+            "f": f_param,
             "theta_c": theta_c_design,
             "Y": Y,
             "Kd20": Kd20,
@@ -272,78 +298,36 @@ class CASSNode(NodeBase):
             "t_d": t_d,
         }
 
-        Q_avg = flow.Q_avg_daily  # m³/d
-        X_kg = X_MLSS / 1000.0  # mg/L → kg/m³
-
-        # ── (1) 温度修正衰减系数 (3-53) ──
-        KdT = Kd20 * (theta_t ** (T_design - 20))  # d⁻¹
-
-        # ── (2) 主反应区总有效容积 (3-54) ──
-        S0_kg = quality.BOD5 / 1000.0  # mg/L → kg/m³
-        Se_kg = 10.0 / 1000.0  # 出水 BOD5=10 mg/L (一级A)
-        V_main = Q_avg * (S0_kg - Se_kg) / (Ns * X_kg * f)  # m³ (所有池总容积)
-
-        # ── (3) 单池容积 (3-55)(3-56)(3-57) ──
-        V_main_single = V_main / n
-        V_selector = V_main_single * r_selector
-        V_eff_single = V_main_single + V_selector
-
-        # ── (4) 平面尺寸 (3-58)~(3-60) ──
-        A_single = V_eff_single / H_max
-        # L/B target = 2.0, B 受 H_max 约束: B/H_max ∈ [1, 2]
-        B_candidate = math.sqrt(A_single / 2.0)
-        B = max(H_max, min(B_candidate, 2.0 * H_max))
-        B = max(math.ceil(B / 1.0) * 1.0, 1.0)
-        L = max(math.ceil(A_single / B / 1.0) * 1.0, B)
-        ratio_LB = L / B
-        ratio_BH = B / H_max
-
         result.add_check(
-            "长宽比 L/B", 4 <= ratio_LB <= 6, round(ratio_LB, 2), "4~6", ""
+            "长宽比 L/B",
+            bool(r["ok_LB"]),
+            round(float(r["val_LB"]), 2),
+            "4~6",
+            "",
         )
         result.add_check(
-            "宽高比 B/H", 1 <= ratio_BH <= 2, round(ratio_BH, 2), "1~2", ""
+            "宽高比 B/H",
+            bool(r["ok_BH"]),
+            round(float(r["val_BH"]), 2),
+            "1~2",
+            "",
+        )
+        result.add_check(
+            "安全距离 1.5~2.0m",
+            bool(r["ok_safe"]),
+            round(float(r["val_safe"]), 2),
+            "1.5~2.0",
+            "m",
         )
 
-        # ── (5) 实际有效容积 ──
-        A_actual = L * B
-        V_eff_actual = A_actual * H_max
-
-        # ── (6) 滗水高度 ──
-        H_decant = H_max * lam
-
-        # ── (7) 泥面高度 (3-63) ──
-        H_sludge = H_max * X_MLSS * SVI / 1e6
-
-        # ── (8) 安全距离 (3-64)(3-65) — 约束 1.5~2.0m,不满足则调整 λ ──
-        H_safe = H_max - H_decant - H_sludge
-        safe_ok = 1.5 <= H_safe <= 2.0
-        lam_original = lam
-        if not safe_ok:
-            # λ 调整: H_safe = H_max × (1 - λ - H_sludge/H_max)
-            # 目标 H_safe = 1.75m (中点),钳制到 [0.2, 0.4]
-            lam = max(0.2, min(0.4, 1.0 - H_sludge / H_max - 1.75 / H_max))
-            H_decant = H_max * lam
-            H_safe = H_max - H_decant - H_sludge
-            safe_ok = 1.5 <= H_safe <= 2.0
-            if lam != lam_original:
-                result.params["lam"] = lam  # 同步更新参数记录
-                result.add_warning(
-                    f"安全距离 {H_safe:.2f}m 不满足 1.5~2.0m,"
-                    f"充水比 λ 已自动从 {lam_original:.3f} 调整为 {lam:.3f}"
-                )
-        result.add_check("安全距离 1.5~2.0m", safe_ok, round(H_safe, 2), "1.5~2.0", "m")
-
-        # ── (6b) 充水比一致性校核 (3-61)(3-62) — 放在 λ 调整之后 ──
-        lam_check = Q_avg * Tc / (24 * n * V_eff_actual)
-        lam_deviation = abs(lam_check - lam) / lam if lam > 0 else 0
         result.add_dimension(
             "设计充水比 λ_design",
-            round(lam, 3),
+            round(float(r["lam_out"]), 3),
             "",
             formula="λ_design = 用户设定值 (0.2~0.4)",
             category="computed",
         )
+        lam_check = flow.Q_avg_daily * Tc / (24 * n * float(r["V_eff_actual"]))
         result.add_dimension(
             "实际充水比 λ_actual",
             round(lam_check, 3),
@@ -353,145 +337,89 @@ class CASSNode(NodeBase):
         )
         result.add_check(
             "充水比一致性 |λ_actual-λ_design|/λ_design < 15%",
-            lam_deviation < 0.15,
-            round(lam_deviation * 100, 1),
+            bool(r["ok_lam"]),
+            round(float(r["val_lam"]) * 100, 1),
             "< 15%",
             "%偏差",
         )
 
-        # ── (9) 总高度 (3-66) ──
-        H_total = H_max + h_super
-
-        # ── (10) 剩余污泥 (4-76)(4-77)(4-78) ──
-        # ① 剩余生物污泥量 (4-76): ΔXv = Y·Qd·(S0-Se)/1000 - Kd(T)·V·X·f/θc
-        Px_bio = (
-            Y * Q_avg * (S0_kg - Se_kg) - KdT * V_main * X_kg * f / theta_c_design
-        )  # kgVSS/d
-
-        # ② 剩余非生物污泥量 (4-77): ΔXs = Qd·(1-f·f_b)·(C0-Ce)/1000
-        f_b = 0.7  # 进水VSS中可生化系数
-        C0 = quality.SS  # 进水SS, mg/L
-        Ce = C0 * (1.0 - self._removal_rates.get("SS", 0.70))  # 出水SS, mg/L
-        Px_nbio = Q_avg * (1.0 - f * f_b) * (C0 - Ce) / 1000.0  # kg/d
-
-        # ③ 剩余污泥总量 (4-78)
-        Px_total = Px_bio + Px_nbio  # kg/d
-
-        # ── (11) 污泥龄校核 (4-79) ──
-        # θc' = V·X·f / ΔXv
-        #   V = 主反应区总容积 (V_main), m³
-        #   X = MLSS浓度 (X_kg), kg/m³
-        #   f = MLVSS/MLSS 比值
-        #   ΔXv = 每日挥发性污泥产量 (Px_bio), kgVSS/d
-        # 校核: θc_design ≤ θc' ≤ 30 d
-        if Px_bio > 0:
-            theta_c_prime = V_main * X_kg * f / Px_bio  # d
-        else:
-            theta_c_prime = float("inf")
-        theta_c_ok = theta_c_design <= theta_c_prime <= 30
         result.add_check(
             "污泥龄校核 θc'",
-            theta_c_ok,
-            round(theta_c_prime, 1),
+            bool(r["ok_theta_c"]),
+            round(float(r["val_theta_c"]), 1),
             f"{theta_c_design}~30",
             "d",
         )
-
-        # ── (11b) 硝化污泥龄校核 (4-79 注) ──
-        # 当需要满足氨氮完全硝化要求时,θc'一般不应小于15~30 d
         result.add_check(
             "硝化污泥龄校核 θc'≥15d",
-            15 <= theta_c_prime <= 30,
-            round(theta_c_prime, 1),
+            bool(r["ok_nitrification"]),
+            round(float(r["val_nitrification"]), 1),
             "15~30",
             "d",
         )
-
-        # ── (12) 需氧量 (3-71)~(3-74) ──
-        # 碳化需氧量
-        O2_carbon = (
-            a_prime * Q_avg * (S0_kg - Se_kg) + b_prime * V_main * X_kg * f
-        )  # kgO2/d
-
-        # 硝化需氧量
-        N_synth = 0.124 * Px_bio  # 细胞合成用氮 kgN/d
-        NH3_load = Q_avg * (quality.NH3N - 5.0) / 1000.0  # kgN/d
-        O2_nitrification = 4.57 * max(0.0, NH3_load - N_synth)  # kgO2/d
-
-        # 反硝化产氧
-        TN_load = Q_avg * (quality.TN - 15.0) / 1000.0  # kgN/d
-        O2_denitrification = 2.86 * max(0.0, TN_load - N_synth)  # kgO2/d
-
-        # 总需氧量
-        O2_total = O2_carbon + O2_nitrification - O2_denitrification
         result.add_check(
-            "总需氧量 > 0", O2_total > 0, round(O2_total, 1), "> 0", "kgO2/d"
+            "总需氧量 > 0",
+            bool(r["ok_O2"]),
+            round(float(r["val_O2"]), 1),
+            "> 0",
+            "kgO2/d",
         )
 
-        # ── (13) 滗水器 (3-75)(3-76) ──
-        Q_decant = V_eff_actual * lam / t_d  # m³/h
-
-        # ── (14) 滗水器堰口长度 (4-76) ──
-        # L_w = Q_h / q_L, 式中:
-        #   Q_h = 滗水流量 (m³/h)
-        #   q_L = 堰口负荷, 限值 20~30 L/(s·m) = 72~108 m³/(m·h)
-        #   单位换算: 1 L/(s·m) = 3.6 m³/(m·h)
-        q_L = 25.0  # 设计堰口负荷 L/(s·m)
-        q_L_m3h = q_L * 3.6  # 转换为 m³/(m·h)
-        L_w = Q_decant / q_L_m3h if q_L_m3h > 0 else 0  # m
-        q_L_actual = Q_decant / max(L_w, 0.01) / 3.6  # 反算实际堰口负荷 L/(s·m)
+        result.add_dimension("池数", n, "座")
+        result.add_dimension("主反应区总容积", round(float(r["V_main"]), 1), "m³")
+        result.add_dimension("单池主反应区容积", round(float(r["V_main_single"]), 1), "m³")
+        result.add_dimension("选择区容积", round(float(r["V_selector"]), 1), "m³")
+        result.add_dimension("单池总有效容积", round(float(r["V_eff_actual"]), 1), "m³")
+        result.add_dimension("池长 L", float(r["L"]), "m")
+        result.add_dimension("池宽 B", float(r["B"]), "m")
+        result.add_dimension("长宽比 L/B", round(float(r["ratio_LB"]), 2), "")
+        result.add_dimension("宽高比 B/H", round(float(r["ratio_BH"]), 2), "")
+        result.add_dimension("有效水深 H_max", float(r["H_max_out"]), "m")
+        result.add_dimension("总高度", float(r["H_total"]), "m")
+        result.add_dimension("滗水高度", round(float(r["H_decant"]), 2), "m")
+        result.add_dimension("污泥层高度", round(float(r["H_sludge"]), 2), "m")
+        result.add_dimension("安全距离", round(float(r["H_safe"]), 2), "m")
+        result.add_dimension("进水BOD5", quality.BOD5, "mg/L")
+        result.add_dimension("出水BOD5", 10.0, "mg/L")
+        result.add_dimension(
+            "BOD负荷 Ns", float(r["Ns_out"]), "kgBOD5/(kgMLSS·d)"
+        )
+        result.add_dimension(
+            "实际污泥龄 θc'",
+            round(float(r["theta_c_actual"]), 1),
+            "d",
+            formula="θc' = V·X·f / ΔXv, (4-79)",
+            category="computed",
+        )
+        result.add_dimension("剩余生物污泥", round(float(r["Px_bio"]), 1), "kgVSS/d")
+        result.add_dimension("剩余非生物污泥", round(float(r["Px_nbio"]), 1), "kg/d")
+        result.add_dimension("剩余污泥总量", round(float(r["Px_total"]), 1), "kg/d")
+        result.add_dimension("碳化需氧量", round(float(r["O2_carbon"]), 1), "kgO2/d")
+        result.add_dimension("硝化需氧量", round(float(r["O2_nitrification"]), 1), "kgO2/d")
+        result.add_dimension("反硝化产氧", round(float(r["O2_denitrification"]), 1), "kgO2/d")
+        result.add_dimension("总需氧量", round(float(r["O2_total"]), 1), "kgO2/d")
+        result.add_dimension("单池滗水流量", round(float(r["Q_decant"]), 1), "m³/h")
+        result.add_dimension(
+            "设计水温衰减系数 KdT", round(float(r["KdT"]), 4), "d⁻¹"
+        )
         result.add_dimension(
             "滗水器堰口长度 L_w",
-            round(L_w, 2),
+            round(float(r["L_w"]), 2),
             "m",
             formula="L_w = Q_h / (q_L × 3.6), q_L=25 L/(s·m)",
             category="physical",
         )
         result.add_check(
             "堰口负荷 q_L 20~30 L/(s·m)",
-            20 <= q_L_actual <= 30,
-            round(q_L_actual, 1),
+            bool(r["ok_weir"]),
+            round(float(r["val_weir"]), 1),
             "20~30",
             "L/(s·m)",
         )
 
-        # ── 组装结果 ──
-        result.add_dimension("池数", n, "座")
-        result.add_dimension("主反应区总容积", round(V_main, 1), "m³")
-        result.add_dimension("单池主反应区容积", round(V_main_single, 1), "m³")
-        result.add_dimension("选择区容积", round(V_selector, 1), "m³")
-        result.add_dimension("单池总有效容积", round(V_eff_actual, 1), "m³")
-        result.add_dimension("池长 L", L, "m")
-        result.add_dimension("池宽 B", B, "m")
-        result.add_dimension("长宽比 L/B", round(ratio_LB, 2), "")
-        result.add_dimension("宽高比 B/H", round(ratio_BH, 2), "")
-        result.add_dimension("有效水深 H_max", H_max, "m")
-        result.add_dimension("总高度", H_total, "m")
-        result.add_dimension("滗水高度", round(H_decant, 2), "m")
-        result.add_dimension("污泥层高度", round(H_sludge, 2), "m")
-        result.add_dimension("安全距离", round(H_safe, 2), "m")
-        result.add_dimension("进水BOD5", quality.BOD5, "mg/L")
-        result.add_dimension("出水BOD5", 10.0, "mg/L")
-        result.add_dimension("BOD负荷 Ns", Ns, "kgBOD5/(kgMLSS·d)")
-        result.add_dimension(
-            "实际污泥龄 θc'",
-            round(theta_c_prime, 1),
-            "d",
-            formula="θc' = V·X·f / ΔXv, (4-79)",
-            category="computed",
-        )
-        result.add_dimension("剩余生物污泥", round(Px_bio, 1), "kgVSS/d")
-        result.add_dimension("剩余非生物污泥", round(Px_nbio, 1), "kg/d")
-        result.add_dimension("剩余污泥总量", round(Px_total, 1), "kg/d")
-        result.add_dimension("碳化需氧量", round(O2_carbon, 1), "kgO2/d")
-        result.add_dimension("硝化需氧量", round(O2_nitrification, 1), "kgO2/d")
-        result.add_dimension("反硝化产氧", round(O2_denitrification, 1), "kgO2/d")
-        result.add_dimension("总需氧量", round(O2_total, 1), "kgO2/d")
-        result.add_dimension("单池滗水流量", round(Q_decant, 1), "m³/h")
-        result.add_dimension("设计水温衰减系数 KdT", round(KdT, 4), "d⁻¹")
-
-        # ── 污泥输出 (SLUDGE 端口, 剩余活性污泥) ──
-        P_moisture_was = 0.992  # 剩余活性污泥含水率 99.2%
+        Px_total = float(r["Px_total"])
+        Px_bio = float(r["Px_bio"])
+        P_moisture_was = 0.992
         Q_wet_was = Px_total / ((1 - P_moisture_was) * 1000.0) if Px_total > 0 else 0.0
         vs_ratio_was = Px_bio / max(Px_total, 0.01) if Px_total > 0 else 0.70
         self._sludge_output = SludgeFlow(
@@ -597,7 +525,9 @@ class CASSNode(NodeBase):
 
         # (11) 污泥龄校核 (4-79)
         # θc' = V·X·f / ΔXv, 校核: θc_design ≤ θc' ≤ 30
-        theta_c_prime = np.where(Px_bio > 0, V_main * X_kg * f / Px_bio, np.inf)
+        theta_c_prime = np.divide(V_main * X_kg * f, Px_bio,
+                                  where=Px_bio > 0,
+                                  out=np.full_like(V_main, np.inf, dtype=np.float64))
         ok_theta_c = (theta_c_prime >= theta_c_design) & (theta_c_prime <= 30)
         ok_nitrification = (15 <= theta_c_prime) & (theta_c_prime <= 30)
 

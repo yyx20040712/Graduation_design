@@ -114,11 +114,12 @@
       "key": "P_sludge",
       "symbol": "P_sludge",
       "name": "污泥含水率",
-      "unit": "kW",
+      "unit": "-",
       "default": 0.92,
-      "min": 0.46,
-      "max": 1.84,
-      "step": 0.09200000000000001
+      "min": 0.80,
+      "max": 0.98,
+      "step": 0.01,
+      "description": "磁分离污泥含水率 (0.80~0.98)"
     },
     {
       "key": "delta_bottom",

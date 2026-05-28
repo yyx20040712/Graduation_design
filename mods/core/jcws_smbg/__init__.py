@@ -88,18 +88,25 @@ class JcwsSmbgNode(NodeBase):
     def calculate(self, flow: WaterFlow, quality: WaterQuality) -> NodeResult:
         Z_water = self.get_param("Z_water_inlet")
         Z_ground = self.get_param("Z_ground")
-        DN = self.get_param("DN_inlet") / 1000.0
-        Z_bottom = Z_water - DN
+        DN_inlet = self.get_param("DN_inlet")
+
+        grid, fixed = self._make_scalar_grid(
+            {},
+            {"Z_water_inlet": Z_water, "Z_ground": Z_ground, "DN_inlet": DN_inlet},
+        )
+        res = self._vectorized_compute(grid, flow, quality, fixed)
+        r = res[0]
+
         result = NodeResult(success=True)
         result.params = {
             "Z_water_inlet": Z_water,
             "Z_ground": Z_ground,
-            "DN_inlet": DN * 1000,
+            "DN_inlet": DN_inlet,
         }
-        result.add_dimension("进厂水面标高", round(Z_water, 3), "m")
-        result.add_dimension("地面标高", round(Z_ground, 3), "m")
-        result.add_dimension("进水管径", DN * 1000, "mm")
-        result.add_dimension("管底标高", round(Z_bottom, 3), "m")
+        result.add_dimension("进厂水面标高", round(float(r["Z_water"]), 3), "m")
+        result.add_dimension("地面标高", round(float(r["Z_ground"]), 3), "m")
+        result.add_dimension("进水管径", float(r["DN"]) * 1000, "mm")
+        result.add_dimension("管底标高", round(float(r["Z_bottom"]), 3), "m")
         return result
 
     @classmethod

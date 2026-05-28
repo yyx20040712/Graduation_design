@@ -38,7 +38,9 @@ from ui.export_handlers import (
 )
 from ui.file_manager import FileManager
 from ui.logger import log
+from ui.param_panel import ParamPanel
 from ui.quality_panel import QualityPanel
+from ui.result_panel import ResultPanel
 from ui.solution_browser import SolutionBrowser
 from ui.validator_dialog import run_validator_dialog
 
@@ -123,11 +125,16 @@ class MainWindow(tk.Tk):
             {}
         )  # noqa: F821 — forward ref via annotations
         self._pipe_node: Optional[PipeNetworkNode] = None
-        self._selected_id: Optional[str] = None
-        self._slider_vars: Dict[str, tk.DoubleVar] = {}
-        self._browse_mode = True  # True=方案浏览, False=手动微调
+
+        # ── v5.4: 集中化状态管理 ──
+        from .app_state import AppState
+
+        self._app_state = AppState()
+        self.status_var = tk.StringVar(
+            value="左键选中节点查看参数 | 右键端口拖拽连线 | F5 计算其余全部"
+        )
+
         self._solution_browser: Optional[SolutionBrowser] = None
-        self._dirty = False  # 是否有未保存的修改
         self.file_manager = FileManager(self)
         self._build_ui()
         self._load_demo()
@@ -139,11 +146,74 @@ class MainWindow(tk.Tk):
             executor=self.executor,
             status_var=self.status_var,
             node_items=self.node_items,
-            slider_vars=self._slider_vars,
-            on_view_results=self._view_results,
+            slider_vars=self._app_state.slider_vars,
+            on_view_results=lambda: self._result_panel.view_results(),
             on_reset_params=self._reset_params,
         )
-        self._quality_panel.set_dirty_callback(lambda: setattr(self, "_dirty", True))
+        self._quality_panel.set_dirty_callback(
+            lambda: setattr(self._app_state, "is_dirty", True)
+        )
+
+        # ── v5.4: 参数面板 (方案浏览 + 手动微调滑块) ──
+        self.param_panel = ParamPanel(
+            parent_frame=self.params_frame,
+            executor=self.executor,
+            state=self._app_state,
+            solution_browser=self._solution_browser,
+            quality_panel=self._quality_panel,
+            mode_btn=self._mode_btn,
+            on_dirty=lambda: setattr(self._app_state, "is_dirty", True),
+            on_recompute=self._on_calc_rest,
+            on_view_results=self._view_results,
+            status_var=self.status_var,
+            trace_upstream=self._trace_upstream_context,
+            get_pipe_node=lambda: self._pipe_node,
+        )
+
+        # ── v5.4: 向后兼容属性 (委托给 AppState) ──
+
+    @property
+    def _loading_project(self) -> bool:
+        return self._app_state.is_loading_project
+
+    @_loading_project.setter
+    def _loading_project(self, value: bool) -> None:
+        self._app_state.is_loading_project = value
+
+    # ── v5.4: 面板就绪检查 ──
+
+    @property
+    def _panels_ready(self) -> bool:
+        """面板是否已初始化 (启动时 _load_demo 可能先于面板创建)"""
+        return hasattr(self, "param_panel") and hasattr(self, "_result_panel")
+
+    @property
+    def _selected_id(self) -> Optional[str]:
+        return self._app_state.selected_node_id
+
+    @_selected_id.setter
+    def _selected_id(self, value: Optional[str]) -> None:
+        self._app_state.selected_node_id = value
+
+    @property
+    def _slider_vars(self) -> Dict[str, tk.DoubleVar]:
+        return self._app_state.slider_vars
+
+    @property
+    def _browse_mode(self) -> bool:
+        return self._app_state.browse_mode
+
+    @_browse_mode.setter
+    def _browse_mode(self, value: bool) -> None:
+        self._app_state.browse_mode = value
+
+    @property
+    def _dirty(self) -> bool:
+        return self._app_state.is_dirty
+
+    @_dirty.setter
+    def _dirty(self, value: bool) -> None:
+        self._app_state.is_dirty = value
 
     # ═══════════════════ UI 构建 ═══════════════════
 
@@ -250,7 +320,7 @@ class MainWindow(tk.Tk):
         ttk.Separator(tb, orient=tk.VERTICAL).pack(
             side=tk.LEFT, fill=tk.Y, padx=4, pady=4
         )
-        ttk.Button(tb, text="🎯 定位流程", command=self._on_locate_flow).pack(
+        ttk.Button(tb, text="📐 列式布局", command=self._on_locate_flow).pack(
             side=tk.LEFT, padx=4, pady=4
         )
         ttk.Separator(tb, orient=tk.VERTICAL).pack(
@@ -350,140 +420,27 @@ class MainWindow(tk.Tk):
 
         self.params_frame = tk.Frame(rp, bg="#252525")
 
-        # ── 结果面板 (4列 Treeview: 符号|物理意义|单位|取值) ──
-        self.result_frame = tk.Frame(rp, bg="#1a1a1a")
-        # 容器 frame 实现双向滚动
-        self._result_container = tk.Frame(self.result_frame, bg="#1a1a1a")
-        self._result_container.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        self.result_tree = ttk.Treeview(
-            self._result_container,
-            columns=("symbol", "meaning", "unit", "value"),
-            show="headings",
-            height=18,
-        )
-        self.result_tree.heading("symbol", text="符号")
-        self.result_tree.heading("meaning", text="物理意义 / 计算公式")
-        self.result_tree.heading("unit", text="单位")
-        self.result_tree.heading("value", text="取值")
-        self.result_tree.column("symbol", width=75, anchor="center", stretch=False)
-        self.result_tree.column("meaning", width=140, anchor="w")
-        self.result_tree.column("unit", width=55, anchor="center", stretch=False)
-        self.result_tree.column("value", width=110, anchor="e", stretch=False)
-        # 暗色主题
-        style = ttk.Style()
-        style.configure(
-            "Treeview",
-            background="#1a1a1a",
-            foreground="#ccc",
-            fieldbackground="#1a1a1a",
-            rowheight=22,
-        )
-        style.configure(
-            "Treeview.Heading",
-            background="#2d2d2d",
-            foreground="#ffaa44",
-            font=("Microsoft YaHei", 9, "bold"),
-        )
-        style.map("Treeview", background=[("selected", "#3a5a1a")])
-        # 分组标题行样式 — 每个板块不同冷色调浅色
-        SECTION_STYLES = {
-            "原始参数": ("#0d3b66", "#66aaff"),  # 深蓝底 + 亮蓝字
-            "构筑物尺寸": ("#1a3d2e", "#55cc88"),  # 深绿底 + 亮绿字
-            "计算结果": ("#3d1a4a", "#cc88ff"),  # 深紫底 + 亮紫字
-            "约束校核": ("#4a2a1a", "#ff9966"),  # 深橙底 + 亮橙字
-            "进水水质": ("#0d3b66", "#66aaff"),  # 蓝
-            "出水水质": ("#1a3d2e", "#55cc88"),  # 绿
-            "去除率": ("#3d1a4a", "#cc88ff"),  # 紫
-        }
-        for name, (bg, fg) in SECTION_STYLES.items():
-            self.result_tree.tag_configure(
-                f"header_{name}",
-                background=bg,
-                foreground=fg,
-                font=("Microsoft YaHei", 10, "bold"),
-            )
-        # 参数分类标题行 — 彩色区分 basic/physical/operating
-        self.result_tree.tag_configure(
-            "cat_basic",
-            background="#0d3b66",
-            foreground="#66aaff",
-            font=("Microsoft YaHei", 10, "bold"),
-        )
-        self.result_tree.tag_configure(
-            "cat_physical",
-            background="#1a3d2e",
-            foreground="#55cc88",
-            font=("Microsoft YaHei", 10, "bold"),
-        )
-        self.result_tree.tag_configure(
-            "cat_operating",
-            background="#3d1a4a",
-            foreground="#cc88ff",
-            font=("Microsoft YaHei", 10, "bold"),
-        )
-        # 交替行背景
-        self.result_tree.tag_configure("row_odd", background="#1e1e1e")
-        self.result_tree.tag_configure("row_even", background="#252525")
-        # 章节标题 — 整行居中横幅
-        self.result_tree.tag_configure(
-            "section_banner",
-            background="#2d2d2d",
-            foreground="#ffaa44",
-            font=("Microsoft YaHei", 10, "bold"),
-            anchor="center",
-        )
-        # 公式子行 — 浅色斜体
-        self.result_tree.tag_configure(
-            "formula_sub",
-            foreground="#888888",
-            font=("Microsoft YaHei", 8, "italic"),
-        )
-        # 约束校核行 — 通过/失败 颜色区分
-        self.result_tree.tag_configure(
-            "check_pass",
-            foreground="#55cc88",
-            font=("Microsoft YaHei", 9),
-        )
-        self.result_tree.tag_configure(
-            "check_fail",
-            foreground="#ff5555",
-            font=("Microsoft YaHei", 9),
-        )
-        # 纵向滚动条
-        self._result_scroll_y = ttk.Scrollbar(
-            self._result_container, orient=tk.VERTICAL, command=self.result_tree.yview
-        )
-        # 横向滚动条
-        self._result_scroll_x = ttk.Scrollbar(
-            self.result_frame, orient=tk.HORIZONTAL, command=self.result_tree.xview
-        )
-        self.result_tree.configure(
-            yscrollcommand=self._result_scroll_y.set,
-            xscrollcommand=self._result_scroll_x.set,
-        )
-        self.result_tree.grid(row=0, column=0, sticky="nsew")
-        self._result_scroll_y.grid(row=0, column=1, sticky="ns")
-        self._result_container.grid_rowconfigure(0, weight=1)
-        self._result_container.grid_columnconfigure(0, weight=1)
-        self._result_scroll_x.pack(side=tk.BOTTOM, fill=tk.X)
-        # 约束校核区域 (Treeview 下方)
-        self.result_check_text = tk.Text(
-            self.result_frame,
-            bg="#1a1a1a",
-            fg="#ccc",
-            font=("Consolas", 9),
-            wrap=tk.WORD,
-            relief=tk.FLAT,
-            borderwidth=0,
-            height=6,
-        )
-        self.result_check_text.pack(side=tk.BOTTOM, fill=tk.X)
-
         self.quality_text = tk.Frame(rp, bg="#1a1a1a")
 
-        # ── 高程面板 ──
-        self.elevation_frame = tk.Frame(rp, bg="#1a1a1a")
-        self._build_elevation_view()
+        # 约束面板容器 (提前创建, ResultPanel 需要引用)
+        self.constraint_frame = tk.Frame(rp, bg="#252525")
+
+        # ── v5.4: ResultPanel (replaces result_frame + elevation_frame) ──
+        self._result_panel = ResultPanel(
+            parent_frame=rp,
+            executor=self.executor,
+            get_selected_id=lambda: self._app_state.selected_node_id,
+            get_node_items=lambda: self.node_items,
+            status_var=self.status_var,
+            tab_var=self.tab_var,
+            get_solution_browser=lambda: self._solution_browser,
+            on_refresh_params=self._refresh_params,
+            quality_panel_getter=lambda: self._quality_panel,
+            constraint_panel_getter=lambda: self._constraint_panel,
+            params_frame=self.params_frame,
+            quality_text=self.quality_text,
+            constraint_frame=self.constraint_frame,
+        )
 
         # ── 模式切换按钮 ──
         mode_frame = tk.Frame(rp, bg="#333", height=28)
@@ -509,7 +466,6 @@ class MainWindow(tk.Tk):
         self.params_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         # ── 约束面板 ──
-        self.constraint_frame = tk.Frame(rp, bg="#252525")
         from .constraint_panel import ConstraintPanel
 
         self._constraint_panel = ConstraintPanel(
@@ -519,9 +475,6 @@ class MainWindow(tk.Tk):
         )
         self._constraint_panel.pack(fill=tk.BOTH, expand=True)
 
-        self.status_var = tk.StringVar(
-            value="左键选中节点查看参数 | 右键端口拖拽连线 | F5 计算其余全部"
-        )
         tk.Label(
             self,
             textvariable=self.status_var,
@@ -531,6 +484,7 @@ class MainWindow(tk.Tk):
             font=("Microsoft YaHei", 9),
         ).pack(side=tk.BOTTOM, fill=tk.X, ipady=2)
         self.bind("<F5>", lambda e: self._on_calc_all())
+        self.bind_all("<Control-l>", lambda e: self._on_locate_flow())
         log.info("MainWindow initialized")
         # 延迟检查模组加载状态(不阻塞启动)
         self.after(300, self._check_mod_status)
@@ -628,7 +582,9 @@ class MainWindow(tk.Tk):
 
     def _on_node_selected(self, node_id: str):
         self._selected_id = node_id
-        self._refresh_params()
+        if self.tab_var.get() == "params":
+            backend = self.node_items[node_id].backend if node_id in self.node_items else None
+            self.param_panel.load_node(backend)
         if self.tab_var.get() == "results":
             self._refresh_selected_result()
         elif self.tab_var.get() == "constraints":
@@ -653,409 +609,35 @@ class MainWindow(tk.Tk):
                         # 委托给 QualityPanel 的滚动功能
                         self._quality_panel.scroll_to_section(node_id)
 
-    # ═══════════════ 面板刷新 ═══════════════
+    # ═══════════════ 参数面板 (委托给 ParamPanel) ═══════════════
+
     def _refresh_params(self):
-        """根据当前模式显示方案浏览器或手动滑块
-
-        仅在参数Tab激活时打包UI内容,避免与约束/结果/水质Tab冲突
-        """
-        # 隐藏两个面板
-        self.params_frame.pack_forget()
-        if self._solution_browser:
-            self._solution_browser.pack_forget()
-
-        # 非参数Tab时不渲染内容(切换节点时避免误显示)
+        """委托给 ParamPanel"""
+        if not self._panels_ready:
+            return
         if self.tab_var.get() != "params":
             return
+        backend = None
+        if self._selected_id and self._selected_id in self.node_items:
+            backend = self.node_items[self._selected_id].backend
+        self.param_panel.load_node(backend)
 
-        if not self._selected_id or self._selected_id not in self.node_items:
-            self.params_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-            tk.Label(
-                self.params_frame,
-                text="← 点击节点查看参数",
-                bg="#252525",
-                fg="#888",
-                font=("Microsoft YaHei", 10),
-            ).pack(pady=40)
-            return
-
-        ui = self.node_items[self._selected_id]
-        be = ui.backend
-        if not be:
-            self.params_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-            tk.Label(self.params_frame, text="无参数", bg="#252525", fg="#888").pack(
-                pady=40
-            )
-            return
-
-        if self._browse_mode:
-            # ── 方案浏览模式 ──
-            self._show_browse_mode(be)
-        else:
-            # ── 手动微调模式 ──
-            self._show_manual_mode(be)
-
-    # ═══════════════ 面板显示 ═══════════════
-    def _show_browse_mode(self, be, force_recompute=False):
-        """显示方案浏览器"""
-        if not self._solution_browser:
-            return
-        # 输入/合并节点和非水处理阶段节点没有方案空间,走手动卡片模式
-        is_io = _is_io_node(be.NODE_TYPE)
-        skip_sb = not has_solution_space(be.NODE_TYPE)
-        if is_io or skip_sb:
-            self._show_manual_mode(be)
-            return
-        # ── 污泥节点: 使用上游污泥流 ──
-        if be.is_sludge_only:
-            sludge = self.executor.trace_sludge_upstream(be.node_id)
-            if sludge is None:
-                from models.base import SludgeFlow
-
-                sludge = SludgeFlow(Q_wet=100, DS=4000, P_moisture=0.96, VS_ratio=0.60)
-            self._solution_browser.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-            self._solution_browser.load_sludge_node(be, sludge)
-            return
-
-        # 获取当前上下文的水量水质 — 从上游追踪,而非读节点自身参数
-        flow, quality = self._trace_upstream_context(be.node_id)
-        # 水质优先使用缓存结果中的进水水质
-        if be.result and be.result.inlet_quality:
-            quality = be.result.inlet_quality
-        # 水量优先使用缓存结果中的流量(若上游追踪返回零流量则回退到节点参数)
-        if flow.Q_design <= 0 and be.result:
-            # 从已缓存结果中提取设计流量
-            for name, (val, unit) in be.result.dimensions.items():
-                if "设计流量" in name and "m³/s" in unit and val > 0:
-                    flow.Q_design = val
-                    break
-        if flow.Q_design <= 0:
-            # 无缓存也无上游 → 尝试从管网节点获取流量
-            if self._pipe_node and self._pipe_node._total_flow > 0:
-                flow.Q_design = self._pipe_node._total_flow
-                flow.Q_avg_daily = self._pipe_node._total_avg_daily
-        if flow.Q_design <= 0:
-            # 最后回退: 使用 WaterFlow 默认值 (城镇污水标准)
-            flow = WaterFlow(Q_design=0.57, Q_avg_daily=34760.7, Kz=1.4)
-        self._solution_browser.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        self._solution_browser.load_node(
-            be, flow, quality, force_recompute=force_recompute
-        )
-
-        # ── 诊断日志: 方案为空时输出上下文 ──
-        if not self._solution_browser._solutions:
-            log.warning("[方案浏览器] %s 无可行方案", be.NODE_NAME)
-            log.warning(
-                "  上游流量: Q_design=%.4f m³/s  Q_avg=%.1f m³/d  Kz=%.1f",
-                flow.Q_design,
-                flow.Q_avg_daily,
-                flow.Kz,
-            )
-            log.warning(
-                "  水质: BOD5=%.0f  COD=%.0f  SS=%.0f  NH3N=%.0f",
-                quality.BOD5,
-                quality.COD,
-                quality.SS,
-                quality.NH3N,
-            )
-            log.warning(
-                "  参数: %s", dict(be._params) if hasattr(be, "_params") else "N/A"
-            )
-            log.warning(
-                "  节点状态: %s", be.state.name if hasattr(be, "state") else "N/A"
-            )
-            if be.result:
-                log.warning("  缓存结果: success=%s", be.result.success)
-
-    def _show_manual_mode(self, be):
-        """显示旧版滑块面板(取值约束为离散值)"""
-        # ── 水质节点特殊处理 ──
-        show_wq = is_water_quality_node(be.NODE_TYPE)
-        if show_wq:
-            # 水质编辑卡片委托给 QualityPanel
-            self.params_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-            self._quality_panel.show_water_quality_card(
-                be, parent_frame=self.params_frame
-            )
-            return
-
-        self.params_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        # 清理 params_frame 内的旧控件
-        for w in self.params_frame.winfo_children():
-            w.destroy()
-        self._slider_vars.clear()
-
-        # 标题
-        tk.Label(
-            self.params_frame,
-            text=f"▎{be.NODE_NAME}",
-            bg="#252525",
-            fg="#fff",
-            font=("Microsoft YaHei", 12, "bold"),
-        ).pack(anchor="w", padx=10, pady=(10, 2))
-        tk.Label(
-            self.params_frame,
-            text=f"类型: {be.NODE_CATEGORY} | 状态: {be.state.name}",
-            bg="#252525",
-            fg="#888",
-            font=("Microsoft YaHei", 8),
-        ).pack(anchor="w", padx=10)
-
-        # 公式
-        formula = _get_formulas().get(be.NODE_TYPE, "")
-        if formula:
-            ff = tk.Frame(self.params_frame, bg="#1a1a1a", bd=1, relief=tk.SUNKEN)
-            ff.pack(fill=tk.X, padx=8, pady=6)
-            tk.Label(
-                ff,
-                text="📐 计算公式",
-                bg="#1a1a1a",
-                fg="#ffaa44",
-                font=("Microsoft YaHei", 10, "bold"),
-            ).pack(anchor="w", padx=8, pady=(6, 2))
-            tk.Label(
-                ff,
-                text=formula,
-                bg="#1a1a1a",
-                fg="#ddd",
-                font=("Consolas", 9),
-                justify=tk.LEFT,
-            ).pack(anchor="w", padx=8, pady=(0, 6))
-
-        # 滑块
-        param_defs = be.get_param_defs()
-        if not param_defs:
-            tk.Label(
-                self.params_frame, text="无可调参数", bg="#252525", fg="#666"
-            ).pack(pady=20)
-            return
-
-        canvas = tk.Canvas(self.params_frame, bg="#252525", highlightthickness=0)
-        scrollbar = tk.Scrollbar(
-            self.params_frame, orient=tk.VERTICAL, command=canvas.yview, width=8
-        )
-        scroll_frame = tk.Frame(canvas, bg="#252525")
-        scroll_frame.bind(
-            "<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-        canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        canvas.bind(
-            "<MouseWheel>", lambda e: canvas.yview_scroll(int(-e.delta / 120), "units")
-        )
-        canvas.bind("<Enter>", lambda e: canvas.focus_set())
-        # 绑定到 scroll_frame 而非抢焦点:Entry 有焦点时滚轮仍可用
-        scroll_frame.bind(
-            "<MouseWheel>", lambda e: canvas.yview_scroll(int(-e.delta / 120), "units")
-        )
-
-        # 获取该参数的允许离散值
-        allowed = {}
-        try:
-            allowed = {
-                pd.key: get_allowed_values(be.NODE_TYPE, pd.key) for pd in param_defs
-            }
-        except KeyError:
-            pass
-
-        for pd in param_defs:
-            row = tk.Frame(scroll_frame, bg="#2d2d2d", bd=1, relief=tk.GROOVE)
-            row.pack(fill=tk.X, padx=4, pady=1)
-            hdr = tk.Frame(row, bg="#2d2d2d")
-            hdr.pack(fill=tk.X, padx=6, pady=(3, 0))
-            tk.Label(
-                hdr,
-                text=pd.name,
-                bg="#2d2d2d",
-                fg="#ccc",
-                font=("Microsoft YaHei", 9, "bold"),
-            ).pack(side=tk.LEFT)
-            var = tk.DoubleVar(value=pd.value)
-            self._slider_vars[pd.key] = var
-
-            # 如果有离散值约束,使用 Combobox 而非 Entry+Scale
-            vals = allowed.get(pd.key, [])
-            if vals and len(vals) > 0:
-                cb = ttk.Combobox(
-                    hdr,
-                    values=[str(v) for v in vals],
-                    textvariable=var,
-                    state="readonly",
-                    width=10,
-                )
-                cb.pack(side=tk.RIGHT, padx=2)
-                cb.bind(
-                    "<<ComboboxSelected>>",
-                    lambda e, k=pd.key: self._on_param_changed(k, float(var.get())),
-                )
-            else:
-                # StringVar for Entry — Excel-like editing (no cursor reset, partial input ok)
-                str_var = tk.StringVar(value=str(pd.value))
-                entry = tk.Entry(
-                    hdr,
-                    textvariable=str_var,
-                    width=7,
-                    bg="#1a1a1a",
-                    fg="#ffaa44",
-                    insertbackground="#fff",
-                    font=("Consolas", 9),
-                    justify=tk.RIGHT,
-                )
-                entry.pack(side=tk.RIGHT, padx=2)
-                # 输入校验: 阻止非数字输入
-                vcmd = (self.register(self._validate_float_entry), "%P")
-                entry.configure(validate="key", validatecommand=vcmd)
-
-                def _sync_entry_to_scale(k=pd.key, sv=str_var, dv=var):
-                    """Entry → Scale: parse text, update DoubleVar + params"""
-                    try:
-                        val = float(sv.get())
-                        dv.set(val)
-                        self._on_param_changed(k, val)
-                        self._set_entry_valid(entry, True)
-                    except (ValueError, tk.TclError):
-                        self._set_entry_valid(entry, False)
-
-                def _sync_scale_to_entry(k=pd.key, sv=str_var, dv=var):
-                    """Scale → Entry: update display + params"""
-                    val = dv.get()
-                    sv.set(str(round(val, 6)).rstrip("0").rstrip("."))
-                    self._on_param_changed(k, val)
-
-                entry.bind("<Return>", lambda e, f=_sync_entry_to_scale: f())
-
-                # FocusOut + 延迟检查: 仅当焦点仍在app内时才提交 (Alt-Tab不触发)
-                def _on_focus_out(e, f=_sync_entry_to_scale):
-                    self.after(
-                        10, lambda: f() if self.focus_get() is not None else None
-                    )
-
-                entry.bind("<FocusOut>", _on_focus_out)
-                scale = tk.Scale(
-                    row,
-                    from_=pd.min_val,
-                    to=pd.max_val,
-                    resolution=pd.step,
-                    orient=tk.HORIZONTAL,
-                    bg="#2d2d2d",
-                    fg="#ffaa44",
-                    troughcolor="#444",
-                    highlightthickness=0,
-                    length=280,
-                    variable=var,
-                )
-                scale.bind("<ButtonRelease-1>", lambda e, f=_sync_scale_to_entry: f())
-                scale.set(pd.value)
-                scale.pack(fill=tk.X, padx=6, pady=(0, 2))
-
-            if pd.unit:
-                tk.Label(
-                    hdr,
-                    text=pd.unit,
-                    bg="#2d2d2d",
-                    fg="#888",
-                    font=("Microsoft YaHei", 8),
-                ).pack(side=tk.RIGHT)
-
-        # ── 污染物去除率 ──
-        rates = be.get_removal_rates()
-        if rates:
-            sep = tk.Frame(scroll_frame, bg="#444", height=1)
-            sep.pack(fill=tk.X, padx=8, pady=(8, 4))
-            tk.Label(
-                scroll_frame,
-                text="🧪 污染物去除率",
-                bg="#252525",
-                fg="#ffaa44",
-                font=("Microsoft YaHei", 10, "bold"),
-            ).pack(anchor="w", padx=10, pady=(4, 2))
-
-            rate_labels = {
-                "BOD5": "BOD₅",
-                "COD": "COD",
-                "SS": "SS",
-                "NH3N": "NH₃-N",
-                "TN": "TN",
-                "TP": "TP",
-            }
-            for pk, label in rate_labels.items():
-                if pk not in rates:
-                    continue
-                rrow = tk.Frame(scroll_frame, bg="#2d2d2d", bd=1, relief=tk.GROOVE)
-                rrow.pack(fill=tk.X, padx=6, pady=1)
-                tk.Label(
-                    rrow,
-                    text=label,
-                    bg="#2d2d2d",
-                    fg="#ccc",
-                    font=("Microsoft YaHei", 9),
-                    width=6,
-                    anchor="e",
-                ).pack(side=tk.LEFT, padx=4)
-                rvar = tk.DoubleVar(value=rates[pk] * 100)  # 转为百分比显示
-                rscale = tk.Scale(
-                    rrow,
-                    from_=0,
-                    to=100,
-                    resolution=1,
-                    orient=tk.HORIZONTAL,
-                    variable=rvar,
-                    bg="#2d2d2d",
-                    fg="#55cc55",
-                    troughcolor="#444",
-                    highlightthickness=0,
-                    length=200,
-                    command=lambda v, pk=pk, be=be: self._on_rate_changed(
-                        pk, float(v) / 100, be
-                    ),
-                )
-                rscale.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=4)
-                tk.Label(
-                    rrow,
-                    text="%",
-                    bg="#2d2d2d",
-                    fg="#888",
-                    font=("Consolas", 9),
-                    width=3,
-                ).pack(side=tk.RIGHT)
-
-        # 按钮
-        btn_frame = tk.Frame(scroll_frame, bg="#252525")
-        btn_frame.pack(fill=tk.X, padx=10, pady=8)
-        ttk.Button(btn_frame, text="查看此节点结果", command=self._view_results).pack(
-            side=tk.LEFT, padx=4
-        )
-        ttk.Button(
-            btn_frame, text="重置默认值", command=lambda: self._reset_params(be)
-        ).pack(side=tk.LEFT, padx=4)
-
-    # ═══════════════ 事件回调 ═══════════════
+    # ═══════════════ 事件回调 (委托给 ParamPanel) ═══════════════
     def _on_toggle_mode(self):
         """切换方案浏览 / 手动微调"""
-        self._browse_mode = not self._browse_mode
-        self._mode_btn.config(
-            text="📊 方案浏览" if self._browse_mode else "🎚 手动微调",
-            bg="#3a5a1a" if self._browse_mode else "#5a3a1a",
-        )
-
-        self._refresh_params()
+        self.param_panel._on_toggle_mode()
 
     def _on_solution_applied(self, solutions, selected_idx=None):
         """方案应用回调 — 标记节点为 CLEAN, 触发下游重算"""
-        self._on_calc_rest()
+        self.param_panel._on_solution_applied(solutions, selected_idx)
 
     def _on_constraint_changed(self, node_type: str):
         """约束限值变更回调 — 刷新方案空间"""
-        self.status_var.set(f"约束限值已更新 — {node_type} 方案空间需刷新")
-        self._dirty = True
+        self.param_panel._on_constraint_changed(node_type)
 
     def _on_rate_changed(self, pollutant: str, rate: float, be):
         """去除率滑块变更"""
-
-        be.set_removal_rate(pollutant, rate)
-        self._dirty = True
+        self.param_panel._on_rate_changed(pollutant, rate, be)
 
     # ═══════════════ 面板显示 ═══════════════
     def _show_water_quality_card(self, be, parent_frame=None):
@@ -1625,18 +1207,14 @@ class MainWindow(tk.Tk):
         self.status_var.set("参数已修改,按 F5 重新计算")
         self.tab_var.set("results")
 
-    # ═══════════════ 设置 ═══════════════
+    # ═══════════════ 设置 (委托给 ParamPanel) ═══════════════
     def _reset_params(self, be):
-        be.reset_params()
-        self._refresh_params()
+        """委托给 ParamPanel"""
+        self.param_panel._reset_params(be)
 
     def _on_param_changed(self, key, var):
-        """参数滑块变更回调."""
-        self._dirty = True
-        if self._selected_id and self._selected_id in self.node_items:
-            be = self.node_items[self._selected_id].backend
-            if be:
-                self.status_var.set(f"{be.NODE_NAME} 参数已变更: {key} = {var}")
+        """参数滑块变更回调 — 委托给 ParamPanel"""
+        self.param_panel._on_param_changed(key, var)
 
     # ═══════════════════ 其他操作 ═══════════════════
     def _get_data_pipe_files(self) -> List[str]:
@@ -1723,67 +1301,13 @@ class MainWindow(tk.Tk):
             quality = WaterQuality()
             result, out_flow, out_quality = node.execute(flow, quality)
         # 处理节点: 自动应用推荐方案, 确保默认参数通过约束
-        self._auto_apply_recommended(node)
+        self.param_panel._auto_apply_recommended(node)
         self.status_var.set(f"已添加: {name}")
         log.info(f"Node added: {name} ({key}) at ({node.x:.0f}, {node.y:.0f})")
 
     def _auto_apply_recommended(self, node):
-        """对新增的处理节点自动枚举方案空间并应用推荐解
-
-        追踪上游管线获取真实的流量水质上下文, 确保方案适配当前位置.
-        """
-        nt = node.NODE_TYPE
-        is_io = _is_io_node(nt)
-        skip_sb = not has_solution_space(nt)
-        if is_io or skip_sb:
-            return
-        try:
-            from models.base import NodeResult, NodeState, WaterQuality
-            from models.solution_space import get_engine
-
-            # 追踪上游获取真实流量水质
-            flow, quality = self._trace_upstream_context(node.node_id)
-
-            engine = get_engine()
-            sols = engine.enumerate(nt, flow, quality)
-            if sols:
-                # 选择安全裕度最高的方案 (而非成本最低)
-                sol = max(sols, key=lambda s: s.robustness)
-                for k, v in sol.params.items():
-                    try:
-                        node.set_param(k, v)
-                    except Exception as e:
-                        _log.warning("operation failed: %s", e, exc_info=True)
-                result = NodeResult(
-                    success=True, params=dict(sol.params), robustness=sol.robustness
-                )
-                for k, (v, u) in sol.dimensions.items():
-                    result.add_dimension(k, v, u)
-                for cn, (passed, actual, limit, unit) in sol.checks.items():
-                    result.add_check(cn, passed, actual, limit, unit)
-                # 记录进/出水水质 — 避免下游节点在 F5 前看到空水质
-                result.inlet_quality = WaterQuality(
-                    BOD5=quality.BOD5,
-                    COD=quality.COD,
-                    SS=quality.SS,
-                    NH3N=quality.NH3N,
-                    TN=quality.TN,
-                    TP=quality.TP,
-                    pH=7.0,
-                )
-                result.outlet_quality = quality.apply_removal(node.get_removal_rates())
-                node._result = result
-                node.state = NodeState.CLEAN
-                self._dirty = True
-                self.status_var.set(
-                    f"已添加: {node.NODE_NAME} (自动应用推荐方案, {len(sols)} 个可用)"
-                )
-                log.info(
-                    f"Auto-applied solution for {node.NODE_NAME}: "
-                    f"flow={flow.Q_design:.3f} m3/s, {len(sols)} available"
-                )
-        except Exception as e:
-            log.debug(f"Auto-apply skipped for {node.NODE_NAME}: {e}")
+        """对新增的处理节点自动枚举方案空间并应用推荐解 — 委托给 ParamPanel"""
+        self.param_panel._auto_apply_recommended(node)
 
     def _trace_upstream_context(self, node_id: str):
         """沿图反向追踪, 获取某个节点的上游汇入流量和水质"""
@@ -2038,7 +1562,7 @@ class MainWindow(tk.Tk):
                 node.set_excel("pipe_final")
         # 项目加载时 (rebuild_canvas) 批量处理, 跳过单节点 auto-apply
         if not getattr(self, "_loading_project", False):
-            self._auto_apply_recommended(node)
+            self.param_panel._auto_apply_recommended(node)
         self._dirty = True
         self.status_var.set(f"已添加: {name}")
 
@@ -2070,7 +1594,7 @@ class MainWindow(tk.Tk):
             self._pipe_node = None
         if self._selected_id == nid:
             self._selected_id = None
-            self._refresh_params()
+            self.param_panel.load_node(None)
         self._dirty = True
         self.status_var.set(f"已删除: {name}")
 
@@ -2155,13 +1679,48 @@ class MainWindow(tk.Tk):
         self.status_var.set("缓存已清除 — 请按 F5 重新计算")
 
     def _on_locate_flow(self):
-        """定位工艺流程: 重置缩放并将画布视野拉回到全部节点"""
+        """自动布局: 按拓扑关系重新排列所有节点 (Sugiyama 分层 + 蛇形网格)
+
+        1. 拓扑排序 → 最长路径分配层级
+        2. Barycenter 重心排序减少连线交叉
+        3. 层内蛇形折行 (超过12节点换行, 奇偶行交替方向)
+        """
         try:
+            self._auto_layout_nodes()
             self.canvas_view.reset_scale()
             self.canvas_view.fit_view()
-            self.status_var.set("视野已重置 — 显示全部工艺流程")
+            self.status_var.set("自动布局完成")
+            self._dirty = True
         except Exception as e:
-            _log.warning("定位流程失败: %s", e)
+            _log.warning("自动布局失败, 回退到仅重置视口: %s", e)
+            self.canvas_view.reset_scale()
+            self.canvas_view.fit_view()
+            self.status_var.set("视野已重置")
+
+    def _auto_layout_nodes(self):
+        """列式自动布局 (v5.4: 委托给 layout_engine)
+
+        节点端口在左右两侧, 采用左→右列式布局:
+          主链路按拓扑顺序分列, 每列最多10节点垂直排列;
+          分支/合并节点自动延展到右侧新列.
+        """
+        from .layout_engine import column_layout
+
+        node_ids = list(self.executor._nodes.keys())
+        if not node_ids:
+            return
+
+        succ_map, pred_map, _ = self.executor._build_adjacency()
+        successors = {n: succ_map.get(n, []) for n in node_ids}
+        predecessors = {n: pred_map.get(n, []) for n in node_ids}
+
+        positions = column_layout(node_ids, successors, predecessors)
+
+        for nid, (wx, wy) in positions.items():
+            node = self.executor._nodes.get(nid)
+            if node:
+                node.x, node.y = wx, wy
+                # canvas 图形移动由后续 reset_scale() 统一处理
 
     def _on_validate_quick(self):
         """运行快速模组验证 (delegated to validator_dialog)"""
@@ -2216,30 +1775,10 @@ class MainWindow(tk.Tk):
 
     # ═══════════════ 面板刷新 ═══════════════
     def _refresh_selected_result(self):
-        """刷新当前选中节点的结果显示 (4列 Treeview)"""
-        if self._selected_id and self._selected_id in self.node_items:
-            be = self.node_items[self._selected_id].backend
-            if be:
-                self._populate_result_tree(be)
-                return
-        # 无选中节点
-        for item in self.result_tree.get_children():
-            self.result_tree.delete(item)
-        self.result_check_text.configure(state=tk.NORMAL)
-        self.result_check_text.delete("1.0", tk.END)
-
-        self.result_check_text.configure(state=tk.DISABLED)
-        self.result_tree.insert(
-            "",
-            tk.END,
-            values=(
-                "←",
-                "点击节点查看计算结果",
-                "",
-                "",
-            ),
-            tags=("hint",),
-        )
+        """刷新当前选中节点的结果显示 -- delegates to ResultPanel"""
+        if not self._panels_ready:
+            return
+        self._result_panel.refresh()
 
     # ═══════════════ 事件回调 ═══════════════
     def _on_calculate(self):
@@ -2247,158 +1786,31 @@ class MainWindow(tk.Tk):
         self._on_calc_rest()
 
     def _suggest_fix(self, check_name: str, actual, limit) -> str:
-        """根据约束名称给出修改建议"""
-        suggestions = {
-            "长宽比": "调整池宽B或池长L,使L/B在约束范围内",
-            "宽高比": "调整池宽B或有效水深",
-            "径深比": "增大池径D或减小有效水深h2",
-            "停留时间": "调整池体尺寸或流量",
-            "安全距离": "降低MLSS浓度或减小充水比λ",
-            "污泥龄": "增大有效容积或减少排泥量",
-            "强制滤速": "增加滤池格数或降低设计滤速",
-            "堰负荷": "增加堰长(增设内侧堰)或降低流量",
-            "充水比": "调整有效容积或工作周期Tc",
-            "表面负荷": "增大沉淀面积或降低流量",
-            "固体通量": "增大沉淀区面积",
-            "紫外剂量": "增加灯管排数或降低渠道流速",
-            "砂斗容积": "增大砂斗上口直径或池径",
-            "过栅流速": "调整栅前水深h或栅条间隙b",
-            "斜管轴向流速": "降低表面负荷或增大斜管倾角",
-            "冲洗水占比": "降低反冲洗强度或延长过滤周期",
-            "实际HRT": "增大池体尺寸或减少池数",
-        }
-        for key, sug in suggestions.items():
-            if key in check_name:
-                return sug
-        return ""
+        """根据约束名称给出修改建议 -- delegates to ResultPanel"""
+        return self._result_panel._suggest_fix(check_name, actual, limit)
 
     # ═══════════════ UI 构建 ═══════════════
     def _build_elevation_view(self):
-        """构建高程面板 Treeview (暗色主题)."""
-        self._elevation_tree = ttk.Treeview(
-            self.elevation_frame,
-            columns=("symbol", "meaning", "unit", "value"),
-            show="headings",
-            height=10,
-        )
-        self._elevation_tree.heading("symbol", text="符号")
-        self._elevation_tree.heading("meaning", text="物理意义")
-        self._elevation_tree.heading("unit", text="单位")
-        self._elevation_tree.heading("value", text="取值")
-        self._elevation_tree.column("symbol", width=75, anchor="center", stretch=False)
-        self._elevation_tree.column("meaning", width=220, anchor="w")
-        self._elevation_tree.column("unit", width=55, anchor="center", stretch=False)
-        self._elevation_tree.column("value", width=100, anchor="e", stretch=False)
-        # 暗色主题 (与结果面板一致)
-        style = ttk.Style()
-        style.configure(
-            "Elevation.Treeview",
-            background="#1a1a1a",
-            foreground="#ccc",
-            fieldbackground="#1a1a1a",
-            rowheight=22,
-        )
-        style.configure(
-            "Elevation.Treeview.Heading",
-            background="#2d2d2d",
-            foreground="#ffaa44",
-            font=("Microsoft YaHei", 9, "bold"),
-        )
-        style.map("Elevation.Treeview", background=[("selected", "#3a5a1a")])
-        # 蓝色分组标题行
-        self._elevation_tree.tag_configure(
-            "section_header",
-            background="#1a3a5a",
-            foreground="#88bbff",
-            font=("Microsoft YaHei", 9, "bold"),
-        )
-        self._elevation_tree.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        """构建高程面板 -- now handled by ResultPanel"""
+        pass
 
     # ═══════════════ 面板刷新 ═══════════════
     def _refresh_elevation_view(self):
-        """刷新高程面板 — 从选中节点的 ElevationData 填充."""
-        for item in self._elevation_tree.get_children():
-            self._elevation_tree.delete(item)
-
-        if not self._selected_id or self._selected_id not in self.node_items:
-            self._elevation_tree.insert(
-                "", tk.END, values=("←", "点击节点查看高程", "", "")
-            )
-            return
-
-        backend = self.node_items[self._selected_id].backend
-        if not backend or not backend.result or not backend.result.elevation:
-            self._elevation_tree.insert("", tk.END, values=("—", "无高程数据", "", ""))
-            return
-
-        elev = backend.result.elevation
-        rows = [
-            ("Z_ground", "地面标高", "m", elev.ground_elevation),
-            ("Z_bottom", "池底/管内底标高", "m", elev.bottom_elevation),
-            ("Z_water", "水面标高", "m", elev.water_elevation),
-            ("h_eff", "有效水深", "m", elev.effective_depth),
-            ("h_super", "超高", "m", elev.super_elevation),
-            ("h_loss", "本节点水头损失", "m", elev.head_loss),
-            ("Z_upstream", "上游水面标高", "m", elev.upstream_water_elevation),
-        ]
-
-        if elev.head_loss_detail:
-            rows.append(("detail", "水头损失明细", "", elev.head_loss_detail))
-        if elev.formula:
-            rows.append(("formula", "计算公式", "", elev.formula))
-
-        for sym, meaning, unit, val in rows:
-            self._elevation_tree.insert(
-                "", tk.END, values=(sym, meaning, unit, self._fmt_val(val))
-            )
+        """刷新高程面板 -- delegates to ResultPanel"""
+        self._result_panel.refresh_elevation()
 
     @staticmethod
     def _fmt_val(val):
-        """Format a value for Treeview display."""
-        if isinstance(val, float):
-            return f"{val:.2f}"
-        return str(val)
+        """Format a value for Treeview display -- delegates to ResultPanel"""
+        return ResultPanel._fmt_val(val)
 
     def _get_scope_prefix(self, dim_name: str, node_type: str) -> str:
-        """从模组 labels.json 读取维度的作用域前缀."""
-        try:
-            from mods.mod_manager import get_mod_manager
-
-            mgr = get_mod_manager()
-            labels = mgr.load_labels(node_type)
-            if labels and "dim_scopes" in labels:
-                scope = labels["dim_scopes"].get(dim_name, "")
-                from models.base import NodeResult
-
-                return NodeResult.SCOPE_PREFIX.get(scope, "")
-        except Exception:
-            pass
-        return ""
+        """从模组 labels.json 读取维度的作用域前缀 -- delegates to ResultPanel"""
+        return self._result_panel._get_scope_prefix(dim_name, node_type)
 
     def _dim_formula(self, dim_name: str, node_type: str) -> str:
-        """维度公式回退查询."""
-        import re
-
-        clean = re.sub(
-            r"^\[(?:单池|单格|单系列|单斗|单孔|总|集水池)\]", "", dim_name
-        ).strip()
-
-        if "去除率" in dim_name:
-            return "η = (进水-出水)/进水 × 100%"
-        if re.match(r"进水(BOD|COD|SS|NH|TN|TP|pH)", dim_name):
-            return "上游来水水质，流量加权平均"
-        if re.match(r"出水(BOD|COD|SS|NH|TN|TP|pH)", dim_name):
-            return "进水水质 × (1 - 去除率)"
-        if "功率" in dim_name:
-            return "P = P_density × V"
-        if "浓度" in dim_name:
-            return "X = 设计规范推荐值或用户设定"
-        if any(kw in dim_name for kw in ["数量", "台数", "格数", "个数"]):
-            return "用户设定或设计规范推荐"
-        from models.dimension_formulas import get_formula as gf
-
-        mod_formula = gf(dim_name, node_type)
-        return mod_formula[:100] if mod_formula else "详见设计规范及计算书"
+        """维度公式回退查询 -- delegates to ResultPanel"""
+        return self._result_panel._dim_formula(dim_name, node_type)
 
     def _on_calc_rest(self):
         """Calculate remaining (non-primary) nodes after auto-apply."""
@@ -2422,187 +1834,12 @@ class MainWindow(tk.Tk):
 
     # ═══════════════ 数据填充 ═══════════════
     def _populate_result_tree(self, backend):
-        """将节点计算结果填充到 4 列 Treeview: 符号 | 物理意义 | 单位 | 取值."""
-        for item in self.result_tree.get_children():
-            self.result_tree.delete(item)
-
-        node = backend
-        result = node.result
-        if not result or not result.success:
-            self.result_tree.insert(
-                "",
-                tk.END,
-                values=("✗", "计算失败", "", result.error_msg if result else ""),
-            )
-            self.result_check_text.configure(state=tk.NORMAL)
-            self.result_check_text.delete("1.0", tk.END)
-            self.result_check_text.configure(state=tk.DISABLED)
-            return
-
-        from ui.dimension_labels import (
-            format_dimension_row,
-            format_param_value,
-            resolve_dimension,
-            split_dimensions,
-        )
-
-        computed, physical, wq_in_out, wq_removal = split_dimensions(
-            result.dimensions, result.dimension_categories
-        )
-
-        # ── 1. 原始设计参数 (合并 basic/physical/operating, 对齐 Excel 输出) ──
-        param_items = []
-        for key, val in result.params.items():
-            sym, meaning, unit = resolve_dimension(key)
-            val_str = format_param_value(key, val) if val is not None else ""
-            param_items.append((sym, meaning, unit, val_str))
-
-        if param_items:
-            self.result_tree.insert(
-                "",
-                tk.END,
-                values=("", "── 原始设计参数 ──", "", ""),
-                tags=("section_banner",),
-            )
-            for sym, meaning, unit, val_str in param_items:
-                self.result_tree.insert(
-                    "",
-                    tk.END,
-                    values=(sym, meaning, unit, val_str),
-                    tags=("param",),
-                )
-
-        # ── 2. 计算结果 (不含水质) ──
-        if computed:
-            self.result_tree.insert(
-                "",
-                tk.END,
-                values=("", "── 计算结果 ──", "", ""),
-                tags=("section_banner",),
-            )
-            for key, val, unit in computed:
-                display_name = (
-                    result.get_display_name(key)
-                    if hasattr(result, "get_display_name")
-                    else key
-                )
-                sym, meaning, _ = format_dimension_row(display_name, val, unit)
-                self.result_tree.insert(
-                    "", tk.END, values=(sym, meaning, unit, self._fmt_val(val))
-                )
-                formula = result.dimension_formulas.get(key, "")
-                if formula:
-                    self.result_tree.insert(
-                        "",
-                        tk.END,
-                        values=("", f"↳ {formula}", "", ""),
-                        tags=("formula_sub",),
-                    )
-
-        # ── 3. 构筑物尺寸 ──
-        if physical:
-            self.result_tree.insert(
-                "",
-                tk.END,
-                values=("", "── 构筑物尺寸 ──", "", ""),
-                tags=("section_banner",),
-            )
-            for key, val, unit in physical:
-                display_name = (
-                    result.get_display_name(key)
-                    if hasattr(result, "get_display_name")
-                    else key
-                )
-                sym, meaning, _ = format_dimension_row(display_name, val, unit)
-                self.result_tree.insert(
-                    "", tk.END, values=(sym, meaning, unit, self._fmt_val(val))
-                )
-                formula = result.dimension_formulas.get(key, "")
-                if formula:
-                    self.result_tree.insert(
-                        "",
-                        tk.END,
-                        values=("", f"↳ {formula}", "", ""),
-                        tags=("formula_sub",),
-                    )
-
-        # ── 4. 约束校核 (仅底部 Text 窗口) ──
-        self.result_check_text.configure(state=tk.NORMAL)
-        self.result_check_text.delete("1.0", tk.END)
-        if result.checks:
-            self.result_check_text.insert(tk.END, "约束校核:\n", ("bold",))
-            for check_name, (passed, actual, limit, unit) in result.checks.items():
-                icon = "✓" if passed else "✗"
-                tag_name = "check_pass" if passed else "check_fail"
-                self.result_check_text.tag_configure(
-                    tag_name, foreground="#55cc88" if passed else "#ff5555"
-                )
-                self.result_check_text.insert(
-                    tk.END, f"  [{icon}] {check_name}: ", (tag_name,)
-                )
-                self.result_check_text.insert(
-                    tk.END,
-                    f"{actual:.2f}{unit} vs {limit}{unit}\n",
-                )
-            self.result_check_text.configure(state=tk.DISABLED)
+        """将节点计算结果填充到 Treeview -- delegates to ResultPanel"""
+        self._result_panel._populate_result_tree(backend)
 
     def _on_tab_changed(self):
-        # 隐藏所有内容面板
-        self.params_frame.pack_forget()
-        self.result_frame.pack_forget()
-        self.quality_text.pack_forget()
-        self.constraint_frame.pack_forget()
-        self.elevation_frame.pack_forget()
-        if self._solution_browser:
-            self._solution_browser.pack_forget()
-        tab = self.tab_var.get()
-        if tab == "params":
-            self._refresh_params()
-        elif tab == "results":
-            self._refresh_selected_result()
-            self.params_frame.pack_forget()
-            if self._solution_browser:
-                self._solution_browser.pack_forget()
-            self.result_frame.pack(
-                side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=5
-            )
-        elif tab == "quality":
-            self.params_frame.pack_forget()
-            if self._solution_browser:
-                self._solution_browser.pack_forget()
-            self.quality_text.pack(
-                side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=5
-            )
-            # 委托给 QualityPanel
-            if self._selected_id and self._selected_id in self.node_items:
-                be = self.node_items[self._selected_id].backend
-                if be:
-                    from models.node_registry import is_water_quality_node
-
-                    if is_water_quality_node(be.NODE_TYPE):
-                        self._quality_panel.show_water_quality_card(be)
-                    else:
-                        self._quality_panel.build_full_quality_flow(
-                            scroll_to_node_id=self._selected_id
-                        )
-            else:
-                self._quality_panel.build_full_quality_flow()
-        elif tab == "constraints":
-            self.constraint_frame.pack(
-                side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=5
-            )
-            if self._selected_id and self._selected_id in self.node_items:
-                be = self.node_items[self._selected_id].backend
-                if be:
-                    applied = (
-                        be.result.params if be.result and be.result.success else None
-                    )
-                    self._constraint_panel.load_node(be, applied)
-        elif tab == "elevation":
-            self.elevation_frame.pack(
-                side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=5
-            )
-            self._refresh_elevation_view()
+        """Tab 切换 -- delegates to ResultPanel"""
+        self._result_panel._on_tab_changed()
 
     # ═══════════════════ 文件操作 ═══════════════════
     def _on_new(self):

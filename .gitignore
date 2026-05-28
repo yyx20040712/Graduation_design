@@ -57,9 +57,10 @@ htmlcov/
 # 输出文件
 output/
 results/
-data/output/
+# data/output/ — 保留此行
+!data/*.xlsx
 *.pdf
-*.xlsx
+# *.xlsx — 项目数据文件不忽略
 *.csv
 *.png
 *.jpg

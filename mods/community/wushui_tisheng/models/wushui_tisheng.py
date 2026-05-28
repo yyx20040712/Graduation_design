@@ -14,7 +14,7 @@ from models.base import (
 )
 
 
-class WuniTishengNode(NodeBase):
+class WushuiTishengNode(NodeBase):
     """污水提升泵房 — 污水提升 + 集水池 + 泵站设计
 
     将上游来水提升至设计高程,以满足后续重力流处理单元的水头需求.
@@ -22,7 +22,7 @@ class WuniTishengNode(NodeBase):
     沿程+局部水头损失、总扬程、轴功率.
     """
 
-    NODE_TYPE = "wuni_tisheng"
+    NODE_TYPE = "wushui_tisheng"
     NODE_NAME = "污水提升泵房"
     NODE_CATEGORY = "社区模组"
 

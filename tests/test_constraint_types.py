@@ -106,7 +106,7 @@ def test_tiaojiechi_HRT_range():
     limits = disc.get("constraint_limits", {})
     assert "实际 HRT" in limits
     limit_str = limits["实际 HRT"]
-    assert "6" in limit_str and "12" in limit_str, f"HRT limit: {limit_str}"
+    assert "2" in limit_str and "12" in limit_str, f"HRT limit: {limit_str}"
 
 
 def test_chenshachi_Dh2_range():

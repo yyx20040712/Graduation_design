@@ -98,52 +98,54 @@ class PeishuiquNode(NodeBase):
         return {"SS": 0.0, "BOD5": 0.0, "COD": 0.0, "NH3N": 0.0, "TN": 0.0, "TP": 0.0}
 
     def calculate(self, flow: WaterFlow, quality: WaterQuality) -> NodeResult:
-        B = self.get_param("B_channel")
+        B_val = self.get_param("B_channel")
         h_eff = self.get_param("h_eff")
-        h_super = self.get_param("h_super")
         n_out = int(self.get_param("n_out"))
-        Q = flow.Q_design  # m³/s
 
-        # (4-174) A = B × h_eff
-        A = B * h_eff  # m²
-        # (4-175) v_actual = Q / A
-        v_actual = Q / A if A > 0 else 0  # m/s
-        # (4-176) L = v_actual × 60 (停留1min)
-        L = math.ceil(v_actual * 60.0 / 0.5) * 0.5  # m
-        # H = h_eff + h_super
-        H_total = h_eff + h_super
+        grid = {
+            "B_channel": np.array([B_val]),
+            "h_eff": np.array([h_eff]),
+        }
+
+        fixed = {
+            "h_super": self.get_param("h_super"),
+            "n_out": float(n_out),
+        }
+
+        r = type(self)._vectorized_compute(grid, flow, quality, fixed)
+        d = r[0]
 
         result = NodeResult(success=True)
         result.params = {
-            "B_channel": B,
+            "B_channel": B_val,
             "h_eff": h_eff,
-            "h_super": h_super,
+            "h_super": self.get_param("h_super"),
             "n_out": n_out,
         }
-        result.add_dimension("渠宽 B", B, "m", formula="B = 设计取值 (0.5~3.0m)")
+        result.add_dimension("渠宽 B", d["B"], "m", formula="B = 设计取值 (0.5~3.0m)")
         result.add_dimension(
-            "有效水深 h_eff", h_eff, "m", formula="h_eff = 设计取值 (0.5~3.0m)"
+            "有效水深 h_eff", d["h_eff"], "m", formula="h_eff = 设计取值 (0.5~3.0m)"
         )
-        result.add_dimension("过水面积 A", round(A, 2), "m²", formula="A = B × h_eff")
+        result.add_dimension("过水面积 A", round(float(d["A"]), 2), "m²", formula="A = B × h_eff")
         result.add_dimension(
-            "实际流速 v_actual", round(v_actual, 3), "m/s", formula="v_actual = Q / A"
+            "实际流速 v_actual", round(float(d["v_actual"]), 3), "m/s", formula="v_actual = Q / A"
         )
-        result.add_dimension("渠长 L", L, "m", formula="L = v_actual × 60 (停留1min)")
+        result.add_dimension("渠长 L", d["L"], "m", formula="L = v_actual × 60 (停留1min)")
         result.add_dimension(
-            "总高度 H", round(H_total, 2), "m", formula="H = h_eff + h_super"
+            "总高度 H", round(float(d["H_total"]), 2), "m", formula="H = h_eff + h_super"
         )
         result.add_dimension("出水口数", n_out, "个")
         result.add_check(
             "渠内流速 0.3~1.2 m/s",
-            0.3 <= v_actual <= 1.2,
-            round(v_actual, 3),
+            bool(d["ok_v"]),
+            round(float(d["val_v"]), 3),
             "0.3~1.2",
             "m/s",
         )
         result.add_check(
-            "有效水深 0.5~3.0 m", 0.5 <= h_eff <= 3.0, round(h_eff, 1), "0.5~3.0", "m"
+            "有效水深 0.5~3.0 m", bool(d["ok_h"]), round(float(d["val_h"]), 1), "0.5~3.0", "m"
         )
-        result.add_check("渠宽 0.5~3.0 m", 0.5 <= B <= 3.0, round(B, 1), "0.5~3.0", "m")
+        result.add_check("渠宽 0.5~3.0 m", bool(d["ok_B"]), round(float(d["val_B"]), 1), "0.5~3.0", "m")
         return result
 
     @classmethod

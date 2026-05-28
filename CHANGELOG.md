@@ -2,7 +2,80 @@
 
 ---
 
-## [5.2.0] — 2026-05-27
+## [5.4.0] — 2026-05-28
+
+### Architecture (v5.4 生产部署级架构重构)
+- **main_window 瘦身**: 2478→1654 行 (-33%), 提取 3 个面板模块
+- **新增模块**: `app_state.py` (集中化状态), `layout_engine.py` (Sugiyama), `result_panel.py` (548L), `param_panel.py` (558L)
+- **模组计算路径统一**: 34 模组 `calculate()` → `_vectorized_compute(N=1)`, 消除 ~1500 行重复计算和双路径不一致 Bug 类别
+- **mods/ 目录统一**: 消除双目录同步风险, 多路径回退
+- **状态管理集中化**: `AppState` dataclass + backward-compat properties
+
+### Fixed
+- **P0: 滑块不回写节点** (v5.3-s2 修复被 agent 提取时遗漏) — `_on_param_changed` 补回 `set_param()`
+- **P0: 面板初始化顺序错误** — `status_var`/`ResultPanel`/`ParamPanel` 创建时机修正
+- **P0: numpy 类型 JSON 不可序列化** — `add_check`/`add_dimension` 强制 Python 原生类型转换
+- **P1: 方案浏览器显示旧方案** — `force_recompute=True` 始终重新枚举
+- **高程冗余约束清理** — 移除超高≥0.3m/水面>池底/水头损失≤3m 三个恒真/硬编码约束
+- **canvas 自动布局 Bug** — `reset_scale()` scale==1.0 时不移动图形
+- **chenshachi + cass 测试跳过** — 参数调优, 物理不变性 36/36 0 skip
+
+### Added
+- `test_import_smoke.py` — 20 个导入/JSON/面板初始化烟雾测试
+- `PARAM_TABLE` 回退: excel_path, pipe_type, SS
+- `_panels_ready` 守卫 + `_loading_project` backward-compat property
+- 方案浏览器标量验证 (v5.3-s2) + 流/污泥上下文清理
+
+### Changed
+- 测试: 640 passed, 1 skip (env)
+- flake8: 22 (全为预存 E231/E701/F401)
+- 架构评分: 7.3 → 8.1/10
+
+---
+
+## [5.3.0] — 2026-05-28
+
+### Added
+- **ModManager 拆分**: 1751行 God Class → 4模块 (discovery/validation/config + core 871行)
+- **物理不变性测试**: 34 项工程规律验证 (非负/单调/守恒/约束/边界)
+- **Git 12 commits**: pre-commit 4钩子 (black/isort/flake8/sync)
+- **崩溃报告**: crash_handler 文件日志 + GUI 对话框
+- **CLI 标准化**: argparse 子命令 (validate/list-mods/crash-log)
+- **GUI 输入校验**: validatecommand 阻止非数字输入
+- **性能基准**: DAG<2s, 加载<1s, 枚举<1s, 冷启动<500ms
+- **PyInstaller 56MB EXE**: 34 模组加载, 121 PASS validator
+
+### Fixed
+- **E702 分号**: 378→0 (26 个 mod core 文件)
+- **F401 未使用导入**: 28+ 消除
+- **静默异常**: 4 处 `except Exception: pass` → log.warning
+- **ceil_to 弃用清理**: 测试 6 个 DeprecationWarning
+- **WATER_QUALITY_ATTRS DRY**: 3 处重复 → 单一定义
+- **GBK 控制台崩溃**: PyInstaller EXE Unicode 修复
+
+---
+
+## [5.2.0] — 2026-05-27 - 2026-05-28 (v5.3-s2)
+
+### Fixed (Critical)
+- **P0: `_on_param_changed` 不回写节点** — slider 参数修改后 F5 读取旧值
+- **P1: 水质面板崩溃** — InputNode/KwInputNode 缺失 `_sync_quality_to_params()`
+- **KwInputNode 高程参数**: Z_water_inlet/Z_ground/DN_inlet
+
+### Added
+- **自动布局**: Sugiyama 分层 + 蛇形网格 (📐 按钮 + Ctrl+L)
+- **方案浏览器标量验证**: 应用方案后自动跑 `calculate()` 对比向量化结果
+- **Canvas 坐标守卫**: NaN/极端值回退
+- **警告展示**: 结果面板底部新增 warnings
+
+### Changed
+- **KwInputNode**: `_sync_quality_to_params()` SS→SS_in 映射
+- **solution_browser**: 污泥/水质上下文清理, 标量失败→DIRTY
+- **PyInstaller spec**: 补充 12+ hiddenimports
+
+---
+
+## [5.1.0] — 2026-05-27
 
 ### Added
 - **内嵌自检模块**: `self_test.py` — 10 项系统自检, 零外部依赖, 可随 EXE 打包

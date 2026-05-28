@@ -117,8 +117,59 @@ class WuniShusongNode(NodeBase):
         ]
 
     def calculate(self, flow, quality) -> NodeResult:
-        """污泥节点不参与水处理线,由 execute_sludge() 处理"""
-        return NodeResult(success=True)
+        n_pumps = int(self.get_param("n_pumps"))
+        Q_pump = self.get_param("Q_pump")
+        H_pump = self.get_param("H_pump")
+        v_pipe = self.get_param("v_pipe")
+        L_pipe = self.get_param("L_pipe")
+
+        grid, fixed = self._make_scalar_grid(
+            {"n_pumps": n_pumps, "Q_pump": Q_pump, "v_pipe": v_pipe},
+            {"H_pump": H_pump, "L_pipe": L_pipe, "_sludge_Q_wet": 100.0},
+        )
+        res = self._vectorized_compute(grid, flow, quality, fixed)
+        r = res[0]
+
+        result = NodeResult(success=True)
+        result.params = {
+            "n_pumps": n_pumps,
+            "Q_pump": Q_pump,
+            "H_pump": H_pump,
+            "v_pipe": v_pipe,
+            "L_pipe": L_pipe,
+        }
+        result.add_dimension("泵台数", n_pumps, "台")
+        result.add_dimension("单泵流量", Q_pump, "m³/h")
+        result.add_dimension("总泵送能力", round(float(r["Q_total"]), 1), "m³/h")
+        result.add_dimension("扬程", H_pump, "m")
+        result.add_dimension("管径", float(r["D_pipe"]), "m")
+        result.add_dimension("管道流速", v_pipe, "m/s")
+        result.add_dimension(
+            "出水管沿程水损 h_f", round(float(r["h_f"]), 3), "m",
+            formula="h_f = (n·v/R^(2/3))² × L", category="computed",
+        )
+        result.add_dimension(
+            "出水管局部水损 h_m", round(float(r["h_m"]), 3), "m",
+            formula="h_m = ξ·v²/(2g), ξ=1.5", category="computed",
+        )
+        result.add_dimension(
+            "出水管总水损 h_loss", round(float(r["h_loss"]), 3), "m",
+            formula="h_loss = h_f + h_m", category="computed",
+        )
+        result.add_dimension("电机功率", round(float(r["P_motor"]), 1), "kW")
+        result.add_check(
+            "泵送能力充足", bool(r["ok_capacity"]),
+            round(float(r["val_capacity"]), 1), ">= 0", "m³/h",
+        )
+        result.add_check(
+            "管道流速合理", bool(r["ok_v_pipe"]),
+            v_pipe, "1.0~2.5", "m/s",
+        )
+        result.add_check(
+            "出水管水损 ≤ 扬程", bool(r["ok_h_loss"]),
+            round(float(r["val_h_loss"]), 2), f"≤ {H_pump}", "m",
+        )
+        return result
 
     def execute_sludge(
         self, sludge: SludgeFlow

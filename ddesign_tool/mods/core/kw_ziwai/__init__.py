@@ -1,6 +1,5 @@
 """kw_ziwai.py — 矿井水紫外消毒池 (Mine Water UV Disinfection Channel)"""
 
-import math
 from typing import Dict, List
 
 import numpy as np
@@ -173,41 +172,64 @@ class KwZiwaiNode(NodeBase):
             "xi_total": xi_total,
         }
 
-        # ── 输入防护 ──
         if n <= 0:
-            result = NodeResult.failed("渠道数 n 必须 >= 1")
-            return result
+            return NodeResult.failed("渠道数 n 必须 >= 1")
 
-        # ── 单渠流量 (3-126) ──
+        grid = {
+            "n": np.array([n], dtype=np.int32),
+            "D_UV": np.array([D_UV]),
+            "v_channel": np.array([v_channel]),
+            "h_channel": np.array([h_channel]),
+        }
+        fixed = {
+            "k_aging": k_aging,
+            "k_foul": k_foul,
+            "T254": T254,
+            "n_T": n_T,
+            "eta_geo": eta_geo,
+            "h_super": h_super,
+            "L_lamp": L_lamp,
+            "gap": gap,
+            "N_layer": N_layer,
+            "d_vert": d_vert,
+            "d_long": d_long,
+            "P_lamp": P_lamp,
+            "L_in": L_in,
+            "L_out": L_out,
+            "xi_total": xi_total,
+        }
+
+        r = self._vectorized_compute(grid, flow, quality, fixed)
+
         Q_single = flow.Q_design / n
-
-        # ── 综合衰减系数 (3-124) ──
-        k_total = k_aging * k_foul
-
-        # ── 透光率修正 (3-125) ──
-        T_eff = (T254 / 100.0) ** n_T
-
-        # ── 渠宽 (3-127) ──
-        B_channel = L_lamp + 2 * gap
-
-        # ── 有效水深 (4-137): H ≥ N_layer·h_v + h_upper + h_lower ──
-        h_upper = 0.3
-        h_lower = 0.2
-        h_min = N_layer * d_vert + h_upper + h_lower
-        h_channel = max(h_channel, h_min)
-
-        # ── 过流断面 (3-129) ──
-        A_channel = B_channel * h_channel
-
-        # ── 校核流速 (3-130) ──
+        B_channel = r["B_channel"][0]
+        h_ch_eff = r["h_channel_eff"][0]
+        A_channel = B_channel * h_ch_eff
         if A_channel <= 0:
             return NodeResult.failed("过流断面面积为 0,请检查渠宽和有效水深")
-        v_actual = Q_single / A_channel
+        v_actual = r["v_actual"][0]
+        I_avg = r["I_avg"][0]
+        if I_avg <= 0 or v_actual <= 0:
+            return NodeResult.failed("光强或流速为 0,无法计算紫外剂量")
+
+        D_actual = r["D_actual"][0]
+        N_rows = int(r["N_rows"][0])
+        t_actual = r["t_actual"][0]
+        N_lamps = int(r["N_lamps"][0])
+        L_total = r["L_total"][0]
+        h_loss = r["h_loss"][0]
+        H_total = r["H_total"][0]
+        k_total = r["k_total"][0]
+        T_eff = r["T_eff"][0]
+
         result.add_check(
-            "渠内流速", 0.05 <= v_actual <= 0.7, round(v_actual, 3), "0.05~0.7", "m/s"
+            "渠内流速",
+            bool(r["ok_v_channel"][0]),
+            round(v_actual, 3),
+            "0.05~0.7",
+            "m/s",
         )
 
-        # ── 低流量流速不足提示 ──
         if v_actual < 0.15 and n >= 2:
             v_if_single = flow.Q_design / A_channel
             result.add_warning(
@@ -219,24 +241,12 @@ class KwZiwaiNode(NodeBase):
                 f"确保紫外剂量达标即可."
             )
 
-        # ── 平均紫外光强 (4-140): I_avg = N_layer·P_lamp·η·f(τ)·C / (10·A), mW/cm² ──
-        I_avg = (
-            P_lamp * N_layer * eta_geo * T_eff * k_total / (10.0 * A_channel)
-        )  # mW/cm²
-
-        # ── 所需灯管排数 (3-134) ──
-        if v_actual <= 0:
-            return NodeResult.failed("实际流速为 0,无法计算紫外剂量")
-        dose_per_row = I_avg * d_long / v_actual  # mJ/cm² per row
-        N_rows = max(math.ceil(D_UV / dose_per_row), 1)
-
-        # ── 实际接触时间 (4-141): t = s_v·n / v (辅助判断) ──
-        t_actual = N_rows * d_long / v_actual  # s
-
-        # ── 实际剂量校核 (4-144): D' = I_avg·t ≥ D_eff ──
-        D_actual = I_avg * t_actual  # mJ/cm²
         result.add_check(
-            "紫外剂量", D_actual >= D_UV, round(D_actual, 1), f">= {D_UV}", "mJ/cm²"
+            "紫外剂量",
+            bool(r["ok_UV_dose"][0]),
+            round(D_actual, 1),
+            f">= {D_UV}",
+            "mJ/cm²",
         )
 
         if t_actual < 6:
@@ -251,23 +261,9 @@ class KwZiwaiNode(NodeBase):
                     f"建议降低流速或增加灯管排数"
                 )
 
-        # ── 灯管总数 (3-136) ──
-        N_lamps = N_rows * N_layer
-
-        # ── 渠道长度 ──
-        L_uv = N_rows * d_long  # 灯管区长度
-        L_total = L_in + L_uv + L_out  # 渠道总长
-
-        # ── 水头损失 (3-129): 局部阻力 + 灯组形阻, 工程下限 0.10m ──
-        h_loss = max(xi_total * v_actual**2 / (2 * GRAVITY), 0.10)
-
-        # ── 总高度 (3-130) ──
-        H_total = math.ceil(h_channel + h_super / 0.1) * 0.1
-
-        # ── 组装结果 ──
         result.add_dimension("渠道数", n, "条")
         result.add_dimension("渠宽", round(B_channel, 2), "m")
-        result.add_dimension("有效水深", round(h_channel, 2), "m")
+        result.add_dimension("有效水深", round(h_ch_eff, 2), "m")
         result.add_dimension("实际流速", round(v_actual, 3), "m/s")
         result.add_dimension("综合衰减系数", round(k_total, 2), "")
         result.add_dimension("有效透光率", round(T_eff, 3), "")

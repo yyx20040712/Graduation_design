@@ -120,7 +120,51 @@ class WuniNongsuoNode(NodeBase):
         ]
 
     def calculate(self, flow, quality) -> NodeResult:
-        return NodeResult(success=True)
+        n = int(self.get_param("n"))
+        q_solid = self.get_param("q_solid")
+        T_thicken = self.get_param("T_thicken")
+        P_out = self.get_param("P_out")
+        h_eff = self.get_param("h_eff")
+
+        grid, fixed = self._make_scalar_grid(
+            {"n": n, "q_solid": q_solid, "T_thicken": T_thicken},
+            {"P_out": P_out, "h_eff": h_eff, "_sludge_DS": 4000.0, "_sludge_Q_wet": 100.0},
+        )
+        res = self._vectorized_compute(grid, flow, quality, fixed)
+        r = res[0]
+
+        result = NodeResult(success=True)
+        result.params = {
+            "n": n, "q_solid": q_solid, "T_thicken": T_thicken,
+            "P_out": P_out, "h_eff": h_eff,
+        }
+        result.add_dimension("池数", n, "座")
+        result.add_dimension("池径 D", float(r["D"]), "m")
+        result.add_dimension("浓缩面积(单池)", round(float(r["D"]) ** 2 * np.pi / 4, 1), "m²")
+        result.add_dimension("有效水深", round(float(r["h_eff_calc"]), 2), "m")
+        result.add_dimension("总高度", round(float(r["H_total"]), 2), "m")
+        result.add_dimension("固体负荷(实际)", round(float(r["q_solid_actual"]), 1), "kgDS/(m²·d)")
+        result.add_dimension("浓缩时间", T_thicken, "h")
+        result.add_dimension("进泥湿泥量", round(100.0, 2), "m³/d")
+        result.add_dimension("进泥含水率", round(0.98, 3), "")
+        result.add_dimension("出泥湿泥量", round(float(r["Q_wet_out"]), 2), "m³/d")
+        result.add_dimension("出泥含水率", P_out, "")
+        result.add_dimension("分离液量", round(max(0, 100.0 - float(r["Q_wet_out"])), 2), "m³/d")
+        result.add_dimension("干固体量", round(4000.0, 1), "kg/d")
+        result.add_dimension("固体回收率", 95.0, "%")
+        result.add_check(
+            "池径 D >= 5", bool(r["ok_D_min"]),
+            round(float(r["val_D_min"]), 1), ">= 5", "m",
+        )
+        result.add_check(
+            "固体负荷合理", bool(r["ok_solid_flux"]),
+            round(float(r["val_solid_flux"]), 1), "30~60 (GB50014 §8.2.1)", "kgDS/(m²·d)",
+        )
+        result.add_check(
+            "有效水深", bool(r["ok_h_eff"]),
+            round(float(r["val_h_eff"]), 2), "3.0~5.0 (GB50014: 宜4m)", "m",
+        )
+        return result
 
     def execute_sludge(
         self, sludge: SludgeFlow

@@ -16,7 +16,13 @@ _log = get_logger(__name__)
 # v4.3: 所有参数标签已从 mod.json 自动生成 (_build_dynamic_labels)
 #       此处仅保留跨模组共享回退, 不再需要逐模组硬编码
 # ═══════════════════════════════════════════════════════════════
-PARAM_TABLE: Dict[str, Tuple[str, str, str]] = {}
+PARAM_TABLE: Dict[str, Tuple[str, str, str]] = {
+    # pipe_network 节点专用 (非模组, 无 labels.json)
+    "excel_path": ("文件", "管网Excel文件", ""),
+    "pipe_type": ("类型", "管道类型(污水/雨水)", ""),
+    # 水质维度回退
+    "SS": ("SS", "悬浮固体浓度", "mg/L"),
+}
 
 
 # ── 维度名 → (符号, 物理意义) ──

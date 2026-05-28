@@ -254,27 +254,50 @@ class KwChenshachiNode(NodeBase):
             "q_weir_design": q_weir_design,
         }
 
-        Q_max = flow.Q_design  # m³/s
-        Q_single = Q_max / n  # m³/s (单格)
-        Q_avg_daily = flow.Q_avg_daily  # m³/d
+        # ── 调用向量化计算 (N=1) ──
+        grid = {
+            "n": np.array([n], dtype=np.int32),
+            "v_h": np.array([v_h], dtype=np.float64),
+            "t_stay": np.array([t_stay], dtype=np.float64),
+            "h_eff": np.array([h_eff], dtype=np.float64),
+        }
+        fixed = {
+            "h_super": h_super,
+            "slope": slope,
+            "hopper_angle": hopper_angle,
+            "hopper_bottom": hopper_bottom,
+            "kappa": kappa,
+            "T_sand": T_sand,
+            "q_weir_design": q_weir_design,
+        }
+        row = self._vectorized_compute(grid, flow, quality, fixed)[0]
 
-        # ── (4-11) 沉砂池长度 L = v × t ──
-        L_calc = v_h * t_stay
-        L = math.ceil(L_calc / 0.5) * 0.5
+        L = float(row["L"])
+        B = float(row["B"])
+        h_hopper = float(row["h_hopper"])
+        H_total = float(row["H_total"])
+        H_rounded = math.ceil(H_total / 0.1) * 0.1
+        V_hopper_single = float(row["V_hopper_single"])
+        V_hopper_total = float(row["V_hopper_total"])
+        V_hopper_needed = float(row["V_hopper_needed"])
+        V_sand_daily = float(row["V_sand_daily"])
+        n_hoppers_per_cell = int(row["n_hoppers_per_cell"])
+        v_actual = float(row["v_actual"])
+        ratio_BH = float(row["ratio_BH"])
+        L_weir_req = float(row["L_weir_req"])
+        L_weir_avail = float(row["L_weir_avail"])
+        q_weir_actual = float(row["q_weir_actual"])
+        ok_v = bool(row["ok_v"])
+        ok_H = bool(row["ok_H"])
+        ok_B = bool(row["ok_B"])
+        ok_BH = bool(row["ok_BH"])
+        ok_hopper = bool(row["ok_hopper"])
+        ok_weir = bool(row["ok_weir"])
 
-        # ── (4-12) 单格水流断面面积 A₁ = Q_max / (n × v) ──
-        A_cross = Q_max / (n * v_h) if v_h > 0 else 0  # m²
-
-        # ── (4-14) 单格池宽 B = A₁ / H ──
-        B_calc = A_cross / h_eff if h_eff > 0 else 0
-        B = round(math.ceil(max(B_calc, 0.6) / 0.1) * 0.1, 2)  # B ≥ 0.6m
-
-        # ── (4-13) 实际流速校核 v_actual = Q_max / (n × B × H) ──
-        A_actual = B * h_eff
-        v_actual = Q_max / (n * A_actual) if A_actual > 0 else 0
+        # ── 校核 ──
         result.add_check(
             "水平流速 0.15~0.30 m/s",
-            0.15 <= v_actual <= 0.30,
+            ok_v,
             round(v_actual, 3),
             "0.15~0.30",
             "m/s",
@@ -284,84 +307,38 @@ class KwChenshachiNode(NodeBase):
         elif v_actual > 0.30:
             result.add_warning(f"实际流速 v={v_actual:.3f}m/s > 0.30,建议增大B或减小n")
 
-        # ── 有效水深校核 H ≤ 1.2m ──
         result.add_check(
-            "有效水深 H ≤ 1.2m", h_eff <= 1.2, round(h_eff, 2), "≤ 1.2", "m"
+            "有效水深 H ≤ 1.2m", ok_H, round(h_eff, 2), "≤ 1.2", "m"
         )
 
-        # ── 单格宽度校核 B ≥ 0.6m ──
-        result.add_check("单格宽度 B ≥ 0.6m", B >= 0.6, round(B, 2), "≥ 0.6", "m")
+        result.add_check("单格宽度 B ≥ 0.6m", ok_B, round(B, 2), "≥ 0.6", "m")
 
-        # ── 宽深比 B/H 1.0~2.0 ──
-        if h_eff > 0:
-            ratio_BH = B / h_eff
-            result.add_check(
-                "宽深比 B/H 1.0~2.0",
-                1.0 <= ratio_BH <= 2.0,
-                round(ratio_BH, 2),
-                "1.0~2.0",
-                "",
-            )
-            if ratio_BH < 1.0 or ratio_BH > 2.0:
-                result.add_warning(f"宽深比 B/H={ratio_BH:.1f},建议调整 H 或 n")
+        result.add_check(
+            "宽深比 B/H 1.0~2.0",
+            ok_BH,
+            round(ratio_BH, 2),
+            "1.0~2.0",
+            "",
+        )
+        if ratio_BH < 1.0 or ratio_BH > 2.0:
+            result.add_warning(f"宽深比 B/H={ratio_BH:.1f},建议调整 H 或 n")
 
-        # ── (4-15) 每日沉砂体积 ──
-        # κ: L/m³ → m³/m³: κ_m3 = κ / 1000
-        kappa_m3_per_m3 = kappa / 1000.0  # m³砂 / m³水
-        V_sand_daily = Q_avg_daily * kappa_m3_per_m3  # m³/d
-
-        # ── (4-16) 所需砂斗总容积 ──
-        V_hopper_needed_total = V_sand_daily * T_sand  # m³
-
-        # ── (4-17) 单格所需砂斗容积 ──
-        V_hopper_needed_per = V_hopper_needed_total / n  # m³
-
-        # ── (4-18) 砂斗深度 h_hopper = (b₁ - b₂)/2 × tan(α) ──
-        b1 = B  # 砂斗上口宽 = 池宽
-        b2 = hopper_bottom
-        alpha_rad = math.radians(hopper_angle)
-        h_hopper = (b1 - b2) / 2.0 * math.tan(alpha_rad)
-
-        # ── (4-19) 单斗容积(棱台)V = h/3 × (b₁² + b₂² + b₁·b₂) ──
-        V_hopper_single = h_hopper / 3.0 * (b1**2 + b2**2 + b1 * b2)
-
-        # ── 沿池长方向砂斗个数 ──
-        n_hoppers_per_cell = max(1, int(L / max(b1, 0.1)))
-        V_hopper_total = V_hopper_single * n_hoppers_per_cell * n
-
-        # ── (4-20) 砂斗容积校核 ──
-        hopper_ok = V_hopper_total >= V_hopper_needed_total
         result.add_check(
             "砂斗容积足够",
-            hopper_ok,
+            ok_hopper,
             round(V_hopper_total, 2),
-            f">= {round(V_hopper_needed_total, 2)}",
+            f">= {round(V_hopper_needed, 2)}",
             "m³",
         )
-        if not hopper_ok:
+        if not ok_hopper:
             result.add_warning(
-                f"砂斗总容积不足: {V_hopper_total:.1f}m³ < {V_hopper_needed_total:.1f}m³,"
+                f"砂斗总容积不足: {V_hopper_total:.1f}m³ < {V_hopper_needed:.1f}m³,"
                 f"建议增大砂斗深度或增加砂斗个数"
             )
 
-        # ── (4-21) 池体总高度 H_t = H + h_hopper + h_free ──
-        H_total = h_eff + h_hopper + h_super
-        H_rounded = math.ceil(H_total / 0.1) * 0.1
-
-        # ── (4-22) 出水堰设计 ──
-        # 需堰长: L_weir_req = Q_max × 1000 / q_weir_design
-        Q_max_Ls = Q_max * 1000  # L/s
-        L_weir_required = Q_max_Ls / q_weir_design if q_weir_design > 0 else 0
-
-        # 可用堰长: 每格三面出水堰 (两侧+末端), 总长 = n × (L + 2×B)
-        L_weir_available = n * (L_calc + 2 * B)
-
-        # 实际堰负荷
-        q_weir_actual = Q_max_Ls / L_weir_available if L_weir_available > 0 else 0
-
         result.add_check(
             "堰口负荷 ≤ 10 L/(s·m)",
-            q_weir_actual <= 10,
+            ok_weir,
             round(q_weir_actual, 2),
             "≤ 10",
             "L/(s·m)",
@@ -369,11 +346,10 @@ class KwChenshachiNode(NodeBase):
         if q_weir_actual > 10:
             result.add_warning(
                 f"堰负荷 q={q_weir_actual:.1f} > 2.9 L/(s·m),"
-                f"需堰长 {L_weir_required:.1f}m > 可用 {L_weir_available:.1f}m,建议增设堰长"
+                f"需堰长 {L_weir_req:.1f}m > 可用 {L_weir_avail:.1f}m,建议增设堰长"
             )
 
         # ── 排砂管径校核 D ≥ 200mm ──
-        # 最小排砂管径
         D_discharge = 200  # mm (最小要求)
         result.add_dimension(
             "排砂管最小管径",
@@ -438,7 +414,7 @@ class KwChenshachiNode(NodeBase):
         )
         result.add_dimension(
             "需砂斗容积",
-            round(V_hopper_needed_total, 2),
+            round(V_hopper_needed, 2),
             "m³",
             formula="V_needed = V_sand,daily × T_sand",
             category="computed",
@@ -470,14 +446,14 @@ class KwChenshachiNode(NodeBase):
         )
         result.add_dimension(
             "需堰长 L_weir",
-            round(L_weir_required, 1),
+            round(L_weir_req, 1),
             "m",
             formula="L_weir = Q_max×1000/q_weir",
             category="computed",
         )
         result.add_dimension(
             "可用堰长",
-            round(L_weir_available, 1),
+            round(L_weir_avail, 1),
             "m",
             formula="L_avail = n × B",
             category="physical",

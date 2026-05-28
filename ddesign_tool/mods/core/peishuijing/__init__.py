@@ -115,29 +115,20 @@ class PeishuijingNode(NodeBase):
         h_weir = self.get_param("h_weir")
         HRT = self.get_param("HRT")
         h_eff = self.get_param("h_eff")
-        h_super = self.get_param("h_super")
-        Q_max = flow.Q_design_as("m3/h")
 
-        # ── (A) 有效容积 HRT法 (4-170) ──
-        V = Q_max * HRT / 60.0  # m³
-        # ── (B) 池体面积 (4-171) ──
-        A = V / h_eff if h_eff > 0 else 0
-        # ── (C) 井径 (圆形井, 4-172圆形版) ──
-        D_HRT = math.sqrt(4 * A / PI) if A > 0 else 2.0
+        grid = {
+            "n_out": np.array([n_out], dtype=np.float64),
+            "h_weir": np.array([h_weir]),
+            "HRT": np.array([HRT]),
+            "h_eff": np.array([h_eff]),
+        }
 
-        # ── (D) 薄壁堰配水: b = Q / (n × m × √(2g) × H^(3/2)) ──
-        m = 0.42
-        b_weir = (
-            Q_max / 3600.0 / (n_out * m * math.sqrt(2 * GRAVITY) * h_weir**1.5)
-            if h_weir > 0
-            else 0
-        )  # m
-        D_weir = b_weir * 1.5  # 井径取堰长的1.5倍
+        fixed = {
+            "h_super": self.get_param("h_super"),
+        }
 
-        # 井径取 HRT法和堰长法的较大值
-        D = math.ceil(max(D_HRT, D_weir, 2.0) / 0.5) * 0.5
-        # ── (E) 总高度 (4-173) ──
-        H_total = h_eff + h_super
+        r = type(self)._vectorized_compute(grid, flow, quality, fixed)
+        d = r[0]
 
         result = NodeResult(success=True)
         result.params = {
@@ -145,27 +136,27 @@ class PeishuijingNode(NodeBase):
             "h_weir": h_weir,
             "HRT": HRT,
             "h_eff": h_eff,
-            "h_super": h_super,
+            "h_super": self.get_param("h_super"),
         }
         result.add_dimension("出水方向数", n_out, "个")
         result.add_dimension(
-            "有效容积 V", round(V, 2), "m3", formula="V = Q_max × HRT / 60"
+            "有效容积 V", round(float(d["V"]), 2), "m3", formula="V = Q_max × HRT / 60"
         )
         result.add_dimension("堰上水头", h_weir, "m")
         result.add_dimension(
-            "井径 D", D, "m", formula="D = max(D_HRT, D_weir, 2.0), ceil 0.5m"
+            "井径 D", d["D"], "m", formula="D = max(D_HRT, D_weir, 2.0), ceil 0.5m"
         )
         result.add_dimension(
-            "总高度 H", round(H_total, 2), "m", formula="H = h_eff + h_super"
+            "总高度 H", round(float(d["H_total"]), 2), "m", formula="H = h_eff + h_super"
         )
         result.add_dimension("有效水深", h_eff, "m")
         result.add_check(
-            "水力停留时间 1~10 min", 1.0 <= HRT <= 10.0, round(HRT, 1), "1~10", "min"
+            "水力停留时间 1~10 min", bool(d["ok_HRT"]), round(float(d["val_HRT"]), 1), "1~10", "min"
         )
         result.add_check(
-            "有效水深 1.5~4.0 m", 1.5 <= h_eff <= 4.0, round(h_eff, 1), "1.5~4.0", "m"
+            "有效水深 1.5~4.0 m", bool(d["ok_h_eff"]), round(float(d["val_h_eff"]), 1), "1.5~4.0", "m"
         )
-        result.add_check("井径 D >= 2.0 m", D >= 2.0, round(D, 1), ">= 2.0", "m")
+        result.add_check("井径 D >= 2.0 m", bool(d["ok_D"]), round(float(d["val_D"]), 1), ">= 2.0", "m")
         return result
 
     @classmethod

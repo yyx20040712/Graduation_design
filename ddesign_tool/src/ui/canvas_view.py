@@ -386,6 +386,14 @@ class NodeCanvas(tk.Frame):
                   右键菜单传入的坐标已经由 _on_add_node_callback 做了 /_scale 转换.
         """
         nid = backend_node.node_id if backend_node else f"ui-{len(self.nodes)}"
+        # 防御: 坐标极端值或 NaN 时回退到合理默认值
+        try:
+            if not (isinstance(x, (int, float)) and isinstance(y, (int, float))):
+                x, y = 100.0, 100.0
+            if abs(x) > 1e6 or abs(y) > 1e6:
+                x, y = 100.0, 100.0
+        except (TypeError, ValueError):
+            x, y = 100.0, 100.0
         # ① 世界坐标 → Canvas 坐标
         cx, cy = x * self._scale, y * self._scale
         item = NodeItem(self.canvas, cx, cy, name, node_type, nid, backend_node)
@@ -420,12 +428,13 @@ class NodeCanvas(tk.Frame):
     def reset_scale(self):
         """重置缩放因子为 1.0, 将所有画布元素移回世界坐标位置.
 
-        不使用 canvas.scale() 还原 — 因为多次不同中心的缩放无法用单次
-        scale 精确逆转. 改为从 backend 世界坐标 (始终正确的规范源) 直接
-        move() 每个元素到目标位置.
-        """
-        if abs(self._scale - 1.0) < 0.001:
-            return
+         不使用 canvas.scale() 还原 — 因为多次不同中心的缩放无法用单次
+         scale 精确逆转. 改为从 backend 世界坐标 (始终正确的规范源) 直接
+         move() 每个元素到目标位置.
+
+         注意: 即使 scale==1.0 也需执行 — 自动布局可能改变了 backend 坐标,
+         必须同步移动 canvas 图形.
+         """
         for node in self.nodes.values():
             if not node.backend:
                 continue

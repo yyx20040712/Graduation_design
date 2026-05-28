@@ -1,6 +1,5 @@
 """aao.py — AAO反应池 (A2O生物脱氮除磷)"""
 
-import math
 import numpy as np
 from typing import Dict, List
 from models.base import (
@@ -182,84 +181,59 @@ class AAONode(NodeBase):
         result = NodeResult(success=True)
         result.params = {k: self.get_param(k) for k in self._default_params()}
 
-        Q_avg_h = flow.Q_avg_hourly
-        Q_per = Q_avg_h / n
-        S0 = quality.BOD5
-        Va = Q_per * tp
-        Vn = Q_per * tn
-        Vo = Q_per * to
-        V_total_series = Va + Vn + Vo
-        V_total = V_total_series * n
-
-        Q_daily = Q_per * 24
-        Xv = X_MLSS * y
-        Vo_required = Q_daily * S0 / (Ls * Xv * 1000) if Ls > 0 and Xv > 0 else 0
-        Vo_ok = Vo >= Vo_required * 0.6
-
-        if V_total_series <= 0:
-            return NodeResult.failed("总容积必须大于0")
-        A_eff = V_total_series / h_eff
-        B_theory = math.sqrt(A_eff / ratio_LB) if ratio_LB > 0 else math.sqrt(A_eff)
-        L_theory = ratio_LB * B_theory
-        B = math.ceil(B_theory / 0.5) * 0.5
-        L = math.ceil(L_theory / 0.5) * 0.5
-        V_actual = L * B * h_eff
-        if V_actual <= 0:
-            return NodeResult.failed("实际容积必须大于0")
-        t_total = V_actual / Q_per
-
-        t_oxic_actual = Vo / V_actual * t_total
-        HRT_total_ok = t_total >= (tp + tn + to - 1)
-        HRT_oxic_ok = t_oxic_actual >= (to - 1)
+        grid, fixed = self._make_scalar_grid(
+            {"n": n, "tp": tp, "tn": tn, "to": to, "Ls": Ls, "X_MLSS": X_MLSS},
+            {"h_eff": h_eff, "ratio_LB": ratio_LB, "y": y, "Y_obs": Y_obs,
+             "h_super": h_super, "R": R, "Ri": Ri, "O2_rate": O2_rate},
+        )
+        res = self._vectorized_compute(grid, flow, quality, fixed)
+        r = res[0]
 
         result.add_check(
-            "总HRT", HRT_total_ok, round(t_total, 1), f">= {tp+tn+to-1:.0f}", "h"
+            "总HRT", bool(r["ok_HRT_total"]),
+            round(float(r["val_HRT_total"]), 1), f">= {tp+tn+to-1:.0f}", "h"
         )
         result.add_check(
-            "好氧HRT", HRT_oxic_ok, round(t_oxic_actual, 1), f">= {to-1:.0f}", "h"
+            "好氧HRT", bool(r["ok_HRT_oxic"]),
+            round(float(r["val_HRT_oxic"]), 1), f">= {to-1:.0f}", "h"
         )
-        if Vo_required > 0:
+        if float(r["val_BOD_load"]) > 0:
             result.add_check(
-                "BOD负荷", Vo_ok, round(Vo_required, 1), f"<= {Vo:.0f}", "m3"
+                "BOD负荷", bool(r["ok_BOD_load"]),
+                round(float(r["val_BOD_load"]), 1), f"<= {float(r['Vo']):.0f}", "m3"
             )
 
-        Q_total_daily = flow.Q_avg_daily
-        Px = Y_obs * Q_total_daily * S0 / 1000
-        O2_total = O2_rate * Q_total_daily * S0 / 1000 * 0.92
-        Q_r = R / 100 * Q_per
-        Q_ri = Ri / 100 * Q_per
-        H_total = h_eff + h_super
-
         result.add_dimension("系列数", n, "系列")
-        result.add_dimension("池长 L", L, "m")
-        result.add_dimension("池宽 B", B, "m")
+        result.add_dimension("池长 L", float(r["L"]), "m")
+        result.add_dimension("池宽 B", float(r["B"]), "m")
         result.add_dimension("有效水深", h_eff, "m")
-        result.add_dimension("总高度", H_total, "m")
-        result.add_dimension("厌氧区容积", round(Va, 1), "m3")
-        result.add_dimension("缺氧区容积", round(Vn, 1), "m3")
-        result.add_dimension("好氧区容积", round(Vo, 1), "m3")
-        result.add_dimension("单系列总容积", round(V_total_series, 1), "m3")
-        result.add_dimension("总有效容积", round(V_total, 1), "m3")
-        result.add_dimension("总HRT", round(t_total, 1), "h")
+        result.add_dimension("总高度", float(r["H_total"]), "m")
+        result.add_dimension("厌氧区容积", round(float(r["Va"]), 1), "m3")
+        result.add_dimension("缺氧区容积", round(float(r["Vn"]), 1), "m3")
+        result.add_dimension("好氧区容积", round(float(r["Vo"]), 1), "m3")
+        result.add_dimension("单系列总容积", round(float(r["V_total_series"]), 1), "m3")
+        result.add_dimension("总有效容积", round(float(r["V_total"]), 1), "m3")
+        result.add_dimension("总HRT", round(float(r["t_total"]), 1), "h")
         result.add_dimension("BOD污泥负荷", Ls, "kgBOD5/(kgMLSS·d)")
         result.add_dimension("污泥龄", theta_c, "d")
-        result.add_dimension("日产泥量", round(Px, 1), "kg/d")
-        result.add_dimension("日需氧量", round(O2_total, 1), "kgO2/d")
+        result.add_dimension("日产泥量", round(float(r["Px"]), 1), "kg/d")
+        result.add_dimension("日需氧量", round(float(r["O2_total"]), 1), "kgO2/d")
         result.add_dimension("污泥回流比", R, "%")
         result.add_dimension("内回流比", Ri, "%")
-        result.add_dimension("回流污泥量", round(Q_r, 2), "m3/h")
-        result.add_dimension("内回流量", round(Q_ri, 2), "m3/h")
-        result.add_dimension("总面积", round(L * B * n, 1), "m2")
-        result.add_dimension("混凝土量估算", round(V_total * 1.2, 1), "m3")
+        result.add_dimension("回流污泥量", round(float(r["Q_r"]), 2), "m3/h")
+        result.add_dimension("内回流量", round(float(r["Q_ri"]), 2), "m3/h")
+        result.add_dimension("总面积", round(float(r["area_total"]), 1), "m2")
+        result.add_dimension("混凝土量估算", round(float(r["concrete_m3"]), 1), "m3")
 
         # ── 污泥输出 (SLUDGE 端口, 剩余活性污泥) ──
+        Px = float(r["Px"])
         P_moisture_was = 0.992
         Q_wet_was = Px / ((1 - P_moisture_was) * 1000.0) if Px > 0 else 0.0
         self._sludge_output = SludgeFlow(
             Q_wet=Q_wet_was,
             DS=Px,
             P_moisture=P_moisture_was,
-            VS_ratio=0.50,  # AAO 剩余污泥典型 VS/SS
+            VS_ratio=0.50,
         )
 
         return result

@@ -2,7 +2,7 @@
 Bootstrap resource extraction for PyInstaller frozen distributions.
 
 When the application is run from a PyInstaller-frozen executable, bundled
-resources live under `sys._MEIPASS`.  This module copies those resources into
+resources live under ``sys._MEIPASS``.  This module copies those resources into
 the current working directory so the rest of the application can find them at
 their expected relative paths.
 
@@ -13,41 +13,40 @@ already present in the working tree.
 import os
 import shutil
 import sys
+import time
 
 from _logging import get_logger
 
 _log = get_logger(__name__)
+
+
 # ---------------------------------------------------------------------------
 # Resource manifest
 # ---------------------------------------------------------------------------
-# Each entry: (relative_path_inside_MEIPASS, relative_destination_in_CWD, is_directory)
+# Each entry: (relative_path_in_MEIPASS, relative_destination_in_CWD, is_directory)
+#
+# Strategy per entry type:
+#   - Directories (mods/data/knowledge): merge — only copy new files, never overwrite
+#   - resources/: copy files that don't exist in cwd; existing files are skipped
+#     (user must manually delete old files to receive updates)
+#   - config.ini: never overwrite (user's local configuration)
 # ---------------------------------------------------------------------------
 
 RESOURCE_MANIFEST: list[tuple[str, str, bool]] = [
-    ("config.ini", "config.ini", False),
-    ("mods", "mods", True),
-    ("data", "data", True),
-    ("MODS_GUIDE.md", "MODS_GUIDE.md", False),
-    ("README.md", "README.md", False),
-    ("使用方法.md", "使用方法.md", False),
-    ("yyx.ddesign.json", "yyx.ddesign.json", False),
-    ("kuangjing.ddesign.json", "kuangjing.ddesign.json", False),
-    ("knowledge", "knowledge", True),
-    ("output_template", "output", True),
-    ("file_inventory.xlsx", "output/file_inventory.xlsx", False),
+    ("config.ini",            "config.ini",  False),
+    ("mods",                  "mods",        True),
+    ("data",                  "data",        True),
+    ("knowledge",             "knowledge",   True),
+    ("resources",             ".",           True),
 ]
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 def _merge_directory(src: str, dst: str, verbose: bool) -> None:
-    """合并源目录到目标目录 — 仅拷贝缺失的文件和子目录.
-
-    用于解决增量更新问题:旧版 EXE 已提取 mods/ 目录后,
-    新版 EXE 新增的模组子文件夹需要被拷贝进去.
-    """
+    """合并源目录到目标目录 — 仅拷贝缺失的文件和子目录."""
     if not os.path.isdir(src):
         return
     for name in os.listdir(src):
@@ -55,46 +54,52 @@ def _merge_directory(src: str, dst: str, verbose: bool) -> None:
         d = os.path.join(dst, name)
         if os.path.isdir(s):
             if not os.path.exists(d):
-                shutil.copytree(s, d)
+                try:
+                    shutil.copytree(s, d)
+                except (PermissionError, FileNotFoundError, OSError) as exc:
+                    if verbose:
+                        print(f"[bootstrap] WARN {name}: {exc}")
+                    continue
                 if verbose:
-                    print(f"[bootstrap] MERGE +dir → {os.path.relpath(d)}")
+                    print(f"[bootstrap] MERGE +dir -> {os.path.relpath(d)}")
             else:
-                _merge_directory(s, d, verbose)  # 递归合并
+                _merge_directory(s, d, verbose)
         else:
             if not os.path.exists(d):
-                shutil.copy2(s, d)
+                try:
+                    shutil.copy2(s, d)
+                except (PermissionError, FileNotFoundError, OSError) as exc:
+                    if verbose:
+                        print(f"[bootstrap] WARN {name}: {exc}")
+                    continue
                 if verbose:
-                    print(f"[bootstrap] MERGE +file → {os.path.relpath(d)}")
+                    print(f"[bootstrap] MERGE +file -> {os.path.relpath(d)}")
 
+
+def _safe_copy_file(src: str, dst: str) -> None:
+    """Copy a single file with retry for Windows file locks."""
+    for attempt in range(3):
+        try:
+            shutil.copy2(src, dst)
+            return
+        except PermissionError:
+            if attempt == 2:
+                raise
+            time.sleep(0.2)
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
 
 def extract_resources(force: bool = False, verbose: bool = True) -> int:
-    """Extract bundled resources from ``sys._MEIPASS`` to the current working
-    directory.
+    """Extract bundled resources to the current working directory.
 
-    In frozen mode (``getattr(sys, 'frozen', False)`` is truthy) this function
-    iterates *RESOURCE_MANIFEST* and, for every entry whose target does **not**
-    already exist (or when *force* is ``True``), copies the resource from the
+    In frozen mode iterates *RESOURCE_MANIFEST* and copies resources from the
     PyInstaller staging area into ``os.getcwd()``.
 
-    When running from source (non-frozen) the function returns ``0``
-    immediately — no copying is needed.
-
-    Parameters
-    ----------
-    force : bool
-        If ``True``, overwrite existing targets.  By default existing files and
-        directories are skipped.
-    verbose : bool
-        If ``True`` (the default), print progress to stdout.
-
-    Returns
-    -------
-    int
-        Number of resources that were actually copied (skipped items are not
-        counted).
+    Returns the number of resources actually copied.
     """
-
-    # -- Source-mode: nothing to do ------------------------------------------
     if not getattr(sys, "frozen", False):
         return 0
 
@@ -106,37 +111,25 @@ def extract_resources(force: bool = False, verbose: bool = True) -> int:
         src = os.path.join(meipass, src_subpath)
         dst = os.path.join(cwd, dst_subpath)
 
-        # -- Skip if target already exists (unless forced) -------------------
-        if os.path.exists(dst) and not force:
-            if is_dir:
-                # 目录已存在 → 合并模式: 仅拷贝缺失的子文件/子目录
-                _merge_directory(src, dst, verbose)
-            else:
+        if not os.path.exists(src):
+            if verbose:
+                print(f"[bootstrap] SKIP (not bundled): {src_subpath}")
+            continue
+
+        if is_dir:
+            _merge_directory(src, dst, verbose)
+            copied += 1
+        else:
+            if os.path.exists(dst) and not force:
                 if verbose:
                     print(f"[bootstrap] SKIP (already exists): {dst_subpath}")
-            continue
-
-        # -- Guard: source must exist inside MEIPASS -------------------------
-        if not os.path.exists(src):
-            print(f"[bootstrap] WARNING — source not found in MEIPASS: {src}")
-            continue
-
-        # -- Copy ------------------------------------------------------------
-        try:
-            if is_dir:
-                if os.path.exists(dst) and force:
-                    shutil.rmtree(dst)
-                shutil.copytree(src, dst)
-            else:
-                shutil.copy2(src, dst)
-
-            copied += 1
-            if verbose:
-                print(f"[bootstrap] OK  → {dst_subpath}")
-        except Exception:
-            import traceback
-
-            print(f"[bootstrap] ERROR copying {src_subpath}:")
-            traceback.print_exc()
+                continue
+            try:
+                _safe_copy_file(src, dst)
+                copied += 1
+                if verbose:
+                    print(f"[bootstrap] OK  -> {dst_subpath}")
+            except Exception as exc:
+                print(f"[bootstrap] ERROR {src_subpath}: {exc}")
 
     return copied

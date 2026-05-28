@@ -232,22 +232,45 @@ class ChuchenchiNode(NodeBase):
             "v_center": v_center,
         }
 
-        # ── 单池流量 ──
-        Q_single = flow.Q_design / n
-        Q_single_m3h = Q_single * 3600
+        # ── 调用向量化计算 (N=1) ──
+        grid = {
+            "n": np.array([n]),
+            "q_prime": np.array([q_prime]),
+            "T_settle": np.array([T_settle]),
+        }
+        fixed = {
+            "h1": h1,
+            "h3": h3,
+            "i_slope": i_slope,
+            "R1": R1,
+            "R2": R2,
+            "h5": h5,
+            "P_sludge": P_sludge,
+            "T_sludge": T_sludge,
+            "v_center": v_center,
+        }
+        r = self._vectorized_compute(grid, flow, quality, fixed)[0]
 
-        # ── (A) 沉淀面积 (3-27) ──
-        F = Q_single_m3h / q_prime
+        D = float(r["D"])
+        F_actual = float(r["F_actual"])
+        q_prime_actual = float(r["q_prime_actual"])
+        h2 = float(r["h2"])
+        ratio_Dh2 = float(r["ratio_Dh2"])
+        H = float(r["H_total"])
+        h4_rounded = float(r["h4"])
+        d_center = float(r["d_center"])
+        q_weir = float(r["q_weir"])
+        S_dry = float(r["S_dry"])
+        S_wet = float(r["S_wet"])
+        V_total_storage = float(r["V_total_storage"])
+        v_peripheral = float(r["v_peripheral"])
 
-        # ── (B) 直径 (3-28) ──
-        D_theory = math.sqrt(4 * F / PI)
-        D = math.ceil(D_theory / 0.5) * 0.5
+        H_rounded = math.ceil(H / 0.1) * 0.1
+        V_sludge = S_wet * T_sludge
+        weir_len = 2.0 * PI * (D - 1.0)
+
+        # ── 校核 ──
         result.add_check("池径 D>=16", D >= 16, round(D, 1), ">= 16", "m")
-
-        F_actual = PI * D**2 / 4
-        q_prime_actual = Q_single_m3h / F_actual
-
-        # ── 校核表面负荷 (3-30) ──
         result.add_check(
             "实际表面负荷 q'",
             1.5 <= q_prime_actual <= 3.0,
@@ -255,39 +278,10 @@ class ChuchenchiNode(NodeBase):
             "1.5~3.0",
             "m³/(m²·h)",
         )
-
-        # ── (C) 有效水深 (3-31) ──
-        h2 = q_prime_actual * T_settle
-        ratio_Dh2 = D / h2 if h2 > 0 else 0
-
         result.add_check("有效水深 h2", 2.0 <= h2 <= 4.0, round(h2, 2), "2.0~4.0", "m")
         result.add_check(
             "径深比 D/h2", 6 <= ratio_Dh2 <= 12, round(ratio_Dh2, 2), "6~12", ""
         )
-
-        # ── (D) 污泥计算 (3-33)~(3-36) — 全按单池 ──
-        SS_in = quality.SS  # mg/L
-        removal_ss = self._removal_rates.get("SS", 0.50)
-        SS_out = SS_in * (1 - removal_ss)
-
-        S_dry = flow.Q_avg_daily * (SS_in - SS_out) / 1000.0 / n  # kg/d (单池)
-        S_wet = S_dry / ((1 - P_sludge) * 1000.0)  # m³/d (单池)
-        V_sludge = S_wet * T_sludge  # m³ (单池, T_sludge单位: d)
-
-        # ── (E) 泥斗 ──
-        R = D / 2.0  # 池半径
-
-        # 中心泥斗容积 (3-38)
-        V1 = PI * h5 / 3 * (R1**2 + R1 * R2 + R2**2)
-
-        # 池底坡降 (3-40)
-        h4 = i_slope * (R - R1)
-        h4_rounded = math.ceil(h4 / 0.1) * 0.1
-
-        # 坡降部分容积 (3-41)
-        V2 = PI * h4_rounded / 3 * (R**2 + R * R1 + R1**2)
-
-        V_total_storage = V1 + V2
         result.add_check(
             "污泥区容积足够",
             V_total_storage >= V_sludge,
@@ -299,31 +293,13 @@ class ChuchenchiNode(NodeBase):
             result.add_warning(
                 f"污泥区容积不足: {V_total_storage:.1f} < {V_sludge:.1f} m³"
             )
-
-        # ── (F) 出水堰 (3-44)~(3-48) ──
-        # 双侧堰 (内外各一圈), 有效堰长翻倍
-        weir_len = 2.0 * PI * (D - 1.0)
-        q_weir = Q_single * 1000.0 / weir_len  # L/(s·m)
         result.add_check("堰负荷", q_weir <= 2.9, round(q_weir, 2), "<= 2.9", "L/(s·m)")
-
-        # ── (G) 中心管 (3-50) ──
-        d_center_theory = math.sqrt(4 * Q_single / (PI * v_center))
-        d_center = math.ceil(d_center_theory / 0.1) * 0.1
-
-        # ── (H) 总高度 (3-52) ──
-        H = h1 + h2 + h3 + h4_rounded + h5
-        H_rounded = math.ceil(H / 0.1) * 0.1
-
-        # ── (I) 排泥周期约束 (GB50014 §6.5.7: 排泥周期宜为 1~2d) ──
         result.add_check("排泥周期 T_sludge", 1 <= T_sludge <= 2, T_sludge, "1~2", "d")
-
-        # ── 刮泥机线速 ──
-        v_peripheral = PI * D * 1.0 / 60.0  # m/min (1 r/h)
         result.add_check(
             "刮泥机线速", v_peripheral <= 3.0, round(v_peripheral, 2), "<= 3.0", "m/min"
         )
 
-        # ── 组装结果 ──
+        # ── 尺寸 ──
         result.add_dimension("池数", n, "座")
         result.add_dimension("池径 D", D, "m")
         result.add_dimension("沉淀面积 F", round(F_actual, 1), "m²")
@@ -394,12 +370,16 @@ class ChuchenchiNode(NodeBase):
         ok_D = D >= 16
 
         F_actual = PI_V * D**2 / 4
-        q_prime_actual = np.where(F_actual > 0, Q_single_m3h / F_actual, 0.0)
+        q_prime_actual = np.divide(Q_single_m3h, F_actual,
+                                   where=F_actual > 0,
+                                   out=np.full_like(Q_single_m3h, 0.0, dtype=np.float64))
         ok_q = (1.5 <= q_prime_actual) & (q_prime_actual <= 3.0)
 
         # 有效水深
         h2 = q_prime_actual * T_settle
-        ratio_Dh2 = np.where(h2 > 0, D / h2, 0.0)
+        ratio_Dh2 = np.divide(D, h2,
+                              where=h2 > 0,
+                              out=np.full_like(D, 0.0, dtype=np.float64))
         ok_h2 = (2.0 <= h2) & (h2 <= 4.0)
         ok_Dh2 = (6 <= ratio_Dh2) & (ratio_Dh2 <= 12)
 

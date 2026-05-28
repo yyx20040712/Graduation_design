@@ -105,4 +105,4 @@ class TestLocateFlow:
         main_window._on_locate_flow()
         main_window.update_idletasks()
         status = main_window.status_var.get()
-        assert "视野已重置" in status, f"状态栏消息不正确: {status}"
+        assert "自动布局完成" in status, f"状态栏消息不正确: {status}"

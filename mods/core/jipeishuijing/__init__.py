@@ -107,36 +107,42 @@ class JipeishuijingNode(NodeBase):
 
     def calculate(self, flow: WaterFlow, quality: WaterQuality) -> NodeResult:
         n_out = int(self.get_param("n_out"))
-        h_weir = self.get_param("h_weir")
         h_eff = self.get_param("h_eff")
-        h_super = self.get_param("h_super")
         HRT = self.get_param("HRT")
-        Q_max = flow.Q_design_as("m3/h")
-        V = Q_max * HRT / 60.0
-        A = V / h_eff if h_eff > 0 else 0
-        L = math.sqrt(A)
-        B = L
-        H_total = h_eff + h_super
+
+        grid = {
+            "n_out": np.array([n_out], dtype=np.float64),
+            "HRT": np.array([HRT]),
+            "h_eff": np.array([h_eff]),
+        }
+
+        fixed = {
+            "h_super": self.get_param("h_super"),
+        }
+
+        r = type(self)._vectorized_compute(grid, flow, quality, fixed)
+        d = r[0]
+
         result = NodeResult(success=True)
         result.params = {
             "n_out": n_out,
-            "h_weir": h_weir,
+            "h_weir": self.get_param("h_weir"),
             "h_eff": h_eff,
-            "h_super": h_super,
+            "h_super": self.get_param("h_super"),
             "HRT": HRT,
         }
         result.add_dimension("出水方向数", n_out, "个")
-        result.add_dimension("堰上水头", h_weir, "m")
-        result.add_dimension("有效容积 V", round(V, 2), "m3")
-        result.add_dimension("池长 L", round(L, 2), "m")
-        result.add_dimension("池宽 B", B, "m")
-        result.add_dimension("总高度 H", round(H_total, 2), "m")
+        result.add_dimension("堰上水头", self.get_param("h_weir"), "m")
+        result.add_dimension("有效容积 V", round(float(d["V"]), 2), "m3")
+        result.add_dimension("池长 L", round(float(d["L"]), 2), "m")
+        result.add_dimension("池宽 B", d["B"], "m")
+        result.add_dimension("总高度 H", round(float(d["H_total"]), 2), "m")
         result.add_dimension("有效水深", h_eff, "m")
         result.add_check(
-            "水力停留时间 3~15 min", 3.0 <= HRT <= 15.0, round(HRT, 1), "3~15", "min"
+            "水力停留时间 3~15 min", bool(d["ok_HRT"]), round(float(d["val_HRT"]), 1), "3~15", "min"
         )
         result.add_check(
-            "有效水深 2.0~5.0 m", 2.0 <= h_eff <= 5.0, round(h_eff, 1), "2.0~5.0", "m"
+            "有效水深 2.0~5.0 m", bool(d["ok_h_eff"]), round(float(d["val_h_eff"]), 1), "2.0~5.0", "m"
         )
         return result
 

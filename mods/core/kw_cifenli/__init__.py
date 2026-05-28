@@ -199,38 +199,46 @@ class KwCifenliNode(NodeBase):
             "delta_top": delta_top,
         }
 
-        # ── (4-44) 单台设计流量 ──
         Q_total_m3h = flow.Q_design * 3600  # m³/h (总)
         Q_1_m3h = Q_total_m3h / N_units  # m³/h (单台)
-        Q_1_m3s = Q_1_m3h / 3600  # m³/s (单台)
 
-        # ── (4-45) 所需总吸附面积 → 反推盘数 ──
-        # q_design = Q₁ / A_total → A_total = Q₁ / q_design
-        A_total_needed = Q_1_m3h / q_design if q_design > 0 else 0  # m²
-        # 单片有效面积: A_per_disk = 2 × πD²/4 × η_immerse (双面)
-        A_per_disk = 2 * PI * D_disk**2 / 4 * eta_immerse
-        n_disks_calc = A_total_needed / A_per_disk if A_per_disk > 0 else 0
-        # 按停留时间 30s 所需最小盘数: t_disk = (n-1)×π²D²δη / Q₁ ≥ 30
-        n_disks_stay = (
-            30 * Q_1_m3s / (PI**2 * D_disk**2 * delta * eta_immerse) + 1
-            if (D_disk > 0 and delta > 0 and eta_immerse > 0)
-            else 0
-        )
-        n_disks = max(
-            9, math.ceil(n_disks_calc), math.ceil(n_disks_stay)
-        )  # 同时满足表面负荷和停留时间
+        # ── 委托向量化计算 (N=1) ──
+        grid = {
+            "N_units": np.array([N_units]),
+            "D_disk": np.array([D_disk]),
+            "delta": np.array([delta]),
+            "eta_immerse": np.array([eta_immerse]),
+            "q_design": np.array([q_design]),
+        }
+        fixed = {
+            "omega": omega,
+            "eta_SS": eta_SS_user,
+            "P_sludge": P_sludge,
+            "rho_sludge": rho_sludge,
+            "delta_end": delta_end,
+            "delta_side": delta_side,
+            "delta_bottom": delta_bottom,
+            "delta_top": delta_top,
+        }
+        vec = self._vectorized_compute(grid, flow, quality, fixed)[0]
 
-        A_total = n_disks * A_per_disk  # 实际总吸附面积
+        n_disks = int(vec["n_disks"])
+        A_total = float(vec["A_total"])
+        A_channel = float(vec["A_channel"])
+        L_channel = float(vec["L_channel"])
+        t_disk = float(vec["t_disk"])
+        v_disk = float(vec["v_disk"])
+        q_actual = float(vec["q_actual"])
+        v_line = float(vec["v_line"])
+        W_SS = float(vec["W_SS"])
+        V_sludge = float(vec["V_sludge"])
+        L_machine = float(vec["L_machine"])
+        B_machine = float(vec["B_machine"])
+        H_machine = float(vec["H_machine"])
+        S_machine = float(vec["S_machine"])
+        P_total = float(vec["P_total"])
 
-        # ── (4-46)(4-47) 流道过流断面面积 ──
-        # A_channel_single ≈ π × D × δ (单片流道)
-        A_channel = (n_disks - 1) * PI * D_disk * delta  # m²
-
-        # ── (4-48) 流道有效长度 ──
-        L_channel = eta_immerse * PI * D_disk  # m (浸没弧长)
-
-        # ── (4-49) 流道停留时间 ──
-        t_disk = A_channel * L_channel / Q_1_m3s if Q_1_m3s > 0 else 0  # s
+        # ── 校核 ──
         result.add_check(
             "流道停留时间 30~60s", 30 <= t_disk <= 60, round(t_disk, 1), "30~60", "s"
         )
@@ -239,16 +247,12 @@ class KwCifenliNode(NodeBase):
         elif t_disk > 60:
             result.add_warning(f"停留时间 {t_disk:.0f}s > 60s,设备利用率偏低")
 
-        # ── (4-50) 流道流速校核 ──
-        v_disk = Q_1_m3s / A_channel if A_channel > 0 else 0  # m/s
         result.add_check(
             "流道流速 ≤ 0.10 m/s", v_disk <= 0.10, round(v_disk, 3), "≤ 0.10", "m/s"
         )
         if v_disk > 0.10:
             result.add_warning(f"流道流速 {v_disk:.3f}m/s > 0.10,建议增加盘数")
 
-        # ── (4-51) 表面水力负荷校核 ──
-        q_actual = Q_1_m3h / A_total if A_total > 0 else 0
         result.add_check(
             "表面负荷 20~40 m³/(m²·h)",
             20 <= q_actual <= 40,
@@ -259,30 +263,9 @@ class KwCifenliNode(NodeBase):
         if q_actual > 40:
             result.add_warning(f"表面负荷 {q_actual:.0f} > 40,建议增加盘数或盘径")
 
-        # ── (4-52) 磁盘外缘线速度 ──
-        v_line = PI * D_disk * omega / 60  # m/s
         result.add_check(
             "外缘线速度 ≤ 0.30 m/s", v_line <= 0.30, round(v_line, 3), "≤ 0.30", "m/s"
         )
-
-        # ── (4-53) 干固体去除量 ──
-        C0 = quality.SS  # mg/L (进水SS)
-        W_SS = flow.Q_avg_daily * C0 * eta_SS_user / 1e6  # t/d
-
-        # ── (4-54) 湿污泥体积 ──
-        V_sludge = W_SS / ((1 - P_sludge) * rho_sludge) if P_sludge < 1 else 0  # m³/d
-
-        # ── (4-55)~(4-58) 设备外形尺寸 ──
-        L_machine = n_disks * delta + 2 * delta_end  # m (轴向)
-        B_machine = D_disk + 2 * delta_side  # m (宽度)
-        H_machine = D_disk + delta_bottom + delta_top  # m (高度)
-        S_machine = L_machine * B_machine  # m² (占地面积)
-
-        # ── (4-59) 装机功率估算 ──
-        # 主传动: 流体阻力+轴承摩擦+盘面夹带提升
-        P_main = 0.5 + 0.02 * n_disks  # kW (经验估算)
-        P_scraper = 0.9  # kW (刮渣机构)
-        P_total = P_main + P_scraper
 
         # ── 组装结果 ──
         result.add_dimension(

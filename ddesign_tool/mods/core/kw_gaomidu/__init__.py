@@ -1,6 +1,5 @@
 """矿井水高密度沉淀池 — 混凝絮凝沉淀一体化高效工艺"""
 
-import math
 from typing import Dict, List
 import numpy as np
 from models.base import (
@@ -138,7 +137,6 @@ class KwGaomiduNode(NodeBase):
         h_clear = self.get_param("h_clear")
         h_dist = self.get_param("h_dist")
         h_super = self.get_param("h_super")
-        h_thicken = 0.5
 
         result = NodeResult(success=True)
         result.params = {
@@ -153,22 +151,38 @@ class KwGaomiduNode(NodeBase):
             "h_super": h_super,
         }
 
-        Q_single = flow.Q_design / n
-        Q_single_m3h = Q_single * 3600
-        V_mix = Q_single * t_mix * 60.0
-        V_floc = Q_single * t_floc * 60.0
-        A_settle = Q_single_m3h / q_surf
-        sin_alpha = math.sin(math.radians(alpha_tube))
-        v_axial = q_surf / (3600.0 * sin_alpha)
+        grid = {
+            "n": np.array([n], dtype=np.int32),
+            "t_mix": np.array([t_mix]),
+            "t_floc": np.array([t_floc]),
+            "q_surf": np.array([q_surf]),
+        }
+        fixed = {
+            "alpha_tube": alpha_tube,
+            "h_clear": h_clear,
+            "h_dist": h_dist,
+            "h_super": h_super,
+            "L_tube": L_tube,
+        }
+
+        r = self._vectorized_compute(grid, flow, quality, fixed)
+
+        V_mix = r["V_mix"][0]
+        V_floc = r["V_floc"][0]
+        A_settle = r["A_settle"][0]
+        L_pool = r["L_pool"][0]
+        B_pool = r["B_pool"][0]
+        v_axial = r["v_axial"][0]
+        H_total = r["H_total"][0]
+
         result.add_check(
-            "斜管轴向流速 < 5mm/s", v_axial < 0.005, round(v_axial, 4), "< 0.005", "m/s"
+            "斜管轴向流速 < 5mm/s",
+            bool(r["ok_axial_v"][0]),
+            round(v_axial, 4),
+            "< 0.005",
+            "m/s",
         )
-        LB_ratio = 1.5
-        B_pool = math.ceil(math.sqrt(A_settle / LB_ratio) / 0.5) * 0.5
-        L_pool = math.ceil(A_settle / B_pool / 0.5) * 0.5
-        h_tube_vert = L_tube * sin_alpha
-        H_total = h_super + h_clear + h_dist + h_thicken + h_tube_vert
-        H_rounded = math.ceil(H_total / 0.1) * 0.1
+
         result.add_dimension("池数", n, "座")
         result.add_dimension("混合区容积", round(V_mix, 1), "m³")
         result.add_dimension("絮凝区容积", round(V_floc, 1), "m³")
@@ -176,7 +190,8 @@ class KwGaomiduNode(NodeBase):
         result.add_dimension("池长 L", L_pool, "m")
         result.add_dimension("池宽 B", B_pool, "m")
         result.add_dimension("斜管轴向流速", round(v_axial, 4), "m/s")
-        result.add_dimension("总高度", H_rounded, "m")
+        result.add_dimension("总高度", H_total, "m")
+
         return result
 
     @classmethod

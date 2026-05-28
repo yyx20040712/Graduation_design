@@ -54,6 +54,11 @@ class WuniHebingNode(NodeBase):
         return {}
 
     def calculate(self, flow, quality) -> NodeResult:
+        import numpy as np
+
+        grid, fixed = self._make_scalar_grid({}, {})
+        grid["_dummy"] = np.array([1.0])
+        self._vectorized_compute(grid, flow, quality, fixed)
         return NodeResult(success=True)
 
     def execute_sludge(

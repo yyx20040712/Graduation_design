@@ -840,6 +840,11 @@ class GraphExecutor:
 
 # ── 节点工厂(用于反序列化)──
 
+# 向后兼容: v5.4 之前 wuni_tisheng 更名为 wushui_tisheng
+_COMPAT_NODE_TYPES = {
+    "wuni_tisheng": "wushui_tisheng",
+}
+
 # 基础设施节点的 from_dict 映射(非模组节点)
 _INFRA_FACTORY = {
     "input_node": "models.input_node.InputNode",
@@ -858,8 +863,11 @@ def default_node_factory(node_type: str, node_dict: Dict) -> Optional[NodeBase]:
     """
     from models.node_registry import resolve_class
 
+    # 0. 向后兼容别名
+    resolved_type = _COMPAT_NODE_TYPES.get(node_type, node_type)
+
     # 1. 统一注册表
-    node_cls = resolve_class(node_type)
+    node_cls = resolve_class(resolved_type)
     if node_cls is not None:
         try:
             return node_cls.from_dict(node_dict)
@@ -868,8 +876,8 @@ def default_node_factory(node_type: str, node_dict: Dict) -> Optional[NodeBase]:
             _log.warning("from_dict failed for %s, trying fallback", node_type)
 
     # 2. 基础设施节点
-    if node_type in _INFRA_FACTORY:
-        parts = _INFRA_FACTORY[node_type].rsplit(".", 1)
+    if resolved_type in _INFRA_FACTORY:
+        parts = _INFRA_FACTORY[resolved_type].rsplit(".", 1)
         import importlib
 
         try:

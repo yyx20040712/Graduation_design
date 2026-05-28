@@ -49,10 +49,51 @@ def get_data_dir() -> str:
 
 
 def get_mods_dir() -> str:
-    """获取模组目录 (mods/)"""
+    """获取模组目录 (mods/)
+
+    优先级:
+      1. DDESIGN_MODS_PATH 环境变量 (自定义路径)
+      2. 项目根目录 mods/ (开发模式, 与测试共享同一目录)
+      3. ddesign_tool/mods/ (回退, 兼容旧布局)
+      4. PyInstaller: os.getcwd()/mods
+    """
+    env_path = os.environ.get("DDESIGN_MODS_PATH", "")
+    if env_path and os.path.isdir(env_path):
+        return env_path
+
     if is_frozen():
         return os.path.join(os.getcwd(), "mods")
+
+    # 开发模式: 优先使用项目根目录的 mods/
+    project_root = os.path.abspath(os.path.join(get_app_root(), ".."))
+    root_mods = os.path.join(project_root, "mods")
+    if os.path.isdir(root_mods):
+        return root_mods
+
     return os.path.join(get_app_root(), "mods")
+
+
+def get_mods_search_paths() -> list:
+    """返回所有可能的模组搜索路径 (用于多目录扫描)
+
+    按优先级排序: 首个路径为主目录, 后续为回退路径.
+    """
+    primary = get_mods_dir()
+    paths = [primary]
+
+    # 如果主路径不是 ddesign_tool/mods/, 将其加入回退
+    app_mods = os.path.join(get_app_root(), "mods")
+    if os.path.isdir(app_mods) and os.path.abspath(app_mods) != os.path.abspath(primary):
+        paths.append(app_mods)
+
+    # 如果主路径不是项目根目录 mods/, 将其加入回退
+    project_root = os.path.abspath(os.path.join(get_app_root(), ".."))
+    root_mods = os.path.join(project_root, "mods")
+    if os.path.isdir(root_mods) and os.path.abspath(root_mods) != os.path.abspath(primary):
+        if os.path.abspath(root_mods) != os.path.abspath(app_mods):
+            paths.append(root_mods)
+
+    return paths
 
 
 def get_config_path() -> str:
@@ -103,10 +144,15 @@ def get_projects_dir() -> str:
 
 
 def setup_import_paths() -> None:
-    """将 src/ 添加到 sys.path, 确保所有模块可导入"""
+    """将 src/ 和项目根目录添加到 sys.path, 确保所有模块可导入"""
     src = get_src_dir()
     if src not in sys.path:
         sys.path.insert(0, src)
     app = get_app_root()
     if app not in sys.path:
         sys.path.insert(0, app)
+    # 项目根目录: 使 mods/ 模块可被 from mods.xxx import 找到
+    project_root = os.path.abspath(os.path.join(app, ".."))
+    if os.path.isdir(os.path.join(project_root, "mods")):
+        if project_root not in sys.path:
+            sys.path.insert(0, project_root)

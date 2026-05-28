@@ -182,18 +182,15 @@ class TestConstraintSelfConsistency:
         "tiaojiechi": {"n": 4, "HRT": 8, "h_eff": 4.5},
         "cugeshan": {"n": 3, "b": 65, "alpha": 75, "v": 0.8},
         "xigeshan": {"n": 3, "b": 20, "alpha": 60, "v": 0.8},
-        "chenshachi": {"HRT": 1.0, "h_eff": 1.5},
+        "chenshachi": {"n": 4, "q_surf": 90, "t": 50, "B_channel": 0.6, "v_channel": 0.8},
         "chuchenchi": {"HRT": 2.0, "h_eff": 3.0, "n": 2},
-        "cass": {"n": 6, "H_max": 5.0, "theta_c": 20, "Tc": 6, "lam": 0.3},
+        "cass": {"n": 10, "H_max": 5.5, "lam": 0.25, "theta_c": 20, "Tc": 6},
         "gaomidu": {"n": 4, "HRT": 2.0, "h_eff": 4.5},
         "vxinglvchi": {"n": 6, "v": 8.0, "h_media": 1.2},
         "ziwai": {"N_layer": 6, "n_lamp": 8, "P_lamp": 250},
     }
     # 已知有约束 bug 的模组 — 单独测试，不要求全部通过
-    KNOWN_BUG_MODS = {
-        "chenshachi": "默认 h_eff=2.5 时 h2=2.25 超限 1.0~2.0, D/h2=1.2 低于 2.0~2.5",
-        "cass": "默认 ratio_LB=2.0 时 L/B=10.5 超限 4~6, 出水偏差 20% > 15%",
-    }
+    KNOWN_BUG_MODS = {}
 
     @pytest.mark.parametrize("node_type,params", RECOMMENDED_PARAMS.items())
     def test_all_constraints_pass_with_recommended_params(self, node_type, params):

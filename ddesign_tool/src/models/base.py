@@ -552,8 +552,17 @@ class NodeResult:
                       若为 None,自动从 DIM_CATEGORIES 查找
             scope: 作用域标记 ("single"|"total"|"per_unit").
                    用于渲染时添加 [单池]/[总] 等前缀
+        v5.4: 强制转换为 Python 原生类型, 防止 numpy 类型
+              在 json.dump 时抛出 TypeError.
         """
-        self.dimensions[name] = (value, unit)
+        # 转换 numpy 标量为 Python 原生类型
+        try:
+            val = float(value)
+            if val == int(val) and not isinstance(value, float):
+                val = int(val)
+        except (TypeError, ValueError):
+            val = value
+        self.dimensions[name] = (val, unit)
         if scope:
             self.dimension_scopes[name] = scope
         # 公式自动回退（v5.3: 模块级导入，消除懒加载开销）
@@ -579,20 +588,32 @@ class NodeResult:
             actual: 实际值
             limit: 限值描述(如 "6~12")
             unit: 单位
+
+        v5.4: 强制转换为 Python 原生类型, 防止 numpy.bool_/int32 等
+              在 json.dump 时抛出 TypeError.
         """
-        self.checks[name] = (passed, actual, limit, unit)
+        self.checks[name] = (
+            bool(passed),
+            float(actual) if actual is not None else 0.0,
+            str(limit),
+            str(unit),
+        )
 
     # ═══════════════ 节点管理 ═══════════════
     def add_warning(self, msg: str) -> None:
-        """添加警告"""
-        self.warnings.append(msg)
+        """添加警告 (v5.4: 自动去重, 相同消息只保留一条)"""
+        if msg not in self.warnings:
+            self.warnings.append(msg)
 
     def to_dict(self) -> Dict[str, Any]:
         result = {
             "success": self.success,
             "params": self.params,
             "dimensions": {k: list(v) for k, v in self.dimensions.items()},
-            "checks": {k: list(v) for k, v in self.checks.items()},
+            "checks": {
+                k: [bool(v[0]), float(v[1]), str(v[2]), str(v[3])]
+                for k, v in self.checks.items()
+            },
             "warnings": self.warnings,
             "error_msg": self.error_msg,
             "removal_rates": self.removal_rates,
@@ -796,7 +817,27 @@ class NodeBase(ParamMixin, SludgeMixin):
             f"{cls.NODE_NAME}({cls.NODE_TYPE}) 未实现 _vectorized_compute()"
         )
 
-    @classmethod
+    # ═══════════════ 事件回调 ═══════════════
+    @staticmethod
+    def _make_scalar_grid(
+        free_params: dict, fixed_params: dict
+    ) -> tuple:
+        """将标量参数转换为向量化兼容的 grid/fixed 字典.
+
+        用于 calculate() 通过 _vectorized_compute(N=1) 实现,
+        消除标量/向量化双路径不一致.
+
+        Args:
+            free_params: {key: scalar_value}  自由变量
+            fixed_params: {key: scalar_value}  固定参数
+
+        Returns:
+            (grid, fixed) — grid 中每个值为 shape (1,) 的 numpy 数组
+        """
+        import numpy as np
+
+        grid = {k: np.array([v]) for k, v in free_params.items()}
+        return grid, dict(fixed_params)
 
     # ═══════════════ 事件回调 ═══════════════
     def get_solution_space(cls, flow: "WaterFlow", quality: "WaterQuality") -> "List":

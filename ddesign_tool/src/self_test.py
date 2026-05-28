@@ -360,17 +360,15 @@ class SelfTestRunner:
                 errors.append(f"WQ_INDICATORS: {len(WQ_INDICATORS)} != 6")
         except Exception as e:
             errors.append(f"QualityPanel: {e}")
-        # main_window.py 标签存在 (仅在源码环境中检查)
+        # ResultPanel Treeview 标签 (运行时导入, 不依赖源文件 grep)
+        # v5.4: 标签定义在 result_panel.RESULT_TREE_TAGS, 自检直接验证常量
         try:
-            fp = os.path.join(os.path.dirname(__file__), "ui", "main_window.py")
-            if os.path.exists(fp):
-                with open(fp, encoding="utf-8") as f:
-                    content = f.read()
-                for tag in ["section_banner", "formula_sub"]:
-                    if tag not in content:
-                        errors.append(f"缺少标签: {tag}")
-        except Exception:
-            pass  # 打包后无源文件, 跳过
+            from ui.result_panel import RESULT_TREE_TAGS
+            for tag in ["section_banner", "formula_sub"]:
+                if tag not in RESULT_TREE_TAGS:
+                    errors.append(f"ResultPanel 缺少标签常量: {tag}")
+        except Exception as e:
+            errors.append(f"ResultPanel 标签检查失败: {e}")
         if errors:
             return TestResult(name="UI 面板契约", passed=False,
                               message=f"{len(errors)} 个失败", detail="\n".join(errors))

@@ -284,25 +284,59 @@ class KwTiaojiechiNode(NodeBase):
             "d_coal": d_coal,
         }
 
-        # ── (4-2) 单池设计流量与有效容积 ──
-        Q_avg_h = flow.Q_avg_hourly  # m³/h
-        Q_per_pool = Q_avg_h / n  # m³/h (单池)
-        V_eff = Q_per_pool * HRT * k  # m³ (单池有效容积)
+        # ── 向量化计算 (N=1) ──
+        grid = {
+            "n": np.array([n], dtype=np.int32),
+            "HRT": np.array([HRT]),
+            "h_eff": np.array([h_eff]),
+            "ratio_LB": np.array([ratio_LB]),
+        }
+        fixed = {
+            "k": k,
+            "h_super": h_super,
+            "h_pit": h_pit,
+            "P_density": P_density,
+            "slope": slope,
+            "P_sludge": P_sludge,
+            "T_sludge": T_sludge,
+            "rho_sludge": rho_sludge,
+            "v_out": v_out,
+            "rho_coal": rho_coal,
+            "d_coal": d_coal,
+        }
+        vec = self._vectorized_compute(grid, flow, quality, fixed)
+        r = vec[0]
 
-        # ── (4-3) 有效面积 ──
-        A_eff = V_eff / h_eff if h_eff > 0 else 0  # m²
+        L = float(r["L"])
+        B = float(r["B"])
+        V_actual = float(r["V_actual"])
+        V_total = float(r["V_total"])
+        H_total = float(r["H_total"])
+        H_rounded = math.ceil(H_total / 0.1) * 0.1
+        HRT_actual = float(r["HRT_actual"])
+        ratio_actual = float(r["ratio_actual"])
+        P_total_kW = float(r["P_kW"])
+        Q_per_pool = float(r["Q_per_pool"])
+        dry_sludge_t_d = float(r["dry_sludge"])
+        wet_sludge_m3_d = float(r["wet_sludge"])
+        V_sludge_needed = float(r["V_sludge_needed"])
+        V_pit_available = float(r["V_pit_available"])
+        u_s_mm_s = float(r["u_s_mm_s"])
+        D_out_mm_val = float(r["D_out_mm"])
+        q_weir = float(r["q_weir"])
+        area_total = float(r["area_total"])
+        concrete_m3 = float(r["concrete_m3"])
 
-        # ── (4-4) 平面尺寸 ──
-        B_theory = math.sqrt(A_eff / ratio_LB)
-        L_theory = ratio_LB * B_theory
-        B = math.ceil(max(B_theory, 1.0) / 0.5) * 0.5
-        L = math.ceil(max(L_theory, B) / 0.5) * 0.5
+        ok_LB = bool(r["ok_LB_ratio"])
+        ok_HRT = bool(r["ok_HRT_actual"])
+        ok_pit = bool(r["ok_pit_vol"])
+        ok_weir = bool(r["ok_weir_load"])
 
-        # ── 取整后校核 ──
-        V_actual = L * B * h_eff  # m³ (单池实际)
-        HRT_actual = V_actual / (Q_per_pool * k) if Q_per_pool > 0 else 0  # h
-        ratio_actual = L / B
+        Q_out_m3s = flow.Q_avg_hourly / 3600.0
+        D_out_m = D_out_mm_val / 1000.0
+        v_out_actual = Q_out_m3s / (math.pi * D_out_m**2 / 4) if D_out_m > 0 else 0
 
+        # ── 校核 ──
         result.add_check(
             "长宽比 L/B", 2.0 <= ratio_actual <= 4.0, round(ratio_actual, 2), "2~4", ""
         )
@@ -314,70 +348,23 @@ class KwTiaojiechiNode(NodeBase):
                 f"实际 HRT={HRT_actual:.1f}h 超出 6~12h 范围,建议调整池体尺寸"
             )
 
-        # ── (4-5) 总高度 ──
-        H_total = h_eff + h_super + h_pit
-        H_rounded = math.ceil(H_total / 0.1) * 0.1
-
-        # ── (4-6) 煤泥产量 ──
-        SS_in = quality.SS  # mg/L
-        eta_SS = self._removal_rates.get("SS", 0.30)
-        dry_sludge_t_d = flow.Q_avg_daily * SS_in * eta_SS / 1e6  # t/d (4-6)
-        # ── (4-7) 湿泥体积 ──
-        wet_sludge_m3_d = (
-            dry_sludge_t_d / ((1 - P_sludge) * rho_sludge) if P_sludge < 1 else 0
-        )
-        # ── (4-8) 贮泥容积需求 ──
-        V_sludge_needed = wet_sludge_m3_d * T_sludge  # m³
-
-        # ── 积泥坑容积估算 (三角形断面近似) ──
-        # 积泥坑位于池底深端,由池底坡度形成
-        # V_pit ≈ B × h_pit² / (2 × slope)
-        V_pit_available = B * h_pit**2 / (2 * slope) if slope > 0 else 0
-        pit_ok = V_pit_available >= V_sludge_needed
         result.add_check(
             "积泥坑容积足够",
-            pit_ok,
+            ok_pit,
             round(V_pit_available, 2),
             f">= {round(V_sludge_needed, 2)}",
             "m³",
         )
-        if not pit_ok:
+        if not ok_pit:
             result.add_warning(
                 f"积泥坑容积不足: {V_pit_available:.1f}m³ < {V_sludge_needed:.1f}m³,"
                 f"建议增大 h_pit 或缩短排泥周期"
             )
 
-        # ── 搅拌总功率 ──
-        V_total = V_actual * n
-        P_total = P_density * V_total  # W
-        P_total_kW = math.ceil(P_total / 100) / 10  # 向上取整 0.1kW
-
-        # ── (4-1) Stokes 沉降速度 ──
-        d_m = d_coal / 1000.0  # mm → m
-        u_s = GRAVITY * (rho_coal - RHO_WATER) * d_m**2 / (18 * MU_WATER)  # m/s
-        u_s_mm_s = u_s * 1000  # mm/s
-
-        # ── (4-9)(4-10) 出水系统 ──
-        Q_out_m3s = Q_avg_h / 3600.0
-        if v_out > 0:
-            D_out_theory = math.sqrt(4 * Q_out_m3s / (math.pi * v_out))
-        else:
-            D_out_theory = 0
-        D_out_mm = round(
-            math.ceil(max(D_out_theory, 0.1) / 0.05) * 0.05 * 1000
-        )  # m → mm
-        D_out_m = D_out_mm / 1000.0
-        v_out_actual = Q_out_m3s / (math.pi * D_out_m**2 / 4) if D_out_m > 0 else 0
-
-        # ── 堰口负荷校核 ──
-        # 双侧出水堰: 堰长 = 2 × B (两端出水)
-        Q_per_pool_Ls = Q_per_pool * 1000 / 3600  # L/s
-        q_weir = Q_per_pool_Ls / (2 * B) if B > 0 else 0
-        weir_ok = q_weir <= 2.9
         result.add_check(
-            "堰口负荷 ≤ 2.9 L/(s·m)", weir_ok, round(q_weir, 2), "≤ 2.9", "L/(s·m)"
+            "堰口负荷 ≤ 2.9 L/(s·m)", ok_weir, round(q_weir, 2), "≤ 2.9", "L/(s·m)"
         )
-        if not weir_ok:
+        if not ok_weir:
             result.add_warning(
                 f"堰口负荷 {q_weir:.1f} L/(s·m) > 2.9,建议增加池数或增设出水堰"
             )
@@ -499,7 +486,7 @@ class KwTiaojiechiNode(NodeBase):
         )
         result.add_dimension(
             "出水管径 D_out",
-            D_out_mm,
+            int(round(D_out_mm_val)),
             "mm",
             formula="D_out = √(4Q/(π·v_out))",
             category="physical",
@@ -521,10 +508,10 @@ class KwTiaojiechiNode(NodeBase):
 
         # 概算用
         result.add_dimension(
-            "调节池总面积", round(L * B * n, 1), "m²", category="physical"
+            "调节池总面积", round(area_total, 1), "m²", category="physical"
         )
         result.add_dimension(
-            "混凝土量估算", round(V_total * 1.2, 1), "m³", category="physical"
+            "混凝土量估算", round(concrete_m3, 1), "m³", category="physical"
         )
 
         return result

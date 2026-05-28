@@ -1,7 +1,6 @@
 """gdys_stss.py — 管道运输水头损失 (Pipe Head Loss)"""
 
 from __future__ import annotations
-import math
 from typing import Dict, List, Tuple
 import numpy as np
 from models.base import (
@@ -82,45 +81,38 @@ class GdysStssNode(NodeBase):
         Q_m3s = self.get_param("Q_manual")
         L = self.get_param("L_pipe")
 
-        # DrainagePipeDesigner: Q in L/s, D in mm
-        Q_Ls = Q_m3s * 1000.0
-        designer = DrainagePipeDesigner(n=0.014, pipe_type="污水")
-        rd = designer.design(Q_Ls, D_min=300, D_max=1000, D_step=100)
+        grid, fixed = self._make_scalar_grid(
+            {"L_pipe": L},
+            {"Q_manual": Q_m3s},
+        )
+        res = self._vectorized_compute(grid, flow, quality, fixed)
+        r = res[0]
 
-        if rd is None:
+        if float(r["DN"]) == 0.0 and float(r["v"]) == 0.0:
             return NodeResult.failed("无法设计满足要求的管道")
-
-        DN_mm = rd["D"]  # mm
-        DN = DN_mm / 1000.0  # m
-        hD_ratio = rd["h_D"]  # 充满度
-        i_slope = rd["slope"]  # 坡度
-        v = rd["velocity"]  # m/s
-
-        # 沿程水头损失: h_f = i × L
-        h_f = i_slope * L
-        # 局部水头损失: h_m = ξ × v²/(2g)
-        h_m = _LOCAL_XI * v**2 / (2 * GRAVITY)
-        h_total = h_f + h_m
 
         result = NodeResult(success=True)
         result.params = {"Q_manual": Q_m3s, "L_pipe": L}
         result.add_dimension("设计流量 Q", Q_m3s, "m3/s")
         result.add_dimension("管段长度 L", L, "m")
-        result.add_dimension("管径 DN", DN_mm, "mm")
-        result.add_dimension("设计流速 v", round(v, 2), "m/s")
-        result.add_dimension("设计坡度 i", round(i_slope, 4), "")
-        result.add_dimension("充满度 h/D", round(hD_ratio, 3), "")
-        result.add_dimension("沿程水头损失 h_f", round(h_f, 3), "m")
-        result.add_dimension("局部水头损失 h_m", round(h_m, 3), "m")
-        result.add_dimension("总水头损失 h_total", round(h_total, 3), "m")
+        result.add_dimension("管径 DN", round(float(r["DN"]) * 1000), "mm")
+        result.add_dimension("设计流速 v", round(float(r["v"]), 2), "m/s")
+        result.add_dimension("设计坡度 i", round(float(r["i"]), 4), "")
+        result.add_dimension("充满度 h/D", round(float(r["hD"]), 3), "")
+        result.add_dimension("沿程水头损失 h_f", round(float(r["h_f"]), 3), "m")
+        result.add_dimension("局部水头损失 h_m", round(float(r["h_m"]), 3), "m")
+        result.add_dimension("总水头损失 h_total", round(float(r["h_total"]), 3), "m")
         result.add_check(
-            "总水头损失 ≤ 2.0m", h_total <= 2.0, round(h_total, 3), "<= 2.0", "m"
+            "总水头损失 ≤ 2.0m", bool(r["ok_total"]),
+            round(float(r["val_total"]), 3), "<= 2.0", "m",
         )
         result.add_check(
-            "流速 0.6~1.5m/s", 0.6 <= v <= 1.5, round(v, 2), "0.6~1.5", "m/s"
+            "流速 0.6~1.5m/s", bool(r["ok_v"]),
+            round(float(r["val_v"]), 2), "0.6~1.5", "m/s",
         )
         result.add_check(
-            "充满度 ≤ GB50014限值", hD_ratio <= 0.75, round(hD_ratio, 3), "<= 0.75", ""
+            "充满度 ≤ GB50014限值", bool(r["ok_fill"]),
+            round(float(r["val_fill"]), 3), "<= 0.75", "",
         )
         return result
 

@@ -452,6 +452,7 @@ def _write_single_elevation_sheet(
 ):
     """写入单个构筑物的高程计算表"""
     is_pipe = node_type == "gdys_stss"
+    is_pump = node_type in ("wuni_bengzhan", "wuni_shusong", "wushui_tisheng")
     depth_label = "管内水深" if is_pipe else "有效水深"
     bottom_label = "管内底标高" if is_pipe else "池底标高"
 
@@ -499,6 +500,11 @@ def _write_single_elevation_sheet(
         ("h_eff" if not is_pipe else "DN", depth_label, "m", elev.effective_depth),
         ("Z_bottom", bottom_label, "m", elev.bottom_elevation),
     ]
+    # ── v5.4: 泵站特殊行 — 集水池说明 ──
+    if is_pump:
+        sump_water = elev.water_elevation - abs(elev.head_loss)
+        rows_data.insert(-2, ("Z_sump", "集水池水面", "m", sump_water))
+        rows_data.append(("", "  (集水池=上游-0.2m, 出水=集水池+扬程)", "", ""))
     if not is_pipe:
         rows_data += [
             ("h_super", "超高", "m", elev.super_elevation),

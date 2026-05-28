@@ -16,6 +16,7 @@ sys.path.insert(0, str(SRC_DIR))
 
 import numpy as np  # noqa: E402
 import pytest  # noqa: E402
+import warnings  # noqa: E402
 from models.base import (  # noqa: E402
     NodeBase,
     NodeResult,
@@ -28,8 +29,27 @@ from models.base import (  # noqa: E402
 )
 
 # ═══════════════════════════════════════════════════════════════════
-# WaterFlow fixtures
+# 全局防御: numpy RuntimeWarning → 测试失败
 # ═══════════════════════════════════════════════════════════════════
+
+
+@pytest.fixture(autouse=True)
+def _fail_on_numpy_divide_warnings():
+    """工业级防御: 任何测试中产生 numpy 除零/无效值警告 → 直接失败.
+
+    这防止了向量化计算中的沉默故障 — 在 CI 中, 警告即错误.
+    """
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always", RuntimeWarning)
+        yield
+        for w in caught:
+            msg = str(w.message)
+            if "divide by zero" in msg or "invalid value encountered" in msg:
+                pytest.fail(
+                    f"numpy RuntimeWarning in test: {w.message}\n"
+                    f"  位置: {w.filename}:{w.lineno}\n"
+                    f"  提示: 在除法/乘法前使用 np.maximum(denom, 1e-10) 或 np.divide(..., where=cond)"
+                )
 
 
 @pytest.fixture
@@ -339,9 +359,9 @@ def node_registry():
         "kw_cifenli",
         "erchunchi",
         "bashi_jiliangcao",
-        "wuni_tisheng",
+        "wushui_tisheng",
     ]:
-        cls = mgr.load_mod(mod_id)
+        cls = mgr.get_node_class(mod_id)
         if cls:
             types[mod_id] = cls
     from models.combiner import CombinerNode

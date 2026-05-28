@@ -53,8 +53,7 @@ jobs:
         run: pip install -r requirements.txt pytest
       - name: Run tests
         run: |
-          python -m pytest tests/ -x --tb=short -q \
-            -k "not (test_all_vectorized or test_no_fallback)"
+          python -m pytest tests/ -x --tb=short -q
 
   sync:
     name: Mod Sync Check

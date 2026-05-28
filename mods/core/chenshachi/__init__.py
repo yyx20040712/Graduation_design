@@ -14,7 +14,6 @@ from models.base import (
     ParamDef,
     Port,
     PortType,
-    PI,
 )
 
 
@@ -197,78 +196,52 @@ class ChenshachiNode(NodeBase):
             "v_channel": v_channel,
         }
 
-        # ── (1) 单池流量 ──
-        Q_single = flow.Q_design / n
-        Q_single_m3h = Q_single * 3600
+        grid = {
+            "n": np.array([n]),
+            "q_surf": np.array([q_surf]),
+            "t": np.array([t]),
+        }
+        fixed = {
+            "h1": h1,
+            "X": X,
+            "T_clean": T_clean,
+            "theta": theta,
+            "dr": dr,
+            "B_channel": B_channel,
+            "v_channel": v_channel,
+        }
 
-        # ── (2) 直径 (3-21) ──
-        D_theory = math.sqrt(4 * Q_single_m3h / (PI * q_surf))
-        D = math.ceil(D_theory / 0.1) * 0.1
+        arr = self._vectorized_compute(grid, flow, quality, fixed)
+        r = arr[0]
 
-        # ── (3) 有效水深 (3-22) ──
-        h2 = q_surf * t / 3600.0
+        D = float(r["D"])
+        h2 = float(r["h2"])
+        ratio_Dh2 = float(r["ratio_Dh2"])
+        V_eff = float(r["V_eff"])
+        t_actual = float(r["t_actual"])
+        V_sand_daily = float(r["V_sand_daily"])
+        d_upper = float(r["d_upper"])
+        h4 = float(r["h4"])
+        h_cyl = float(r["h_cyl"])
+        H_total = float(r["H_total"])
+        V_cone = float(r["V_cone"])
+        V_storage = float(r["V_storage"])
+        A_channel = float(r["A_channel"])
+        h_channel = float(r["h_channel"])
+        L_straight = float(r["L_straight"])
+        B_out = float(r["B_out"])
+        V_hopper = float(r["V_hopper"])
 
-        # ── 校核有效水深 h2 (旋流沉砂池: 1.0~2.0m) ──
+        V_cyl = V_storage - V_cone
+        H_rounded = math.ceil(H_total / 0.1) * 0.1
+
         result.add_check("有效水深 h2", 1.0 <= h2 <= 2.0, round(h2, 2), "1.0~2.0", "m")
-
-        # ── 校核 D/h2 (旋流沉砂池: 2.0~2.5) ──
-        ratio_Dh2 = D / h2 if h2 > 0 else 0
         result.add_check(
             "径深比 D/h2", 2.0 <= ratio_Dh2 <= 2.5, round(ratio_Dh2, 2), "2.0~2.5", ""
         )
-
-        # ── (4) 有效容积 (3-23) — 基于实际取整后尺寸 ──
-        V_eff = PI * (D / 2) ** 2 * h2
-        t_actual = V_eff / Q_single if Q_single > 0 else 0
         result.add_check(
             "停留时间 t", 25 <= t_actual <= 60, round(t_actual, 1), "25~60", "s"
         )
-
-        # ── (5) 每日沉砂量 (3-24) — 单池 ──
-        V_sand_daily = (flow.Q_avg_daily / n) * X / 1e6  # m³/d
-
-        # ── (6) 砂斗所需容积 (3-25) — 单池 ──
-        V_hopper = V_sand_daily * T_clean * 1.5
-
-        # ── (7) 砂斗上口直径 (3-26) ──
-        d_upper = 0.5 * D
-
-        # ── (8) 锥体高度 (3-27) ──
-        h4 = (d_upper - dr) / (2 * math.tan(math.radians(theta)))
-
-        # ── (9) 锥体容积 ──
-        V_cone = (
-            PI
-            * h4
-            / 3
-            * ((d_upper / 2) ** 2 + (d_upper / 2) * (dr / 2) + (dr / 2) ** 2)
-        )
-
-        # ── 圆柱段 (3-28)(3-29): 锥体不足时补圆柱,h_cyl 向上取整 ──
-        V_cyl = 0.0
-        if V_cone < V_hopper:
-            h_cyl_exact = (V_hopper - V_cone) / (PI * (d_upper / 2) ** 2)
-            h_cyl = math.ceil(h_cyl_exact / 0.1) * 0.1
-            V_cyl = PI * (d_upper / 2) ** 2 * h_cyl
-        else:
-            h_cyl = 0.0
-            V_cyl = 0.0
-
-        # 总储砂容积 = 锥体 + 圆柱段(取整后 > V_hopper)
-        V_storage = V_cone + V_cyl
-
-        # ── 缓冲层 ──
-        h3 = 0.5
-
-        # ── 总高度 ──
-        H_total = h1 + h2 + h3 + h4 + h_cyl
-        H_rounded = math.ceil(H_total / 0.1) * 0.1
-
-        # ── (10) 进水渠道设计 (4-26)(4-27)(4-28) ──
-        A_channel = Q_single / v_channel if v_channel > 0 else 0
-        h_channel = A_channel / B_channel if B_channel > 0 else 0
-        L_straight = max(7 * B_channel, 4.5)
-
         result.add_check(
             "进水渠水深 h渠 ≥ 0.2", h_channel >= 0.2, round(h_channel, 3), "≥ 0.2", "m"
         )
@@ -280,10 +253,6 @@ class ChenshachiNode(NodeBase):
             "",
         )
 
-        # ── (11) 出水渠道 (4-29) ──
-        B_out = 2 * B_channel
-
-        # ── 组装结果 ──
         result.add_dimension("池数", n, "座", formula="n = 用户设定 (≥2)")
         result.add_dimension(
             "池径 D", D, "m", formula="D = √(4×Q₁/(π×q_surf)), 取整到0.1m (3-21)"
@@ -371,10 +340,8 @@ class ChenshachiNode(NodeBase):
             formula="V_storage = V_cone + V_cyl (取整后)",
         )
 
-        # ── 沉砂输出 (SLUDGE 端口) — 汇总 n 池总量 ──
-        # 沉砂含水率 ~60%, 无机质为主 (VS~5%), 湿密度~1600kg/m³
         P_grit = 0.60
-        DS_grit = V_sand_daily * (1 - P_grit) * 1600.0  # kg/d (单池)
+        DS_grit = V_sand_daily * (1 - P_grit) * 1600.0
         self._sludge_output = SludgeFlow(
             Q_wet=V_sand_daily * n,
             DS=DS_grit * n,
@@ -421,9 +388,10 @@ class ChenshachiNode(NodeBase):
         ratio_Dh2 = np.where(h2 > 0, D / h2, 0.0)
         ok_ratio = (2.0 <= ratio_Dh2) & (ratio_Dh2 <= 2.5)
 
-        # 有效容积 — 基于实际取整后尺寸
+        # 有效容积 — 基于实际取整后尺寸 (safe division)
         V_eff = PI_V * (D / 2) ** 2 * h2
-        t_actual = np.where(Q_single > 0, V_eff / Q_single, 0.0)
+        safe_Q_single = np.maximum(Q_single, 1e-10)
+        t_actual = np.where(Q_single > 0, V_eff / safe_Q_single, 0.0)
         ok_t = (25 <= t_actual) & (t_actual <= 60)
 
         # 每日沉砂量 — 单池
@@ -437,11 +405,13 @@ class ChenshachiNode(NodeBase):
             / 3
             * ((d_upper / 2) ** 2 + (d_upper / 2) * (dr / 2) + (dr / 2) ** 2)
         )
+        denom_sand = PI_V * (d_upper / 2) ** 2
+        safe_denom_sand = np.maximum(denom_sand, 1e-10)
         h_cyl_exact = np.where(
-            V_cone < V_hopper, (V_hopper - V_cone) / (PI_V * (d_upper / 2) ** 2), 0.0
+            V_cone < V_hopper, (V_hopper - V_cone) / safe_denom_sand, 0.0
         )
         h_cyl = np.ceil(h_cyl_exact / 0.1) * 0.1  # 向上取整到0.1m
-        V_cyl = PI_V * (d_upper / 2) ** 2 * h_cyl  # 圆柱段容积
+        V_cyl = np.maximum(denom_sand, 0.0) * h_cyl  # 圆柱段容积
         V_storage = V_cone + V_cyl  # 总储砂容积(取整后 > V_hopper)
 
         h3_buf = 0.5
@@ -455,16 +425,20 @@ class ChenshachiNode(NodeBase):
         L_straight = np.maximum(7 * B_channel, 4.5)
         B_out = 2 * B_channel
 
-        # 渠道约束校核
+        # 渠道约束校核 (safe division)
         ok_channel_depth = h_channel >= 0.2
+        safe_h_channel = np.maximum(h_channel, 1e-10)
+        ratio_Bh = np.where(h_channel > 0, B_channel / safe_h_channel, np.nan)
         ok_channel_Bh = np.where(
             h_channel > 0,
-            (1.0 <= B_channel / h_channel) & (B_channel / h_channel <= 3.0),
+            (1.0 <= ratio_Bh) & (ratio_Bh <= 3.0),
             False,
         )
 
-        # 成本字段
-        concrete_m3 = PI_V * (D / 2) ** 2 * H_total * n * 0.4
+        # 成本字段 (safe computation)
+        safe_D = np.maximum(D, 0.0)
+        safe_H_total = np.maximum(H_total, 0.0)
+        concrete_m3 = PI_V * (safe_D / 2) ** 2 * safe_H_total * n * 0.4
 
         dtype = np.dtype(
             [
@@ -529,5 +503,7 @@ class ChenshachiNode(NodeBase):
         result["val_h2"] = h2
         result["val_t"] = t_actual
         result["val_channel_depth"] = h_channel
-        result["val_channel_Bh"] = np.where(h_channel > 0, B_channel / h_channel, 0)
+        result["val_channel_Bh"] = np.where(h_channel > 0,
+                                            B_channel / np.maximum(h_channel, 1e-10),
+                                            0.0)
         return result

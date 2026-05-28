@@ -49,12 +49,13 @@ class TestDefaultParams:
     """测试 _default_params() 和 _build_param_defs()"""
 
     def test_default_params_keys(self):
-        """_default_params() 返回 10 个键(v4.1: Q_design 由 Q_avg_daily/Kz 计算,不作为参数)"""
+        """_default_params() 返回 13 个键 (v5.3: 新增 Z_water_inlet/Z_ground/DN_inlet 高程参数)"""
         params = KwInputNode._default_params()
         expected_keys = {"Q_avg_daily", "Kz", "SS_in", "TDS", "pH", "COD",
-                         "BOD5", "NH3N", "TN", "TP"}
+                         "BOD5", "NH3N", "TN", "TP",
+                         "Z_water_inlet", "Z_ground", "DN_inlet"}
         assert set(params.keys()) == expected_keys
-        assert len(params) == 10
+        assert len(params) == 13
 
     def test_default_params_values(self):
         """默认值与规格一致"""
@@ -71,9 +72,9 @@ class TestDefaultParams:
         assert params["TP"] == 2.0
 
     def test_param_defs_count(self, node):
-        """_build_param_defs() 返回 10 个 ParamDef 对象"""
+        """_build_param_defs() 返回 13 个 ParamDef 对象 (v5.3: 新增高程参数)"""
         defs = node.get_param_defs()
-        assert len(defs) == 10
+        assert len(defs) == 13
 
 
 # ═══════════════════════════════════════════════════════════════════

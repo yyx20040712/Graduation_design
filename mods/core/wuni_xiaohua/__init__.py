@@ -116,7 +116,61 @@ class WuniXiaohuaNode(NodeBase):
         ]
 
     def calculate(self, flow, quality) -> NodeResult:
-        return NodeResult(success=True)
+        n = int(self.get_param("n"))
+        T_digest = self.get_param("T_digest")
+        theta_digest = self.get_param("theta_digest")
+        eta_VS = self.get_param("eta_VS")
+        biogas_rate = self.get_param("biogas_rate")
+
+        grid, fixed = self._make_scalar_grid(
+            {"n": n, "theta_digest": theta_digest,
+             "eta_VS": eta_VS, "biogas_rate": biogas_rate},
+            {"T_digest": T_digest, "_sludge_DS": 4000.0,
+             "_sludge_Q_wet": 100.0, "_sludge_VS": 0.60},
+        )
+        res = self._vectorized_compute(grid, flow, quality, fixed)
+        r = res[0]
+
+        DS_in = 4000.0
+        Q_wet_in = 100.0
+        VS_in = DS_in * 0.60
+        FS_in = DS_in - VS_in
+
+        result = NodeResult(success=True)
+        result.params = {
+            "n": n, "T_digest": T_digest, "theta_digest": theta_digest,
+            "eta_VS": eta_VS, "biogas_rate": biogas_rate,
+        }
+        result.add_dimension("池数", n, "座")
+        result.add_dimension("池径 D", float(r["D"]), "m")
+        result.add_dimension("总高度 H", float(r["H"]), "m")
+        result.add_dimension("单池容积", round(float(r["V_single"]), 1), "m³")
+        result.add_dimension("总容积", round(float(r["D"]) ** 2 * np.pi / 4 * float(r["H"]) * n, 1), "m³")
+        result.add_dimension("消化温度", T_digest, "°C")
+        result.add_dimension("消化时间", theta_digest, "d")
+        result.add_dimension("进泥湿泥量", round(Q_wet_in, 2), "m³/d")
+        result.add_dimension("进泥干固量", round(DS_in, 1), "kg/d")
+        result.add_dimension("VS降解量", round(float(r["VS_degraded"]), 1), "kgVS/d")
+        result.add_dimension("VS降解率", eta_VS * 100, "%")
+        result.add_dimension("出泥干固量", round(VS_in - float(r["VS_degraded"]) + FS_in, 1), "kg/d")
+        result.add_dimension("出泥湿泥量", round(float(r["Q_wet_out"]), 2), "m³/d")
+        result.add_dimension("出泥含水率", 0.92, "")
+        result.add_dimension("沼气产量", round(float(r["biogas"]), 1), "m³/d")
+        result.add_dimension("甲烷产量", round(float(r["biogas"]) * 0.65, 1), "m³/d")
+        result.add_dimension(
+            "容积负荷",
+            round(VS_in / (float(r["D"]) ** 2 * np.pi / 4 * float(r["H"]) * n) if float(r["D"]) > 0 else 0, 2),
+            "kgVS/(m³·d)",
+        )
+        result.add_check(
+            "池径 D >= 8", bool(r["ok_D_min"]),
+            round(float(r["val_D_min"]), 1), ">= 8", "m",
+        )
+        result.add_check(
+            "容积负荷", bool(r["ok_vol_load"]),
+            round(float(r["val_vol_load"]), 2), "1.0~4.0", "kgVS/(m³·d)",
+        )
+        return result
 
     def execute_sludge(
         self, sludge: SludgeFlow

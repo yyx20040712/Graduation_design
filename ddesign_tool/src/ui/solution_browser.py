@@ -16,6 +16,8 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Callable, Dict, List, Optional
 
+import numpy as np
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from _logging import get_logger
@@ -68,6 +70,7 @@ class SolutionBrowser(tk.Frame):
         self._node_type = backend_node.NODE_TYPE
         self._flow = flow
         self._quality = quality
+        self._sludge = None  # 清除污泥上下文，避免状态泄漏
         self._solutions = []
         self._selected_idx = -1
         self._filters = {}
@@ -83,9 +86,12 @@ class SolutionBrowser(tk.Frame):
                 self._node_type, flow, quality, force_recompute=force_recompute
             )
             self._solutions = solutions
-            self._status_label.config(
-                text=f"共 {len(solutions)} 个可行方案" if solutions else "无可行方案"
-            )
+            if solutions:
+                self._status_label.config(text=f"共 {len(solutions)} 个可行方案")
+            else:
+                self._status_label.config(text="无可行方案")
+                # ── v5.4: 无可行解时在面板上显示诊断建议 ──
+                self._show_no_solution_hint(engine, flow, quality)
         except NotImplementedError:
             self._status_label.config(text="该模块暂不支持方案浏览")
             self._build_filter_ui([])
@@ -105,6 +111,8 @@ class SolutionBrowser(tk.Frame):
         self._backend_node = backend_node
         self._node_type = backend_node.NODE_TYPE
         self._sludge = sludge
+        self._flow = None     # 清除水量上下文，避免状态泄漏到标量验证
+        self._quality = None  # 清除水质上下文
         self._solutions = []
         self._selected_idx = -1
         self._filters = {}
@@ -289,6 +297,73 @@ class SolutionBrowser(tk.Frame):
             side=tk.RIGHT,
             padx=2,
         )
+
+    # ═══════════════ 无可行解诊断 ═══════════════
+
+    def _show_no_solution_hint(self, engine, flow, quality):
+        """当无可行方案时, 在面板上显示诊断建议 (v5.4)"""
+        from models.discretization import get_config
+
+        cfg = get_config(self._node_type)
+        constraint_keys = cfg.get("constraint_keys", [])
+        constraint_names = cfg.get("constraint_names", [])
+        free_keys = list(cfg.get("free", {}).keys())
+
+        # 用全量 free 值枚举一次以获得结果数组进行诊断
+        free_vals = [cfg["free"][k] for k in free_keys]
+        meshes = np.meshgrid(*free_vals, indexing="ij")
+        grid = {k: mesh.ravel() for k, mesh in zip(free_keys, meshes)}
+        fixed = cfg.get("fixed", {})
+        results = engine._compute_vectorized(
+            self._node_type, grid, flow, quality, fixed
+        )
+        engine._filter_feasible(
+            results, constraint_keys, constraint_names,
+            cfg.get("constraint_limits"), self._node_type,
+        )
+        suggestion = engine._suggest_relaxation(
+            results, constraint_keys, constraint_names, cfg
+        )
+
+        # 在面板中显示建议
+        hint = tk.Frame(self._filter_frame, bg=self._bg)
+        hint.pack(fill=tk.X, pady=20, padx=10)
+        tk.Label(
+            hint,
+            text="💡 诊断建议",
+            bg=self._bg, fg="#ffaa44",
+            font=("Microsoft YaHei", 11, "bold"),
+        ).pack(anchor="w")
+        if suggestion:
+            tk.Label(
+                hint,
+                text=suggestion,
+                bg=self._bg, fg="#ccc",
+                font=("Microsoft YaHei", 9),
+                wraplength=350, justify="left",
+            ).pack(anchor="w", pady=(6, 0))
+        # 逐约束显示通过率
+        detail = tk.Frame(hint, bg=self._bg)
+        detail.pack(fill=tk.X, pady=(8, 0))
+        for i, ckey in enumerate(constraint_keys):
+            ok_field = "ok_" + ckey
+            if ok_field in results.dtype.names:
+                total = len(results)
+                passed = int(results[ok_field].sum())
+                name = constraint_names[i] if i < len(constraint_names) else ckey
+                color = "#55cc55" if passed == total else "#cc5555"
+                tk.Label(
+                    detail, text=f"  {name}: ", bg=self._bg, fg="#888",
+                    font=("Consolas", 8),
+                ).pack(anchor="w")
+                tk.Label(
+                    detail,
+                    text=f"    {passed}/{total} 通过 ({100*passed//total}%)",
+                    bg=self._bg, fg=color,
+                    font=("Consolas", 8),
+                ).pack(anchor="w")
+
+    # ═══════════════ 筛选器 UI ═══════════════
 
     def _build_filter_ui(self, solutions: List[Solution]) -> None:
         """为当前模块构建参数筛选 Combobox"""
@@ -618,7 +693,11 @@ class SolutionBrowser(tk.Frame):
             return sorted(filtered, key=lambda s: -s.robustness)
 
     def _apply_current(self):
-        """将当前选中的方案写入后端节点(不刷新表格,供内部调用)"""
+        """将当前选中的方案写入后端节点(不刷新表格,供内部调用)
+
+        关键修复: 应用方案后运行标量 execute() 验证, 避免向量化/标量双路径
+        结果不一致导致导出时出现"硬约束未通过"的虚假告警.
+        """
         if not self._backend_node or self._selected_idx < 0:
             return False
         sol = self._solutions[self._selected_idx]
@@ -628,8 +707,50 @@ class SolutionBrowser(tk.Frame):
             except Exception as e:
                 _log.warning("operation failed: %s", e, exc_info=True)
 
-        from models.base import NodeResult, NodeState, WaterQuality
+        from models.base import NodeResult, NodeState, WaterQuality, WaterFlow
 
+        # ── 标量验证: 用真实的 calculate() 跑一遍, 作为 ground truth ──
+        scalar_passed = True
+        scalar_warnings = []
+        if self._flow and self._quality:
+            try:
+                scalar_result, _, _ = self._backend_node.execute(
+                    self._flow, self._quality
+                )
+                if scalar_result and scalar_result.success:
+                    # 对比向量化 checks: 标量 Fail 但向量化 Pass 的 → 警告
+                    for cn, (v_passed, v_actual, v_limit, v_unit) in sol.checks.items():
+                        s_check = scalar_result.checks.get(cn)
+                        if s_check is not None:
+                            s_passed = s_check[0]
+                            if v_passed and not s_passed:
+                                scalar_passed = False
+                                scalar_warnings.append(cn)
+                    if not scalar_passed:
+                        _log.warning(
+                            "[方案验证] %s 标量与向量化结果不一致, 约束失败: %s",
+                            self._node_type,
+                            ", ".join(scalar_warnings),
+                        )
+                    # 使用标量结果 (ground truth) 覆盖向量化近似
+                    self._backend_node._result = scalar_result
+                    self._backend_node.state = NodeState.CLEAN
+                    return True
+                else:
+                    scalar_passed = False
+                    _log.warning(
+                        "[方案验证] %s 标量计算失败, 回退到向量化结果",
+                        self._node_type,
+                    )
+            except Exception as e:
+                scalar_passed = False
+                _log.warning(
+                    "[方案验证] %s 标量验证异常: %s",
+                    self._node_type,
+                    e,
+                )
+
+        # ── 回退: 标量验证失败时使用向量化结果, 标记 DIRTY 强制 F5 重算 ──
         result = NodeResult(
             success=True, params=dict(sol.params), robustness=sol.robustness
         )
@@ -652,7 +773,16 @@ class SolutionBrowser(tk.Frame):
             rates = self._backend_node.get_removal_rates()
             result.outlet_quality = self._quality.apply_removal(rates)
         self._backend_node._result = result
-        self._backend_node.state = NodeState.CLEAN
+        # 标量验证未通过 → 标记 DIRTY 确保 F5 重算, 同时保留向量化结果供参考
+        if not scalar_passed:
+            self._backend_node.state = NodeState.DIRTY
+            result.add_warning(
+                f"向量化/标量结果不一致, 约束差异: {', '.join(scalar_warnings)}"
+                if scalar_warnings
+                else "标量验证未通过, 请按 F5 重新计算"
+            )
+        else:
+            self._backend_node.state = NodeState.CLEAN
         return True
 
     # ═══════════════ 事件回调 ═══════════════

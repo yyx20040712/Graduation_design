@@ -227,6 +227,17 @@ class KwInputNode(NodeBase):
                     self._params[param_key] = value
         self.state = NodeState.DIRTY
 
+    def _sync_quality_to_params(self) -> None:
+        """Sync water_quality attributes → _params (with SS→SS_in mapping).
+
+        Called by quality_panel after user directly modifies water_quality via setattr.
+        """
+        param_map = {"SS": "SS_in"}
+        for attr in ["BOD5", "COD", "SS", "NH3N", "TN", "TP"]:
+            param_key = param_map.get(attr, attr)
+            if param_key in self._params:
+                self._params[param_key] = getattr(self.water_quality, attr)
+
     def calculate(self, flow: WaterFlow, quality: WaterQuality) -> NodeResult:
         Qad = self.get_param("Q_avg_daily")
         Kz = self.get_param("Kz")

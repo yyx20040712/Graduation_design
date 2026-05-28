@@ -9,6 +9,17 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Callable, Dict, Optional
 
+# ── 模块级导入 (提前加载, 避免 EXE 打包后动态导入失败) ──
+try:
+    from models.base import NodeState  # noqa: F401 — used in _on_commit closure
+except ImportError:
+    NodeState = None  # type: ignore[assignment]
+try:
+    from models.node_registry import is_water_quality_node
+except ImportError:
+    def is_water_quality_node(_node_type: str) -> bool:
+        return False
+
 # 污染物颜色 & 标签 (模块级复用)
 WQ_COLORS = {
     "BOD5": "#5599ff", "COD": "#ff9955", "SS": "#55cc55",
@@ -168,7 +179,18 @@ class QualityPanel:
                 val = float(val_str)
                 if hasattr(be_node, "water_quality"):
                     setattr(be_node.water_quality, a, val)
-                    be_node._sync_quality_to_params()
+                    # Sync to _params if method exists (WaterQualityNode);
+                    # InputNode/KwInputNode may also have it after fix
+                    if hasattr(be_node, "_sync_quality_to_params"):
+                        be_node._sync_quality_to_params()
+                    elif a in getattr(be_node, "_params", {}):
+                        be_node._params[a] = val
+                    # Mark node DIRTY so F5 will recalculate
+                    if NodeState is not None:
+                        try:
+                            be_node.state = NodeState.DIRTY
+                        except AttributeError:
+                            pass
                 else:
                     be_node.set_param(a, val)
                 self._mark_dirty()
@@ -273,8 +295,6 @@ class QualityPanel:
 
         self._quality_sections = {}
         has_any_data = False
-
-        from models.node_registry import is_water_quality_node
 
         for nid in order:
             node = self.executor._nodes.get(nid)

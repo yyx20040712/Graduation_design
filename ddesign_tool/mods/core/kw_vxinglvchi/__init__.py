@@ -114,81 +114,67 @@ class KwVxinglvchiNode(NodeBase):
 
     def calculate(self, flow: WaterFlow, quality: WaterQuality) -> NodeResult:
         n = int(self.get_param("n"))
-        v_filter = self.get_param("v_filter")
-        v_force = self.get_param("v_force")
-        T_filter = self.get_param("T_filter")
-        k_self = self.get_param("k_self")
-        h_media = self.get_param("h_media")
-        h_water = self.get_param("h_water")
-        h_super = self.get_param("h_super")
-        h_plate = self.get_param("h_plate")
-        h_under = self.get_param("h_under")
-        rho_head = self.get_param("rho_head")
-        q_g1 = self.get_param("q_g1")
-        q_w2 = self.get_param("q_w2")
-        q_w3 = self.get_param("q_w3")
-        q_s = self.get_param("q_s")
-        t_g1 = self.get_param("t_g1")
-        t_gw = self.get_param("t_gw")
-        t_w3 = self.get_param("t_w3")
+        v_filter_val = self.get_param("v_filter")
+        h_media_val = self.get_param("h_media")
+        h_water_val = self.get_param("h_water")
+
+        grid = {
+            "n": np.array([n], dtype=np.float64),
+            "v_filter": np.array([v_filter_val]),
+            "h_media": np.array([h_media_val]),
+            "h_water": np.array([h_water_val]),
+        }
+
+        fixed = {
+            "v_force": self.get_param("v_force"),
+            "T_filter": self.get_param("T_filter"),
+            "k_self": self.get_param("k_self"),
+            "h_super": self.get_param("h_super"),
+            "h_plate": self.get_param("h_plate"),
+            "h_under": self.get_param("h_under"),
+            "rho_head": self.get_param("rho_head"),
+            "q_g1": self.get_param("q_g1"),
+            "q_w2": self.get_param("q_w2"),
+            "q_w3": self.get_param("q_w3"),
+            "q_s": self.get_param("q_s"),
+            "t_g1": self.get_param("t_g1"),
+            "t_gw": self.get_param("t_gw"),
+            "t_w3": self.get_param("t_w3"),
+        }
+
+        r = type(self)._vectorized_compute(grid, flow, quality, fixed)
+        d = r[0]
 
         result = NodeResult(success=True)
         result.params = {k: self.get_param(k) for k in self._default_params()}
 
-        # (1) 设计总流量 Q_d = α × Q  (m³/d)
-        Q_d = flow.Q_avg_daily * k_self
-        # (2) 反冲洗历时 + 有效工作时间 T_w
-        t_bw = t_g1 + t_gw + t_w3  # min
-        t_bw_h = t_bw / 60.0
-        T_w = 24.0 - 24.0 * t_bw_h / T_filter  # h/d
-        # (3) 总过滤面积 F = Q_d / (v × T_w)
-        F_total = Q_d / (v_filter * T_w)
-        f_single = F_total / n
-        # (4) 强制滤速
-        v_force_actual = n / (n - 1) * v_filter if n > 1 else float("inf")
+        result.add_dimension("设计总流量 Q_d(总)", round(float(d["Q_d"]), 0), "m³/d")
+        result.add_dimension("日有效工作时间 T_w", round(float(d["T_w"]), 1), "h/d")
+        result.add_dimension("总过滤面积 F(总)", round(float(d["F_total"]), 1), "m²")
+        result.add_dimension("单格过滤面积 f(单格)", round(float(d["f_single"]), 1), "m²")
+        result.add_dimension("滤池格数", n, "格")
+        result.add_dimension("单格长度 L(单格)", d["L"], "m")
+        result.add_dimension("单格宽度 B(单格)", d["B"], "m")
+        result.add_dimension("滤池总高度 H_t", math.ceil(float(d["H_total"]) / 0.1) * 0.1, "m")
+        result.add_dimension("设计滤速 v", d["v_filter"], "m/h")
+        result.add_dimension("实际强制滤速 v_q", round(float(d["v_force_actual"]), 2), "m/h")
+        result.add_dimension("单次冲洗水量 W_w(单格)", round(float(d["W_w"]), 1), "m³")
+        result.add_dimension("冲洗水占比 η_w", round(float(d["eta_w"]) * 100, 2), "%")
+        result.add_dimension("滤头数量 N_nozzle(单格)", int(d["N_head"]), "个")
         result.add_check(
             "强制滤速 v_q <= 限值",
-            v_force_actual <= v_force,
-            round(v_force_actual, 2),
-            f"<= {v_force}",
+            bool(d["ok_force"]),
+            round(float(d["val_force"]), 2),
+            f"<= {fixed['v_force']}",
             "m/h",
         )
-        # (5) 单格尺寸
-        B = min(math.ceil(math.sqrt(f_single / 2.0) / 0.1) * 0.1, 4.5)
-        L = math.ceil(f_single / B / 0.1) * 0.1
-        A_actual = L * B
-        # (6) 总高度
-        H_total = h_super + h_water + h_media + h_plate + h_under
-        # (7) 反冲洗
-        Q_w2_val = q_w2 * A_actual
-        Q_w3_val = q_w3 * A_actual
-        Q_s_val = q_s * A_actual
-        W_w = (
-            Q_w2_val * t_gw * 60.0 + Q_w3_val * t_w3 * 60.0 + Q_s_val * t_bw * 60.0
-        ) / 1000.0
-        V_daily_per_cell = Q_d / n
-        eta_w = (
-            W_w * (24.0 / T_filter) / V_daily_per_cell if V_daily_per_cell > 0 else 0
-        )
         result.add_check(
-            "冲洗水占比 < 5%", eta_w < 0.05, round(eta_w * 100, 1), "< 5", "%"
+            "冲洗水占比 < 5%",
+            bool(d["ok_bw"]),
+            round(float(d["val_bw"]) * 100, 1),
+            "< 5",
+            "%",
         )
-        # (8) 滤头
-        N_head = math.ceil(rho_head * A_actual)
-
-        result.add_dimension("设计总流量 Q_d(总)", round(Q_d, 0), "m³/d")
-        result.add_dimension("日有效工作时间 T_w", round(T_w, 1), "h/d")
-        result.add_dimension("总过滤面积 F(总)", round(F_total, 1), "m²")
-        result.add_dimension("单格过滤面积 f(单格)", round(f_single, 1), "m²")
-        result.add_dimension("滤池格数", n, "格")
-        result.add_dimension("单格长度 L(单格)", L, "m")
-        result.add_dimension("单格宽度 B(单格)", B, "m")
-        result.add_dimension("滤池总高度 H_t", math.ceil(H_total / 0.1) * 0.1, "m")
-        result.add_dimension("设计滤速 v", v_filter, "m/h")
-        result.add_dimension("实际强制滤速 v_q", round(v_force_actual, 2), "m/h")
-        result.add_dimension("单次冲洗水量 W_w(单格)", round(W_w, 1), "m³")
-        result.add_dimension("冲洗水占比 η_w", round(eta_w * 100, 2), "%")
-        result.add_dimension("滤头数量 N_nozzle(单格)", N_head, "个")
         return result
 
     @classmethod

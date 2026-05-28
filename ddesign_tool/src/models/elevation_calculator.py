@@ -221,6 +221,29 @@ class ElevationCalculator:
             head_loss = transport_loss
             loss_detail = f"运输损耗 {transport_loss:.2f}m"
             loss_formula = "池底 = min(上游池底) - 运输损耗"
+        elif node_type in ("wuni_bengzhan", "wuni_shusong", "wushui_tisheng"):
+            # ── v5.4: 泵站特殊高程 ──
+            # 集水池在低处: 集水池水面 = 上游 - 0.2m (进水跌落)
+            # 泵提升: 下游出水标高 = 集水池水面 + 静扬程 H_pump
+            # elev.water_elevation 存储 下游出水标高 (与下游节点对接)
+            h_sump_loss = 0.2  # 进水跌落经验值 (m)
+            sump_water = up_water - h_sump_loss  # 集水池水面
+            H_pump = (
+                node.get_param("H_pump")
+                if hasattr(node, "get_param")
+                else 20.0
+            )
+            h_eff = self._extract_effective_depth(
+                node, results.get(nid) if results else None
+            )
+            water_elev = sump_water + H_pump  # 下游出水标高  ← 存储为水面标高
+            bottom_elev = sump_water - h_eff  # 集水池池底
+            head_loss = -H_pump  # 负值 = 增益
+            loss_detail = f"进水跌落 {h_sump_loss}m (集水池={sump_water:.2f}) + 泵扬程 {H_pump}m → 出水={water_elev:.2f}"
+            loss_formula = (
+                f"集水池水面 = 上游 - {h_sump_loss}m = {sump_water:.2f}; "
+                f"出水 = 集水池 + 扬程{H_pump}m = {water_elev:.2f}"
+            )
         else:
             water_elev = up_water - head_loss
             h_eff = self._extract_effective_depth(
@@ -392,43 +415,16 @@ class ElevationCalculator:
     def _add_elevation_checks(
         result: NodeResult, elev: ElevationData, node_name: str
     ) -> None:
-        """向 NodeResult 添加高程相关约束校核
+        """高程相关的工程提示 (非约束校核)
 
-        检查项:
-        - 超高 ≥ 0.3m (GB50014)
-        - 水面标高 > 池底标高
-        - 水头损失 ≤ 3.0m (单个构筑物)
-        - 跌水检测 (ΔZ > 1.0m → 提示)
+        v5.4 清理: 移除三个冗余/恒真约束——
+        - 超高≥0.3m: h_super 是用户输入参数, 非计算结果, 不应校验
+        - 水面>池底: 池底=水面-有效水深, 恒真命题
+        - 水头损失≤3m: 约束面板已有此限值, 无需硬编码
+
+        保留有价值的跌水工程提醒.
         """
-        # 超高检查
-        super_ok = elev.super_elevation >= 0.3
-        result.add_check(
-            "高程-超高≥0.3m", super_ok, round(elev.super_elevation, 2), ">= 0.3", "m"
-        )
-
-        # 水面标高合理性 (仅对有有效水深的构筑物)
-        if elev.effective_depth > 0.1:
-            water_ok = elev.water_elevation > elev.bottom_elevation
-            result.add_check(
-                "高程-水面>池底",
-                water_ok,
-                round(elev.water_elevation - elev.bottom_elevation, 2),
-                "> 0",
-                "m",
-            )
-
-        # 水头损失不能过大 (跳过起始节点和泵站)
-        if elev.head_loss > 0:
-            hl_ok = elev.head_loss <= 3.0
-            result.add_check(
-                "高程-水头损失≤3m", hl_ok, round(elev.head_loss, 2), "<= 3.0", "m"
-            )
-            if not hl_ok:
-                result.add_warning(
-                    f"高程: {node_name} 水头损失 {elev.head_loss:.2f}m > 3.0m"
-                )
-
-        # 跌水提示
+        # 跌水提示 (ΔZ > 1.0m → GB50014 §5 建议设跌水井)
         if elev.head_loss > 1.0 and not elev.formula.startswith("起始"):
             result.add_warning(
                 f"高程: {node_name} 水头损失 {elev.head_loss:.2f}m > 1.0m, 建议设跌水井"

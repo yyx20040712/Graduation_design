@@ -39,6 +39,7 @@ def export_cost_report(
 
         fp = write_cost_report(est, executor=executor, results=results)
         status_var.set(f"概算报告已导出: {fp}")
+        messagebox.showinfo("导出完成", f"已保存到:\n{fp}")
     except Exception as e:
         status_var.set(f"概算导出失败: {e}")
         messagebox.showerror("导出失败", str(e))

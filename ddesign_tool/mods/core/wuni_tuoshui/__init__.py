@@ -1,6 +1,5 @@
 """wuni_tuoshui.py — 污泥脱水间 (Sludge Dewatering)"""
 
-import math
 from typing import Dict, List, Tuple, Optional
 
 import numpy as np
@@ -114,7 +113,54 @@ class WuniTuoshuiNode(NodeBase):
         ]
 
     def calculate(self, flow, quality) -> NodeResult:
-        return NodeResult(success=True)
+        equip_type = int(self.get_param("equip_type"))
+        q_capacity = self.get_param("q_capacity")
+        n_machines = int(self.get_param("n_machines"))
+        P_out = self.get_param("P_out")
+        dosage_PAM = self.get_param("dosage_PAM")
+        equip_name = "带式压滤机" if equip_type == 0 else "离心脱水机"
+
+        grid, fixed = self._make_scalar_grid(
+            {"equip_type": equip_type, "n_machines": n_machines,
+             "q_capacity": q_capacity, "P_out": P_out},
+            {"dosage_PAM": dosage_PAM, "_sludge_DS": 4000.0, "_sludge_Q_wet": 100.0},
+        )
+        res = self._vectorized_compute(grid, flow, quality, fixed)
+        r = res[0]
+
+        DS = 4000.0
+        Q_wet_in = 100.0
+        P_in = 0.96
+        T_run_val = float(r["T_run"])
+        Q_wet_out_val = float(r["Q_wet_out"])
+        PAM_daily = float(r["PAM_daily"])
+        PAM_solution = PAM_daily / 0.002 / 1000.0
+
+        result = NodeResult(success=True)
+        result.params = {
+            "equip_type": equip_type, "q_capacity": q_capacity,
+            "n_machines": n_machines, "P_out": P_out, "dosage_PAM": dosage_PAM,
+        }
+        result.add_dimension("设备类型", equip_name, "")
+        result.add_dimension("脱水机台数", n_machines, "台")
+        result.add_dimension("单机处理量", q_capacity, "m³/h")
+        result.add_dimension("日运行时间", round(T_run_val, 1), "h/d")
+        result.add_dimension("进泥湿泥量", round(Q_wet_in, 2), "m³/d")
+        result.add_dimension("进泥含水率", round(P_in, 3), "")
+        result.add_dimension("出泥湿泥量", round(Q_wet_out_val, 2), "m³/d")
+        result.add_dimension("出泥含水率", P_out, "")
+        result.add_dimension(
+            "分离液量", round(max(0, Q_wet_in - Q_wet_out_val), 2), "m³/d",
+        )
+        result.add_dimension("干固体量", round(DS, 1), "kg/d")
+        result.add_dimension("PAM日耗量", round(PAM_daily, 1), "kg/d")
+        result.add_dimension("PAM溶液流量", round(PAM_solution, 2), "m³/d")
+        result.add_dimension("固体回收率", 97.0, "%")
+        result.add_check(
+            "日运行时间 <= 20h", bool(r["ok_run_time"]),
+            round(float(r["val_run_time"]), 1), "<= 20", "h/d",
+        )
+        return result
 
     def execute_sludge(
         self, sludge: SludgeFlow

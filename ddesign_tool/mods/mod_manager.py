@@ -247,6 +247,12 @@ class ModManager:
 
     # ── 公共属性 ──
 
+    # 向后兼容: node_type 重命名映射 (旧名称 → 新名称)
+    # 使用例: 添加条目后, 旧项目文件中的重命名节点类型自动解析
+    COMPAT_NODE_TYPES: Dict[str, str] = {
+        "wuni_tisheng": "wushui_tisheng",
+    }
+
     @property
     def node_registry(self) -> Dict[str, Tuple[Type, str]]:
         """返回 NODE_REGISTRY 兼容格式"""
@@ -291,10 +297,14 @@ class ModManager:
 
     def discover_all(self, force_rescan: bool = False) -> None:
         """扫描并加载所有模组."""
-        from _paths import get_mods_dir
+        from _paths import get_mods_dir, get_mods_search_paths
         from . import mod_discovery
 
         with self._lock:
+            extra_roots = [
+                Path(p) for p in get_mods_search_paths()
+                if Path(p) != Path(get_mods_dir())
+            ]
             self._loaded = mod_discovery.discover_mods(
                 mods_root=Path(get_mods_dir()),
                 mods=self._mods,
@@ -303,6 +313,7 @@ class ModManager:
                 schema_validate_fn=_validate_with_schema,
                 force_rescan=force_rescan,
                 already_loaded=self._loaded,
+                extra_roots=extra_roots if extra_roots else None,
             )
         log.info(
             "ModManager: discovered %d mods, registered %d node types",
@@ -742,11 +753,16 @@ class ModManager:
         return self._mods.get(mod_id)
 
     def get_node_class(self, node_type: str) -> Optional[Type]:
-        """根据 node_type 获取节点类"""
+        """根据 node_type 获取节点类
+
+        支持向后兼容别名映射 (COMPAT_NODE_TYPES).
+        """
+        # 兼容性别名 — 允许旧项目文件使用已重命名的 node_type
+        resolved = self.COMPAT_NODE_TYPES.get(node_type, node_type)
 
         for mod_info in self._mods.values():
 
-            if mod_info.node_type == node_type:
+            if mod_info.node_type == resolved:
 
                 return self.load_mod(mod_info.id)
 
