@@ -357,6 +357,17 @@ class NodeCanvas(tk.Frame):
             self.canvas.create_line(0, y, 4000, y, fill="#1e1e1e", tags=("grid",))
         self.canvas.tag_lower("grid")
 
+    # ═══════════════════════════════════════════════════════════════
+    # 坐标系统 (Blender 风格)
+    #
+    #   世界坐标 (canonical):  backend.x / backend.y   → 保存到 JSON
+    #   Canvas 坐标 (derived): NodeItem.x / NodeItem.y  → 渲染用
+    #   变换关系:   canvas = world × _scale
+    #
+    #   _scale 是视口属性, 不影响数据. 缩放通过 canvas.scale() 改变
+    #   画布元素几何尺寸, 通过 update_text_fonts() 同步字体大小.
+    # ═══════════════════════════════════════════════════════════════
+
     # ── 节点 ──
 
     # ═══════════════ 节点管理 ═══════════════
@@ -368,28 +379,37 @@ class NodeCanvas(tk.Frame):
         x: float = 100,
         y: float = 100,
     ) -> NodeItem:
+        """创建节点并放置在画布上.
+
+        Args:
+            x, y: 世界坐标 (backend 位置), 内部转换为 canvas = world × _scale.
+                  右键菜单传入的坐标已经由 _on_add_node_callback 做了 /_scale 转换.
+        """
         nid = backend_node.node_id if backend_node else f"ui-{len(self.nodes)}"
-        # 世界坐标 → Canvas 坐标 (乘当前缩放因子)
+        # ① 世界坐标 → Canvas 坐标
         cx, cy = x * self._scale, y * self._scale
         item = NodeItem(self.canvas, cx, cy, name, node_type, nid, backend_node)
-        # 同步缩放: 对新建节点及端口应用当前累积缩放, 使其大小与已有节点一致
+
+        # ② 若视口已缩放, 将新建节点同步到当前缩放级别
+        #    canvas.scale(origin=cx,cy) 对矩形是纯尺寸缩放 (原点不变),
+        #    对文本/端口则是位置+尺寸同步缩放.
         if self._scale != 1.0:
             for iid in item._items:
                 self.canvas.scale(iid, cx, cy, self._scale, self._scale)
             for p in item.input_ports + item.output_ports:
                 self.canvas.scale(p._outer_id, cx, cy, self._scale, self._scale)
                 self.canvas.scale(p._inner_id, cx, cy, self._scale, self._scale)
-            # 同步端口 Python 坐标 (canvas.scale 只更新渲染, 不更新 Python 对象)
+            # canvas.scale 只更新渲染, 需同步 Python 对象的坐标
             for p in item.input_ports + item.output_ports:
                 outer = self.canvas.coords(p._outer_id)
                 if outer:
                     p.x = (outer[0] + outer[2]) / 2
                     p.y = (outer[1] + outer[3]) / 2
-            # 同步 NodeItem 坐标
-            coords = self.canvas.coords(item._items[1])  # body rect
+            coords = self.canvas.coords(item._items[1])
             if coords:
                 item.x, item.y = coords[0], coords[1]
-        # 同步新建节点的文本字体 (防止 scale≠1.0 时标题与框体不匹配)
+
+        # ③ 字体同步 (tkinter Canvas.scale 不改变字体大小)
         item.update_text_fonts(self._scale)
         self.nodes[nid] = item
         return item
@@ -398,8 +418,33 @@ class NodeCanvas(tk.Frame):
 
     # ═══════════════ 设置 ═══════════════
     def reset_scale(self):
-        """重置缩放因子为 1.0 (加载项目前调用, 避免创建节点时坐标错位)"""
+        """重置缩放因子为 1.0, 将所有画布元素移回世界坐标位置.
+
+        不使用 canvas.scale() 还原 — 因为多次不同中心的缩放无法用单次
+        scale 精确逆转. 改为从 backend 世界坐标 (始终正确的规范源) 直接
+        move() 每个元素到目标位置.
+        """
+        if abs(self._scale - 1.0) < 0.001:
+            return
+        for node in self.nodes.values():
+            if not node.backend:
+                continue
+            tx, ty = node.backend.x, node.backend.y
+            coords = self.canvas.coords(node._items[1])
+            if not coords:
+                continue
+            dx, dy = tx - coords[0], ty - coords[1]
+            for iid in node._items:
+                self.canvas.move(iid, dx, dy)
+            for p in node.input_ports + node.output_ports:
+                self.canvas.move(p._outer_id, dx, dy)
+                self.canvas.move(p._inner_id, dx, dy)
+                p.x += dx
+                p.y += dy
+            node.x, node.y = tx, ty
         self._scale = 1.0
+        self._update_connections()
+        self._sync_text_fonts()
 
     def fit_view(self):
         """重置视口到内容区域并刷新滚动区域"""
@@ -720,27 +765,27 @@ class NodeCanvas(tk.Frame):
 
     # ═══════════════ 同步 ═══════════════
     def _sync_all_positions(self):
-        """从 Canvas 坐标回读所有节点和端口的位置
+        """从 Canvas 坐标回读, 同步 NodeItem 和 backend 坐标.
 
-        Canvas 坐标 = World 坐标 × scale,回读后除以 scale 恢复世界坐标.
-        仅用于连线渲染 (更新 PortItem.x/y) 和后端同步 (backend.x/y).
+        调用时机:
+          - _scroll:  canvas.scale 之后, 坐标系已变, 需要回读
+          - _release: 拖拽完成后, 将 canvas 位移写入 backend 世界坐标
+
+        不在 reset_scale 中调用 — 那里直接用 backend 位置移动元素,
+        坐标已经是正确的, 无需回读.
         """
         for node in self.nodes.values():
-            # 读取矩形 Canvas 坐标 → 转换为世界坐标
-            coords = self.canvas.coords(node._items[1])  # rect_id
+            coords = self.canvas.coords(node._items[1])
             if coords:
                 node.x, node.y = coords[0], coords[1]
-            # 读取端口 Canvas 坐标
             for p in node.input_ports + node.output_ports:
                 outer = self.canvas.coords(p._outer_id)
                 if outer:
                     p.x = (outer[0] + outer[2]) / 2
                     p.y = (outer[1] + outer[3]) / 2
-            # 同步后端 — 写入世界坐标 (canvas / scale)
             if node.backend and self._scale > 0:
                 node.backend.x = node.x / self._scale
                 node.backend.y = node.y / self._scale
-        # 强制更新所有连线
         self._update_connections()
 
     def _sync_text_fonts(self):

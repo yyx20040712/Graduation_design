@@ -127,6 +127,39 @@
       "max": 9.0,
       "step": 0.1,
       "description": "进水酸碱度"
+    },
+    {
+      "key": "Z_water_inlet",
+      "symbol": "Z_water_inlet",
+      "name": "矿井水进厂水面标高",
+      "unit": "m",
+      "default": 100.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "step": 0.001,
+      "description": "矿井水进厂水面标高，高程计算起点"
+    },
+    {
+      "key": "Z_ground",
+      "symbol": "Z_ground",
+      "name": "矿井水进厂地面标高",
+      "unit": "m",
+      "default": 102.0,
+      "min": -10000.0,
+      "max": 10000.0,
+      "step": 0.001,
+      "description": "矿井水处理厂区地面标高"
+    },
+    {
+      "key": "DN_inlet",
+      "symbol": "DN_inlet",
+      "name": "矿井水进水管径",
+      "unit": "mm",
+      "default": 800.0,
+      "min": 300.0,
+      "max": 2000.0,
+      "step": 50.0,
+      "description": "矿井水进厂管道公称直径"
     }
   ],
   "removal_rates": {},

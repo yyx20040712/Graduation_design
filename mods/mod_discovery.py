@@ -12,7 +12,7 @@ import importlib
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional
 
 log = logging.getLogger("ModDiscovery")
 

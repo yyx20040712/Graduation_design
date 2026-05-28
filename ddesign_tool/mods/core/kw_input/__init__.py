@@ -32,10 +32,9 @@ class KwInputNode(NodeBase):
     @classmethod
     def _default_params(cls) -> Dict[str, float]:
         # 源自 dlc.docx §4.1.2
-        # Q_design 由 Q_avg_daily / 86400 * Kz 自动计算,不再作为可调参数
         return {
-            "Q_avg_daily": 43835.6,  # m³/d
-            "Kz": 1.5,  # 总变化系数 (2739.8/1826.5)
+            "Q_avg_daily": 43835.6,
+            "Kz": 1.5,
             "SS_in": 800,
             "TDS": 1500,
             "pH": 7.5,
@@ -44,6 +43,9 @@ class KwInputNode(NodeBase):
             "NH3N": 8.0,
             "TN": 12.0,
             "TP": 2.0,
+            "Z_water_inlet": 100.0,
+            "Z_ground": 102.0,
+            "DN_inlet": 800.0,
         }
 
     def _build_param_defs(self) -> List[ParamDef]:
@@ -158,6 +160,36 @@ class KwInputNode(NodeBase):
                 unit="-",
                 description="进水酸碱度",
             ),
+            ParamDef(
+                "矿井水进厂水面标高",
+                "Z_water_inlet",
+                value=100.0,
+                default=100.0,
+                min_val=-10000.0,
+                max_val=10000.0,
+                step=0.001,
+                unit="m",
+            ),
+            ParamDef(
+                "矿井水进厂地面标高",
+                "Z_ground",
+                value=102.0,
+                default=102.0,
+                min_val=-10000.0,
+                max_val=10000.0,
+                step=0.001,
+                unit="m",
+            ),
+            ParamDef(
+                "矿井水进水管径",
+                "DN_inlet",
+                value=800.0,
+                default=800.0,
+                min_val=300.0,
+                max_val=2000.0,
+                step=50.0,
+                unit="mm",
+            ),
         ]
 
     def _init_ports(self) -> None:
@@ -225,12 +257,23 @@ class KwInputNode(NodeBase):
             "NH3N": self.get_param("NH3N"),
             "TN": self.get_param("TN"),
             "TP": self.get_param("TP"),
+            "Z_water_inlet": self.get_param("Z_water_inlet"),
+            "Z_ground": self.get_param("Z_ground"),
+            "DN_inlet": self.get_param("DN_inlet"),
         }
         result.add_dimension("设计流量", round(Qd, 4), "m³/s")
         result.add_dimension("平均日涌水量", Qad, "m³/d")
         result.add_dimension("平均时涌水量", flow_out.Q_avg_hourly, "m³/h")
         result.add_dimension("变化系数", Kz, "")
         result.add_dimension("进水TDS", self.get_param("TDS"), "mg/L")
+        # 高程参数
+        Z_water = self.get_param("Z_water_inlet")
+        Z_ground = self.get_param("Z_ground")
+        DN = self.get_param("DN_inlet") / 1000.0
+        result.add_dimension("矿井水进厂水面标高", round(Z_water, 3), "m")
+        result.add_dimension("矿井水地面标高", round(Z_ground, 3), "m")
+        result.add_dimension("矿井水进水管径", DN * 1000, "mm")
+        result.add_dimension("矿井水管底标高", round(Z_water - DN, 3), "m")
 
         wq = self.water_quality
         for attr in ["BOD5", "COD", "SS", "NH3N", "TN", "TP"]:
