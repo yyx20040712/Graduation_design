@@ -3,6 +3,7 @@ param_panel.py — 参数面板组件 (v5.4 extracted from main_window.py)
 
 管理参数 Tab 的全部 UI: 方案浏览 + 手动微调滑块/输入框。
 """
+
 from __future__ import annotations
 
 import tkinter as tk
@@ -10,12 +11,14 @@ from tkinter import ttk
 from typing import Callable, Dict
 
 from _logging import get_logger
-from .app_state import AppState
 
 # ── 模块级导入 (提前加载, 避免 EXE 打包后动态导入失败) ──
 from models.discretization import get_allowed_values
-from models.node_registry import has_solution_space, is_water_quality_node
+from models.node_registry import has_solution_space
 from models.node_registry import is_io_node as _is_io_node
+from models.node_registry import is_water_quality_node
+
+from .app_state import AppState
 
 _log = get_logger(__name__)
 
@@ -34,6 +37,7 @@ def _register_infra_nodes() -> None:
     from models.combiner import CombinerNode
     from models.pipe_network import PipeNetworkNode
     from models.water_quality_node import WaterQualityNode
+
     from mods.mod_manager import get_mod_manager
 
     mgr = get_mod_manager()
@@ -222,9 +226,7 @@ class ParamPanel:
             flow = WaterFlow(Q_design=0.57, Q_avg_daily=34760.7, Kz=1.4)
         self._solution_browser.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         # v5.4: force_recompute=True — 确保始终显示当前流量/水质下的最新方案
-        self._solution_browser.load_node(
-            be, flow, quality, force_recompute=True
-        )
+        self._solution_browser.load_node(be, flow, quality, force_recompute=True)
 
         # ── 诊断日志: 方案为空时输出上下文 ──
         if not self._solution_browser._solutions:
@@ -421,9 +423,9 @@ class ParamPanel:
                 def _on_focus_out(e, f=_sync_entry_to_scale):
                     self.parent_frame.after(
                         10,
-                        lambda: f()
-                        if self.parent_frame.focus_get() is not None
-                        else None,
+                        lambda: (
+                            f() if self.parent_frame.focus_get() is not None else None
+                        ),
                     )
 
                 entry.bind("<FocusOut>", _on_focus_out)
@@ -440,9 +442,7 @@ class ParamPanel:
                     length=280,
                     variable=var,
                 )
-                scale.bind(
-                    "<ButtonRelease-1>", lambda e, f=_sync_scale_to_entry: f()
-                )
+                scale.bind("<ButtonRelease-1>", lambda e, f=_sync_scale_to_entry: f())
                 scale.set(pd.value)
                 scale.pack(fill=tk.X, padx=6, pady=(0, 2))
 
@@ -547,7 +547,19 @@ class ParamPanel:
         self._on_recompute()
 
     def _on_constraint_changed(self, node_type: str):
-        """约束限值变更回调 — 刷新方案空间"""
+        """约束限值变更回调 — 刷新方案空间 + 标记相关节点需重算
+
+        关键修复: 约束参数通过面板"确定"按钮提交后, 必须标记所有同类型节点
+        为 DIRTY, 否则 F5 计算时 executor.execute(force_all=False) 找不到 DIRTY
+        节点, 导致使用陈旧缓存结果而非新参数重算.
+        """
+        from models.base import NodeState
+
+        # 标记所有同 node_type 的节点为 DIRTY (discretization config 是
+        # 按 nodetype 共享的, 修改约束影响该类型所有节点实例)
+        for nid, node in self.executor._nodes.items():
+            if getattr(node, "NODE_TYPE", "") == node_type:
+                node.state = NodeState.DIRTY
         self.status_var.set(f"约束限值已更新 — {node_type} 方案空间需刷新")
         self._state.is_dirty = True
 
@@ -576,9 +588,7 @@ class ParamPanel:
         # 水质相关的参数键 (已在水质卡片中编辑, 不再重复显示)
         _wq_keys = {"SS_in", "COD", "BOD5", "NH3N", "TN", "TP", "TDS", "pH"}
 
-        param_defs = [
-            pd for pd in be.get_param_defs() if pd.key not in _wq_keys
-        ]
+        param_defs = [pd for pd in be.get_param_defs() if pd.key not in _wq_keys]
         if not param_defs:
             return
 
@@ -588,7 +598,8 @@ class ParamPanel:
         tk.Label(
             self.parent_frame,
             text="▎工程参数 (流量/高程)",
-            bg="#252525", fg="#ffaa44",
+            bg="#252525",
+            fg="#ffaa44",
             font=("Microsoft YaHei", 10, "bold"),
         ).pack(anchor="w", padx=10, pady=(2, 4))
 
@@ -600,8 +611,7 @@ class ParamPanel:
         allowed = {}
         try:
             allowed = {
-                pd.key: get_allowed_values(be.NODE_TYPE, pd.key)
-                for pd in param_defs
+                pd.key: get_allowed_values(be.NODE_TYPE, pd.key) for pd in param_defs
             }
         except KeyError:
             pass
@@ -612,8 +622,10 @@ class ParamPanel:
             hdr = tk.Frame(row, bg="#2d2d2d")
             hdr.pack(fill=tk.X, padx=6, pady=(3, 0))
             tk.Label(
-                hdr, text=pd.name,
-                bg="#2d2d2d", fg="#ccc",
+                hdr,
+                text=pd.name,
+                bg="#2d2d2d",
+                fg="#ccc",
                 font=("Microsoft YaHei", 9, "bold"),
             ).pack(side=tk.LEFT)
             var = tk.DoubleVar(value=pd.value)
@@ -625,7 +637,8 @@ class ParamPanel:
                     hdr,
                     values=[str(v) for v in vals],
                     textvariable=var,
-                    state="readonly", width=10,
+                    state="readonly",
+                    width=10,
                 )
                 cb.pack(side=tk.RIGHT, padx=2)
                 cb.bind(
@@ -635,9 +648,14 @@ class ParamPanel:
             else:
                 str_var = tk.StringVar(value=str(pd.value))
                 entry = tk.Entry(
-                    hdr, textvariable=str_var, width=7,
-                    bg="#1a1a1a", fg="#ffaa44", insertbackground="#fff",
-                    font=("Consolas", 9), justify=tk.RIGHT,
+                    hdr,
+                    textvariable=str_var,
+                    width=7,
+                    bg="#1a1a1a",
+                    fg="#ffaa44",
+                    insertbackground="#fff",
+                    font=("Consolas", 9),
+                    justify=tk.RIGHT,
                 )
                 entry.pack(side=tk.RIGHT, padx=2)
                 vcmd = (self._tk_register(self._validate_float_entry), "%P")
@@ -658,13 +676,26 @@ class ParamPanel:
                     self._on_param_changed(k, val)
 
                 entry.bind("<Return>", lambda e, f=_sync_entry: f())
-                entry.bind("<FocusOut>", lambda e, f=_sync_entry:
-                    self.parent_frame.after(10, lambda: (f()
-                        if self.parent_frame.focus_get() is not None else None)))
+                entry.bind(
+                    "<FocusOut>",
+                    lambda e, f=_sync_entry: self.parent_frame.after(
+                        10,
+                        lambda: (
+                            f() if self.parent_frame.focus_get() is not None else None
+                        ),
+                    ),
+                )
                 scale = tk.Scale(
-                    row, from_=pd.min_val, to=pd.max_val, resolution=pd.step,
-                    orient=tk.HORIZONTAL, bg="#2d2d2d", fg="#ffaa44",
-                    troughcolor="#444", highlightthickness=0, length=280,
+                    row,
+                    from_=pd.min_val,
+                    to=pd.max_val,
+                    resolution=pd.step,
+                    orient=tk.HORIZONTAL,
+                    bg="#2d2d2d",
+                    fg="#ffaa44",
+                    troughcolor="#444",
+                    highlightthickness=0,
+                    length=280,
                     variable=var,
                 )
                 scale.bind("<ButtonRelease-1>", lambda e, f=_sync_scale: f())
@@ -673,7 +704,10 @@ class ParamPanel:
 
             if pd.unit:
                 tk.Label(
-                    hdr, text=pd.unit, bg="#2d2d2d", fg="#888",
+                    hdr,
+                    text=pd.unit,
+                    bg="#2d2d2d",
+                    fg="#888",
                     font=("Microsoft YaHei", 8),
                 ).pack(side=tk.RIGHT)
 
@@ -730,9 +764,7 @@ class ParamPanel:
                     TP=quality.TP,
                     pH=7.0,
                 )
-                result.outlet_quality = quality.apply_removal(
-                    node.get_removal_rates()
-                )
+                result.outlet_quality = quality.apply_removal(node.get_removal_rates())
                 node._result = result
                 node.state = NodeState.CLEAN
                 self._state.is_dirty = True
@@ -742,8 +774,7 @@ class ParamPanel:
                 from ui.logger import log
 
                 log.info(
-                    "Auto-applied solution for %s: "
-                    "flow=%.3f m3/s, %d available",
+                    "Auto-applied solution for %s: " "flow=%.3f m3/s, %d available",
                     node.NODE_NAME,
                     flow.Q_design,
                     len(sols),
