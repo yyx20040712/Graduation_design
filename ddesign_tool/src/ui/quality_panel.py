@@ -9,6 +9,10 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Callable, Dict, Optional
 
+from _logging import get_logger
+
+_log = get_logger(__name__)
+
 # ── 模块级导入 (提前加载, 避免 EXE 打包后动态导入失败) ──
 try:
     from models.base import NodeState  # noqa: F401 — used in _on_commit closure
@@ -308,6 +312,7 @@ class QualityPanel:
 
         self._quality_sections = {}
         has_any_data = False
+        node_count = 0  # v5.4-s7: 诊断计数
 
         for nid in order:
             node = self.executor._nodes.get(nid)
@@ -320,6 +325,7 @@ class QualityPanel:
                 continue
             if is_water_quality_node(node.NODE_TYPE):
                 continue
+            node_count += 1
 
             has_any_data = True
             section = tk.Frame(flow_frame, bg="#1a1a1a", bd=0,
@@ -386,6 +392,11 @@ class QualityPanel:
                              font=("Consolas", 9), width=10, anchor="e").pack(side=tk.LEFT)
 
         if not has_any_data:
+            _log.warning(
+                "build_full_quality_flow: no data — %d total nodes, "
+                "%d with quality data",
+                len(order), node_count
+            )
             tk.Label(
                 flow_frame, text="(请先按 F5 计算，仅显示处理单元的水质变化)",
                 bg="#1a1a1a", fg="#888",
