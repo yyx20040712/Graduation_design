@@ -49,6 +49,8 @@ def _merge_directory(src: str, dst: str, verbose: bool) -> None:
     """合并源目录到目标目录 — 仅拷贝缺失的文件和子目录."""
     if not os.path.isdir(src):
         return
+    # v5.4-s7: 确保目标目录存在, 否则 shutil.copy2 会因父目录缺失而失败
+    os.makedirs(dst, exist_ok=True)
     for name in os.listdir(src):
         s = os.path.join(src, name)
         d = os.path.join(dst, name)
