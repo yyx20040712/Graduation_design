@@ -456,24 +456,37 @@ class NodeCanvas(tk.Frame):
         self._sync_text_fonts()
 
     def fit_view(self):
-        """重置视口到内容区域并居中 (v5.4-s7: 居中而非左上角)"""
+        """重置视口到内容区域并居中 (v5.4-s7: 强制更新布局后居中)"""
+        # ── 强制完成所有待处理的几何计算 ──
+        self.canvas.update_idletasks()
         bbox = self.canvas.bbox("all")
         if bbox:
             self.canvas.configure(scrollregion=bbox)
-            # ── 居中视口: 计算内容的几何中心 ──
-            cx = (bbox[0] + bbox[2]) / 2
-            cy = (bbox[1] + bbox[3]) / 2
             cw = self.canvas.winfo_width()
             ch = self.canvas.winfo_height()
-            if cw > 0 and ch > 0:
-                # 将内容中心映射到视口中心
-                content_w = bbox[2] - bbox[0]
-                content_h = bbox[3] - bbox[1]
-                target_x = (cx - cw / 2) / max(content_w, 1)
-                target_y = (cy - ch / 2) / max(content_h, 1)
-                self.canvas.xview_moveto(max(0.0, min(1.0, target_x)))
-                self.canvas.yview_moveto(max(0.0, min(1.0, target_y)))
+            content_w = bbox[2] - bbox[0]
+            content_h = bbox[3] - bbox[1]
+            # ── 如果视口能容纳全部内容, 居中显示; 否则从左上角开始 ──
+            if cw >= content_w and ch >= content_h:
+                # 内容比视口小 → 居中
+                offset_x = (cw - content_w) / 2
+                offset_y = (ch - content_h) / 2
+                self.canvas.configure(scrollregion=(
+                    bbox[0] - offset_x, bbox[1] - offset_y,
+                    bbox[2] + offset_x, bbox[3] + offset_y
+                ))
+                self.canvas.xview_moveto(0)
+                self.canvas.yview_moveto(0)
+            elif cw > 1 and ch > 1:
+                # 视口尺寸有效 → 尝试居中
+                cx = (bbox[0] + bbox[2]) / 2
+                cy = (bbox[1] + bbox[3]) / 2
+                tx = max(0.0, min(1.0, (cx - cw / 2) / max(content_w, 1)))
+                ty = max(0.0, min(1.0, (cy - ch / 2) / max(content_h, 1)))
+                self.canvas.xview_moveto(tx)
+                self.canvas.yview_moveto(ty)
             else:
+                # 视口尺寸未知 → 回退左上角
                 self.canvas.xview_moveto(0)
                 self.canvas.yview_moveto(0)
         else:

@@ -1702,15 +1702,14 @@ class MainWindow(tk.Tk):
         self.status_var.set("缓存已清除 — 请按 F5 重新计算")
 
     def _on_locate_flow(self):
-        """自动布局: 按拓扑关系重新排列所有节点 (Sugiyama 分层 + 蛇形网格)
+        """自动布局: 按拓扑关系重新排列所有节点
 
-        1. 拓扑排序 → 最长路径分配层级
-        2. Barycenter 重心排序减少连线交叉
-        3. 层内蛇形折行 (超过12节点换行, 奇偶行交替方向)
+        v5.4-s7 fix: 添加 update_idletasks 确保 canvas 几何计算完成
         """
         try:
             self._auto_layout_nodes()
             self.canvas_view.reset_scale()
+            self.update_idletasks()  # 确保 canvas 尺寸已计算
             self.canvas_view.fit_view()
             self.status_var.set("自动布局完成")
             self._dirty = True
@@ -1843,11 +1842,16 @@ class MainWindow(tk.Tk):
             self.executor.execute(force_all=False)
             self._refresh_selected_result()
             self._update_all_node_statuses()
-            # ── v5.4-s7: 如果水质 Tab 当前可见, 直接刷新全流程水质追踪 ──
-            # 绕过 _on_tab_changed 的 pack/unpack 链条, 避免
-            # frame 重建竞争条件导致面板不刷新
+            # ── v5.4-s7: 水质 Tab 刷新 ──
+            # 直接重建水质面板内容 (不依赖 _on_tab_changed 的 pack/unpack 链)
             if self.tab_var.get() == "quality":
+                # 确保 quality_text frame 已 pack (可能在之前的操作中被 pack_forget)
+                if not self.quality_text.winfo_ismapped():
+                    self.quality_text.pack(
+                        side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=5
+                    )
                 self._quality_panel.build_full_quality_flow()
+                self.quality_text.update()
             self.status_var.set("计算完成")
         except Exception as e:
             self.status_var.set(f"计算失败: {e}")
