@@ -456,14 +456,30 @@ class NodeCanvas(tk.Frame):
         self._sync_text_fonts()
 
     def fit_view(self):
-        """重置视口到内容区域并刷新滚动区域"""
+        """重置视口到内容区域并居中 (v5.4-s7: 居中而非左上角)"""
         bbox = self.canvas.bbox("all")
         if bbox:
             self.canvas.configure(scrollregion=bbox)
+            # ── 居中视口: 计算内容的几何中心 ──
+            cx = (bbox[0] + bbox[2]) / 2
+            cy = (bbox[1] + bbox[3]) / 2
+            cw = self.canvas.winfo_width()
+            ch = self.canvas.winfo_height()
+            if cw > 0 and ch > 0:
+                # 将内容中心映射到视口中心
+                content_w = bbox[2] - bbox[0]
+                content_h = bbox[3] - bbox[1]
+                target_x = (cx - cw / 2) / max(content_w, 1)
+                target_y = (cy - ch / 2) / max(content_h, 1)
+                self.canvas.xview_moveto(max(0.0, min(1.0, target_x)))
+                self.canvas.yview_moveto(max(0.0, min(1.0, target_y)))
+            else:
+                self.canvas.xview_moveto(0)
+                self.canvas.yview_moveto(0)
         else:
             self.canvas.configure(scrollregion=(0, 0, 4000, 3000))
-        self.canvas.xview_moveto(0)
-        self.canvas.yview_moveto(0)
+            self.canvas.xview_moveto(0)
+            self.canvas.yview_moveto(0)
 
     # ═══════════════ 节点管理 ═══════════════
     def remove_node(self, node_id: str):

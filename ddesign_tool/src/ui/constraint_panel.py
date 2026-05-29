@@ -265,9 +265,23 @@ class ConstraintPanel(tk.Frame):
             allowed_vals: 离散允许值列表 (来自 free), None=自由输入
             unit: 单位字符串
         """
-        # 如果有已应用方案的参数, 使用方案值覆盖 config 默认值
+        # ── 确定显示值: config 值优先于旧计算结果 ──
+        # v5.4-s7 fix: 用户通过约束面板修改参数后,
+        # be.result.params 仍是旧值, 切换 Tab 回来时应用旧值覆盖了新配置.
+        # 现在: 对比 config 与 applied_params, config 被修改过则用 config.
         if self._applied_params and param_key in self._applied_params:
-            current_val = self._applied_params[param_key]
+            applied_val = self._applied_params[param_key]
+            # 检查 config 是否被用户修改过 (不同于原始计算结果)
+            try:
+                from models.discretization import get_config
+                cfg = get_config(self._node_type)
+                cfg_val = cfg.get("fixed", {}).get(param_key)
+                if cfg_val is not None and cfg_val != applied_val:
+                    current_val = cfg_val  # 用户修改过, 用新值
+                else:
+                    current_val = applied_val
+            except (KeyError, ImportError):
+                current_val = applied_val
         row = tk.Frame(parent, bg="#2d2d2d", bd=1, relief=tk.GROOVE)
         row.pack(fill=tk.X, padx=6, pady=1)
 
