@@ -499,9 +499,11 @@ class MainWindow(tk.Tk):
             try:
                 executor = self._pm.load(Path(valid_recent[0]))
                 self.executor = executor
+                # v5.4-s7: 同步更新所有面板的 executor 引用
+                self._sync_executor_refs()
                 self._rebuild_canvas()
                 self._dirty = False
-                self.title(f"排水工程设计工具 v3 — {Path(valid_recent[0]).name}")
+                self.title(f"排水工程设计工具 v5.4-s7 — {Path(valid_recent[0]).name}")
                 self.status_var.set(
                     f"已恢复: {Path(valid_recent[0]).name}  |  文件→最近文件 可切换"
                 )
@@ -1643,6 +1645,18 @@ class MainWindow(tk.Tk):
             self._refresh_selected_result()
 
     # ═══════════════ 查询/获取 ═══════════════
+    def _sync_executor_refs(self):
+        """同步 executor 引用到所有依赖面板 (v5.4-s7)
+
+        当 self.executor 被替换时(加载项目/新建),
+        QualityPanel/ParamPanel 仍持有旧引用, 导致
+        水质面板/方案浏览器读取空数据.
+        """
+        if hasattr(self, "_quality_panel"):
+            self._quality_panel.executor = self.executor
+        if hasattr(self, "param_panel"):
+            self.param_panel.executor = self.executor
+
     def _get_effluent_std(self, node=None):
         """获取出水标准 — 按水类型自动选择"""
         # 从节点或全局图判断水类型

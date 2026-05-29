@@ -47,6 +47,7 @@ class FileManager:
                 return
         self._do_clear()
         self.main.executor = GraphExecutor()
+        self.main._sync_executor_refs()
         self.main._pm.new_project()
         self.main._pipe_node = None
         self.main._selected_id = None
@@ -69,9 +70,10 @@ class FileManager:
             self._do_clear()
             executor = self.main._pm.load(Path(path))
             self.main.executor = executor
+            self.main._sync_executor_refs()
             self._rebuild_canvas()
             self.update_recent_menu()
-            self.main.title(f"排水工程设计工具 v3 — {Path(path).name}")
+            self.main.title(f"排水工程设计工具 v5.4-s7 — {Path(path).name}")
             self.main.status_var.set(f"已打开: {Path(path).name}")
         except Exception as e:
             log.error("Open failed: %s", e)
@@ -149,10 +151,11 @@ class FileManager:
             self._do_clear()
             executor = self.main._pm.load(Path(path_str))
             self.main.executor = executor
+            self.main._sync_executor_refs()
             self._rebuild_canvas()
             self.update_recent_menu()
             self.main._dirty = False
-            self.main.title(f"排水工程设计工具 v3 — {Path(path_str).name}")
+            self.main.title(f"排水工程设计工具 v5.4-s7 — {Path(path_str).name}")
             self.main.status_var.set(f"已打开: {Path(path_str).name}")
         except Exception as e:
             log.error("Open recent failed: %s", e)
