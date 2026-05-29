@@ -1842,7 +1842,9 @@ class MainWindow(tk.Tk):
             self.executor.execute(force_all=False)
             self._refresh_selected_result()
             self._update_all_node_statuses()
-        self.status_var.set("计算完成")
+            self.status_var.set("计算完成")
+        except Exception as e:
+            self.status_var.set(f"计算失败: {e}")
         # ── v5.4-s7: 水质面板内容刷新 (冷启动修复在 quality_panel.py) ──
         if self.tab_var.get() == "quality":
             self._quality_panel.build_full_quality_flow()
