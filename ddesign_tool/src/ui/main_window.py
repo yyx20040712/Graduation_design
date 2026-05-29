@@ -1842,20 +1842,16 @@ class MainWindow(tk.Tk):
             self.executor.execute(force_all=False)
             self._refresh_selected_result()
             self._update_all_node_statuses()
-            # ── v5.4-s7: 水质 Tab 刷新 ──
-            # 冷启动时 quality_text frame 的 pack 尚未被 tkinter 处理,
-            # 此时 build_full_quality_flow 创建的 canvas 尺寸为 1×1。
-            # after_idle 延迟到 tkinter 完成所有几何计算后执行。
-            if self.tab_var.get() == "quality":
-                def _rebuild_quality():
-                    if self.tab_var.get() != "quality":
-                        return
-                    self._result_panel._on_tab_changed()
-
-                self.after_idle(_rebuild_quality)
             self.status_var.set("计算完成")
         except Exception as e:
             self.status_var.set(f"计算失败: {e}")
+        # ── v5.4-s7: 水质面板刷新 — 在 try 外部执行, 避免被 except 吞掉 ──
+        # 冷启动问题根因: quality_text 在第一次 _on_tab_changed 时 pack,
+        # 但后续 _on_calc_rest 中的 after_idle 时机不可靠。
+        # 新方案: 设置 needs_refresh 标志, 由 _on_tab_changed 检查并重建。
+        if self.tab_var.get() == "quality":
+            self._quality_needs_refresh = True
+            self._result_panel._on_tab_changed()
 
     def _update_all_node_statuses(self):
         """Update canvas status lights for all nodes based on calculation results."""
