@@ -1842,9 +1842,10 @@ class MainWindow(tk.Tk):
             self.executor.execute(force_all=False)
             self._refresh_selected_result()
             self._update_all_node_statuses()
-        self.status_var.set("计算完成")
+            self.status_var.set("计算完成")
+        except Exception as e:
+            self.status_var.set(f"计算失败: {e}")
         # ── v5.4-s7: 水质面板刷新 ──
-        # after(0) 推迟到下一事件循环, 让 tkinter 先完成当前帧渲染
         if self.tab_var.get() == "quality":
             self.after(100, self._refresh_quality_panel)
 
