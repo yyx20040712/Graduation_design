@@ -2,7 +2,25 @@
 
 ---
 
-## [5.4.0] — 2026-05-28
+## [5.4.7] — 2026-05-29 (v5.4-s7)
+
+### Fixed
+- **P0: 约束面板「确定→F5计算」链路断裂** — `param_panel._on_constraint_changed()` 仅设置 UI dirty 标志, 从未标记 `NodeState.DIRTY`, 导致 `GraphExecutor.execute(force_all=False)` 跳过所有节点
+- **P1: 无可行解诊断 UI 不显示** — `_build_filter_ui()` 在提示创建后立即 `destroy` 了所有组件, 添加 `return` 提前退出
+- **标题栏版本号 v3→v5.4-s7**
+
+### Added
+- **最小冲突集诊断** (`solution_space._diagnose_infeasibility`): 无可行解时找到无法同时满足的最小约束子集 (QuickXplain-lite, O(2^n), n≤10)
+- **约束知识库**: 11 模组 `discretization.json` 新增 `constraint_hints` 字段 (51 条), 含参数映射+调整方向+物理建议
+- **启发式推断** (`_infer_hint_from_name`): 17 组约束关键词→参数映射规则, 覆盖全部 28 模组
+- **通过率可视化**: 方案浏览器无解面板 — 冲突集卡片 + 逐约束色条 + 具体调参文本
+- **全局自检 10→14 项**: 工具栏按钮信号 (20 项), 约束面板按钮绑定, 参数面板按钮信号 — 全部 EXE 兼容
+- **`test_constraint_consistency`** 扩展 `constraint_hints` 字段校验
+
+### Changed
+- `solution_space._suggest_relaxation` → `_diagnose_infeasibility` (保留旧接口兼容)
+- `solution_browser._show_no_solution_hint` 完全重写 UI
+- 自检 tests 11-14: `inspect.getsource()` → `hasattr()` 运行时检查 (EXE 兼容)
 
 ### Architecture (v5.4 生产部署级架构重构)
 - **main_window 瘦身**: 2478→1654 行 (-33%), 提取 3 个面板模块

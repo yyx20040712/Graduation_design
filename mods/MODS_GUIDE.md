@@ -2,7 +2,7 @@
 
 > **You are an AI agent. This guide is written for YOU.**
 > Follow it exactly. Do not improvise on structure. Copy the templates verbatim.
-> **版本**: v4.2 | **更新**: 2026-05-24 | **架构**: MC式即放即用 + 单一数据源 (JSON-only)
+> **版本**: v5.4-s7 | **更新**: 2026-05-29 | **架构**: MC式即放即用 + 单一数据源 (JSON-only)
 
 ---
 
@@ -234,6 +234,13 @@ def execute_sludge(self, sludge: SludgeFlow) -> Tuple[Optional[NodeResult], Slud
   "constraint_names": ["径深比 D/h2", "有效水深 h2"],
   "constraint_limits": {"径深比 D/h2": "2.0~2.5", "有效水深 h2": "1.0~2.0"},
   "constraint_types": {"径深比 D/h2": "result", "有效水深 h2": "result"},
+  "constraint_hints": {
+    "径深比 D/h2": {
+      "params": ["n", "q_surf"],
+      "adjust": "调整",
+      "hint": "调整池数 n 或表面负荷 q_surf 以改变池径"
+    }
+  },
   "display_name": "模块中文名",
   "estimator_type": "circular|rectangular"
 }
@@ -243,6 +250,11 @@ def execute_sludge(self, sludge: SludgeFlow) -> Tuple[Optional[NodeResult], Slud
 - **显示型自由变量**: 同时入 free(UI下拉) 和 fixed(实际值) — 不增加方案空间
 - `constraint_keys` 匹配向量化 `ok_*` 后缀
 - `constraint_names` 匹配 `add_check()` 第一个参数 **精确一致**
+- `constraint_hints` (v5.4-s7 新增, 可选): 无可行解时显示调整建议
+  - `params`: 影响该约束的参数列表 (free或fixed键名)
+  - `adjust`: 调整方向 ("增大"/"降低"/"调整")
+  - `hint`: 用户可见的建议文本 (中文)
+  - 未配置时由启发式规则 `_infer_hint_from_name()` 自动推断
 
 ---
 

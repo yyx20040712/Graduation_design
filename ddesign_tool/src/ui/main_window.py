@@ -116,7 +116,7 @@ class MainWindow(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title("排水工程设计工具 v3")
+        self.title("排水工程设计工具 v5.4-s7")
         self.geometry("1500x850")
         self.configure(bg="#1a1a1a")
         self.executor = GraphExecutor()
