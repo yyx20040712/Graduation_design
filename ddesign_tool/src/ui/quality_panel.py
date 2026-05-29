@@ -254,6 +254,10 @@ class QualityPanel:
 
     def build_full_quality_flow(self, scroll_to_node_id=None):
         """全流程水质追踪 — 按水流顺序排列所有工艺节点的水质变化表."""
+        # ── v5.4-s7: 冷启动修复 — 确保父 frame 已完成几何布局 ──
+        # 第一次打开时 quality_text 可能尚未 mapped (尺寸 1×1),
+        # 导致内部 canvas 不可见。update_idletasks 强制完成布局。
+        self.parent.update_idletasks()
         for w in self.parent.winfo_children():
             w.destroy()
 
