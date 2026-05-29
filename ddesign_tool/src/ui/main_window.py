@@ -1842,12 +1842,19 @@ class MainWindow(tk.Tk):
             self.executor.execute(force_all=False)
             self._refresh_selected_result()
             self._update_all_node_statuses()
-            self.status_var.set("计算完成")
-        except Exception as e:
-            self.status_var.set(f"计算失败: {e}")
-        # ── v5.4-s7: 水质面板内容刷新 (冷启动修复在 quality_panel.py) ──
+        self.status_var.set("计算完成")
+        # ── v5.4-s7: 水质面板刷新 ──
+        # after(0) 推迟到下一事件循环, 让 tkinter 先完成当前帧渲染
         if self.tab_var.get() == "quality":
-            self._quality_panel.build_full_quality_flow()
+            self.after(0, self._refresh_quality_panel)
+
+    def _refresh_quality_panel(self):
+        """延迟刷新水质面板 — 确保 frame 已映射"""
+        if not self.quality_text.winfo_ismapped():
+            self.quality_text.pack(
+                side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=5
+            )
+        self._quality_panel.build_full_quality_flow()
 
     def _update_all_node_statuses(self):
         """Update canvas status lights for all nodes based on calculation results."""
