@@ -908,6 +908,17 @@ class MainWindow(tk.Tk):
             btn_frame, text="重置默认值", command=lambda: self._reset_params(be)
         ).pack(side=tk.LEFT, padx=4)
 
+        # ── 递归滚轮绑定到所有子组件 ──
+        def _bind_wheel(widget, canvas_ref):
+            widget.bind(
+                "<MouseWheel>",
+                lambda e: canvas_ref.yview_scroll(int(-e.delta / 120), "units"),
+            )
+            for child in widget.winfo_children():
+                _bind_wheel(child, canvas_ref)
+
+        _bind_wheel(cards_frame, canvas)
+
     # ═══════════════ 水质全流程追踪 ═══════════════
 
     # 污染物颜色 & 标签 (模块级复用)
@@ -1177,6 +1188,18 @@ class MainWindow(tk.Tk):
                 fg="#888",
                 font=("Microsoft YaHei", 10),
             ).pack(pady=40)
+
+        # ── 递归滚轮绑定: 确保鼠标在任何子组件上滚轮都生效 ──
+        # v5.4-s7 fix: tkinter 滚轮事件不冒泡, 需递归绑定到所有子 widget
+        def _bind_wheel(widget, canvas_ref):
+            widget.bind(
+                "<MouseWheel>",
+                lambda e: canvas_ref.yview_scroll(int(-e.delta / 120), "units"),
+            )
+            for child in widget.winfo_children():
+                _bind_wheel(child, canvas_ref)
+
+        _bind_wheel(flow_frame, canvas)
 
         # ── 滚动到指定节点 ──
         if scroll_to_node_id and scroll_to_node_id in self._quality_sections:
