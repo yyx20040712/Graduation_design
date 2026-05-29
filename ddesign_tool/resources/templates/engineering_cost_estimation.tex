@@ -1,0 +1,497 @@
+\documentclass[12pt,a4paper]{ctexart}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry,booktabs,array,longtable}
+\usepackage{hyperref}
+\geometry{margin=2.5cm}
+\title{排水工程设计工具 v3.4\\工程概算方法与计算逻辑}
+\author{杨元鑫 \\ 哈尔滨工业大学 环境工程}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{编制依据与价格水平}
+
+本工程概算严格依据下列标准与定额编制：GB 50500--2013《建设工程工程量清单计价规范》；2019 年版《黑龙江省市政工程消耗量定额》，涵盖第一册（土石方工程）、第五册（市政管网工程）、第六册（水处理工程）、第九册（钢筋工程）和第十一册（措施项目）；T/BCEBCA 1--2023《建设工程造价指标分类与测算标准》；2024 年鹤岗市建设工程材料价格信息；以及上海市 2025 年水务工程造价信息（综合人工单价 161 元/工日）。
+
+价格水平统一调整至 2024 年鹤岗市水平。在 2019 定额基础上，材料费上浮约 $15\%$，人工费上浮约 $30\%$，机械台班费上浮约 $10\%$。
+
+\section{概算方法总述}
+
+本概算采用分部分项工程量清单（Bill of Quantities, BOQ）法，其核心思想是将工程造价逐级分解为若干独立的可计量分项，对每一项分别计算其工程量和综合单价，最后累加汇总。设某构筑物可分解为 $m$ 个分项，第 $i$ 项的工程量为 $Q_i$，综合单价为 $P_i$，则该构筑物的土建合价为：
+
+\begin{equation}
+C = \sum_{i=1}^{m} Q_i \cdot P_i
+\end{equation}
+
+综合单价 $P_i$ 是完成单位合格工程量所需的人工费、材料费、施工机具使用费、企业管理费和利润的合计，不含规费和增值税。规费和增值税在最终汇总时按规定的费率另行计算。
+
+根据池型的几何特征，全部构筑物划分为圆形池与矩形池两大类。旋流沉砂池和辐流式初沉池归入圆形池，采用圆柱壳结构建模；调节池、CASS 反应器、高密度沉淀池、V 型滤池、紫外消毒池以及粗、细格栅间归入矩形池，采用矩形箱体结构建模。每类池体的分部分项工程统一划分为七项：机械挖土方、C15 混凝土垫层、C30 底板、C30 池壁、HRB400 钢筋、内防水砂浆和模板。这一划分使得所有构筑物的概算计算得以通过统一的公式框架完成，仅需代入各池的具体尺寸参数。
+
+\section{建筑工程费——圆形池}
+
+\subsection{壁厚与底板厚度的经验确定}
+
+圆形池的结构厚度由单池有效容积 $V_{\text{eff}}$ 按照经验分级确定。这一分级方法来源于市政给排水构筑物的常规设计实践，反映了池体规模与结构受力需求之间的正相关关系。壁厚 $t_w$ 和底板厚 $t_f$ 的分段函数为：
+
+\begin{equation}
+t_w = \begin{cases}
+0.25\text{ m}, & V_{\text{eff}} < 500\text{ m}^3 \\
+0.30\text{ m}, & 500 \le V_{\text{eff}} < 2000\text{ m}^3 \\
+0.35\text{ m}, & 2000 \le V_{\text{eff}} < 5000\text{ m}^3 \\
+0.40\text{ m}, & V_{\text{eff}} \ge 5000\text{ m}^3
+\end{cases}
+\end{equation}
+
+\begin{equation}
+t_f = \begin{cases}
+0.30\text{ m}, & V_{\text{eff}} < 1000\text{ m}^3 \\
+0.40\text{ m}, & 1000 \le V_{\text{eff}} < 5000\text{ m}^3 \\
+0.50\text{ m}, & V_{\text{eff}} \ge 5000\text{ m}^3
+\end{cases}
+\end{equation}
+
+\subsection{分项工程量计算}
+
+设圆形池直径为 $D$ (m)，池总高度为 $H$ (m)，池数为 $n$，半径为 $R = D/2$。以下逐一给出七项分项工程的体积或面积公式。
+
+土方开挖按圆形基坑放坡开挖考虑，基坑周边预留 1.0 m 的工作面宽度，坑底超深 0.5 m（为垫层和基础处理预留），放坡系数 1:0.5 对应土方扩大系数取 1.3：
+
+\begin{equation}
+V_{\text{excav}} = \pi \cdot (R + 1.0)^2 \cdot (H + t_f + 0.5) \cdot n \cdot 1.3
+\end{equation}
+
+C15 混凝土垫层厚 0.1 m，沿径向向外扩出底板边缘 0.3 m：
+
+\begin{equation}
+V_{\text{pad}} = \pi \cdot (R + 0.3)^2 \cdot 0.1 \cdot n
+\end{equation}
+
+C30 抗渗混凝土底板为等厚圆板：
+
+\begin{equation}
+V_{\text{floor}} = \pi \cdot R^2 \cdot t_f \cdot n
+\end{equation}
+
+池壁为圆柱壳，计算高度取总高减去底板厚度（池壁坐落于底板之上）：
+
+\begin{equation}
+V_{\text{wall}} = 2\pi \cdot R \cdot (H - t_f) \cdot t_w \cdot n
+\end{equation}
+
+钢筋工程量按底板和池壁的混凝土体积分别乘以含钢量系数计算。底板含钢量取 $\rho_{\text{floor}} = 100$ kg/m$^3$，池壁含钢量取 $\rho_{\text{wall}} = 120$ kg/m$^3$（池壁受侧向水土压力，配筋率高于底板）：
+
+\begin{equation}
+W_{\text{rebar}} = \frac{V_{\text{floor}} \cdot \rho_{\text{floor}} + V_{\text{wall}} \cdot \rho_{\text{wall}}}{1000} \quad (\text{t})
+\end{equation}
+
+内防水砂浆面积取池壁内侧圆柱面面积加底板顶面面积：
+
+\begin{equation}
+A_{\text{wp}} = \left(2\pi \cdot R \cdot (H - t_f) + \pi \cdot R^2\right) \cdot n
+\end{equation}
+
+模板面积取池壁外侧圆柱面面积（内侧防水砂浆兼作模板）：
+
+\begin{equation}
+A_{\text{form}} = 2\pi \cdot R \cdot (H - t_f) \cdot n
+\end{equation}
+
+\section{建筑工程费——矩形池}
+
+\subsection{分项工程量计算}
+
+设矩形池的长为 $L$ (m)、宽为 $B$ (m)、总高为 $H$ (m)，池数为 $n$。壁厚 $t_w$ 和底板厚 $t_f$ 的确定方式与圆形池相同，依据单池有效容积按分级函数计算。
+
+矩形池的土方开挖按矩形基坑考虑，基坑每侧预留 1.0 m 工作面，坑底超深 0.5 m。矩形基坑的放坡效应取综合扩大系数 1.2（略低于圆形池的 1.3，因矩形坑的四角区域放坡重叠部分抵消了部分增量）：
+
+\begin{equation}
+V_{\text{excav}} = (L + 2) \cdot (B + 2) \cdot (H + t_f + 0.5) \cdot n \cdot 1.2
+\end{equation}
+
+垫层外扩 0.3 m：
+
+\begin{equation}
+V_{\text{pad}} = (L + 0.6) \cdot (B + 0.6) \cdot 0.1 \cdot n
+\end{equation}
+
+底板为等厚矩形板：
+
+\begin{equation}
+V_{\text{floor}} = L \cdot B \cdot t_f \cdot n
+\end{equation}
+
+池壁为四面矩形板围成的箱体，总壁长为 $2(L + B)$，计算高度为总高减去底板厚度：
+
+\begin{equation}
+V_{\text{wall}} = 2 \cdot (L + B) \cdot (H - t_f) \cdot t_w \cdot n
+\end{equation}
+
+矩形池壁四角存在混凝土重叠区域，实际壁体积略小于上式计算结果，相对误差在 $2\%$ 以内，忽略不计。钢筋、防水和模板的公式与圆形池同理：
+
+\begin{equation}
+W_{\text{rebar}} = \frac{V_{\text{floor}} \cdot \rho_{\text{floor}} + V_{\text{wall}} \cdot \rho_{\text{wall}}}{1000}
+\end{equation}
+
+\begin{equation}
+A_{\text{wp}} = A_{\text{form}} = \left[2 \cdot (L + B) \cdot (H - t_f) + L \cdot B\right] \cdot n
+\end{equation}
+
+\subsection{综合单价一览}
+
+各分项工程的 2024 年综合单价汇总于表 \ref{tab:civil_price}。单价数据来源于 2019 年黑龙江定额经材料、人工和机械费调整后的综合测算结果。
+
+\begin{table}[htbp]
+\centering
+\caption{土建综合单价（2024年鹤岗调整价）}
+\label{tab:civil_price}
+\begin{tabular}{llr}
+\toprule
+\textbf{定额编号} & \textbf{项目名称} & \textbf{综合单价（元/单位）} \\
+\midrule
+T1-1  & 机械挖土方              & 45 元/m$^3$ \\
+T1-2  & 回填夯实                & 36 元/m$^3$ \\
+T6-1  & C15 垫层混凝土          & 680 元/m$^3$ \\
+T6-2  & C30 底板（含模板）      & 1050 元/m$^3$ \\
+T6-3  & C30 池壁（含模板）      & 1150 元/m$^3$ \\
+T9-1  & HRB400 钢筋（含加工绑扎）& 7200 元/t \\
+T11-1 & 池壁模板                & 65 元/m$^2$ \\
+T11-2 & 底板模板                & 50 元/m$^2$ \\
+T11-3 & 内防水砂浆              & 80 元/m$^2$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{设备购置费}
+
+\subsection{工艺设备}
+
+各构筑物所配置的主要工艺设备按其实际数量乘以对应设备的 2024 年市场参考价汇总，计算公式为：
+
+\begin{equation}
+C_{\text{equip}} = \sum_{j=1}^{k} n_j \cdot P_{\text{equip},j}
+\end{equation}
+
+其中 $n_j$ 为第 $j$ 类设备的数量（台或套），$P_{\text{equip},j}$ 为该设备的 2024 年市场参考价（万元/台）。主要工艺设备的参考价格列于表 \ref{tab:equip_price}。
+
+\begin{table}[htbp]
+\centering
+\caption{主要工艺设备参考价（2024年）}
+\label{tab:equip_price}
+\small
+\begin{tabular}{llrl}
+\toprule
+\textbf{构筑物} & \textbf{设备名称} & \textbf{数量} & \textbf{单价（万元/台）} \\
+\midrule
+粗格栅   & 回转式格栅除污机    & 3  & 15.0 \\
+         & 螺旋输送压榨机      & 1  & 10.0 \\
+细格栅   & 转鼓细格栅          & 3  & 22.0 \\
+沉砂池   & 旋流沉砂器          & 2  & 18.0 \\
+         & 砂水分离器          & 1  & 10.0 \\
+初沉池   & 中心传动刮泥机      & 2  & 28.0 \\
+CASS    & 微孔曝气器+管路     & 4  & 22.0 \\
+         & 旋转式滗水器        & 4  & 18.0 \\
+         & 鼓风机房(含鼓风机)  & 1  & 80.0 \\
+AAO     & 微孔曝气器+管路     & 3  & 22.0 \\
+         & 潜水搅拌器(厌/缺)   & 6  & 8.0 \\
+         & 混合液回流泵        & 3  & 12.0 \\
+         & 鼓风机房(含鼓风机)  & 1  & 80.0 \\
+高密度池 & 斜管填料            & 4  & 12.0 \\
+         & PAC 加药系统       & 1  & 25.0 \\
+V型滤池 & 反冲洗鼓风机        & 2  & 22.0 \\
+紫外消毒 & 紫外消毒模块        & 2  & 55.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{通用设备与附属建筑}
+
+全厂通用设备及附属建筑的购置费按表 \ref{tab:common_equip} 所列项目汇总，合计 710 万元。
+
+\begin{table}[htbp]
+\centering
+\caption{全厂通用设备及附属建筑}
+\label{tab:common_equip}
+\begin{tabular}{lr}
+\toprule
+\textbf{项目名称} & \textbf{造价（万元）} \\
+\midrule
+进水泵房（提升泵）          & 85 \\
+污泥浓缩脱水机              & 65 \\
+电气自控 PLC+SCADA          & 130 \\
+厂区管路阀门                & 90 \\
+生物除臭系统                & 55 \\
+化验室仪器                  & 35 \\
+综合楼及附属建筑            & 120 \\
+办公运输设备                & 50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{安装工程费}
+
+安装工程费按设备购置费的固定比例估算，费率取 $15\%$：
+
+\begin{equation}
+C_{\text{install}} = 0.15 \cdot C_{\text{equip}}
+\end{equation}
+
+\section{管网工程费}
+
+\subsection{概算模型}
+
+管网工程费基于排水管网 Excel 计算结果的「计算结果」工作表，对每一管段独立计算其造价，然后逐段累加。单段管道造价由五项分项工程构成——管道材料及铺设、沟槽土方开挖与回填、施工机械台班、人工工时以及检查井摊销：
+
+\begin{equation}
+C_{\text{seg}} = C_{\text{pipe}} + C_{\text{earth}} + C_{\text{mach}} + C_{\text{labor}} + C_{\text{mh}}
+\end{equation}
+
+管网总造价为全部管段之和，加提升泵站费用：
+
+\begin{equation}
+C_{\text{pipe\_total}} = \sum_{j=1}^{N_{\text{seg}}} C_{\text{seg},j} + C_{\text{pump}}
+\end{equation}
+
+\subsection{管道材料与铺设}
+
+管道综合单价 $P_{\text{pipe}}(D)$（元/m）是管径 $D$ (mm) 的函数，其内涵已包含预应力或钢筋混凝土管的材料费、管道铺设所需的人工与机械费以及管道接口的处理费用。管径间的单价采用分段线性插值确定：
+
+\begin{equation}
+P_{\text{pipe}}(D) = P_k + \frac{D - D_k}{D_{k+1} - D_k} \cdot (P_{k+1} - P_k),\quad D \in [D_k, D_{k+1}]
+\end{equation}
+
+各标准管径对应的综合单价列于表 \ref{tab:pipe_price}，2024 年调整价在 2019 定额基础上上浮约 $25\%\sim30\%$。
+
+\begin{table}[htbp]
+\centering
+\caption{管道综合单价（2024年鹤岗调整价，含铺设、开挖、回填及检查井摊销）}
+\label{tab:pipe_price}
+\begin{tabular}{lcccccccccccc}
+\toprule
+\textbf{管径 (mm)} & 300 & 400 & 500 & 600 & 700 & 800 & 900 & 1000 & 1100 & 1200 & 1400 & 1500 \\
+\midrule
+\textbf{单价 (元/m)} & 620 & 800 & 1050 & 1350 & 1650 & 1950 & 2250 & 2600 & 2900 & 3400 & 4300 & 5000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+单段管道的材料与铺设费即为长度乘以对应管径的综合单价：
+
+\begin{equation}
+C_{\text{pipe}} = P_{\text{pipe}}(D) \cdot L
+\end{equation}
+
+\subsection{沟槽土方开挖与回填}
+
+管段的平均埋深由该管段起止点的管内底标高与地面标高反算得到。起点埋深为起点地面标高与起点管内底标高之差，终点埋深同理，二者取平均即为本段的平均埋深。若 Excel 源数据中缺少高程信息，系统默认取 1.5 m 作为平均埋深的保守估计：
+
+\begin{equation}
+\overline{h}_d = \frac{(H_{g,\text{start}} - H_{i,\text{start}}) + (H_{g,\text{end}} - H_{i,\text{end}})}{2}
+\end{equation}
+
+沟槽底宽取管外径（以 m 计）加两侧各 0.6 m 的工作面宽度：
+
+\begin{equation}
+b_t = \frac{D}{1000} + 1.2
+\end{equation}
+
+沟槽深度在平均埋深基础上增加 0.2 m 的管底碎石垫层厚度。梯形断面沟槽的放坡系数 1:0.5 对应于土方扩大系数 1.3：
+
+\begin{equation}
+V_{\text{excav}} = b_t \cdot (\overline{h}_d + 0.2) \cdot L \cdot 1.3
+\end{equation}
+
+回填量按开挖量的 $85\%$ 估算，剩余 $15\%$ 为余土外运：
+
+\begin{equation}
+V_{\text{backfill}} = 0.85 \cdot V_{\text{excav}}
+\end{equation}
+
+土方合价为开挖费与回填费之和，其中 $P_{\text{excav}} = 45$ 元/m$^3$，$P_{\text{backfill}} = 36$ 元/m$^3$：
+
+\begin{equation}
+C_{\text{earth}} = V_{\text{excav}} \cdot P_{\text{excav}} + V_{\text{backfill}} \cdot P_{\text{backfill}}
+\end{equation}
+
+\subsection{施工机械台班与人工工时}
+
+依据 2019 黑龙江定额第五册（HLJD-SZ-2019-5），不同管径的管道铺设所需的人工与机械消耗量以「每 10 m 管道」为计量单位给出，详见表 \ref{tab:machine_shift_full}。
+
+\begin{table}[htbp]
+\centering
+\caption{管道铺设人工与机械消耗量（每 10 m 管道）}
+\label{tab:machine_shift_full}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{管径 (mm)} & \textbf{技工(工日)} & \textbf{普工(工日)} & \textbf{起重机(台班)} & \textbf{载重车(台班)} \\
+\midrule
+300  & 2.1 & 4.2 & 0.02 & 0.03 \\
+400  & 2.5 & 5.0 & 0.03 & 0.04 \\
+500  & 3.0 & 6.0 & 0.04 & 0.05 \\
+600  & 3.5 & 7.0 & 0.05 & 0.06 \\
+700  & 4.0 & 8.0 & 0.06 & 0.08 \\
+800  & 4.5 & 9.0 & 0.07 & 0.10 \\
+900  & 5.0 & 10.0& 0.08 & 0.12 \\
+1000 & 5.6 & 11.2& 0.09 & 0.14 \\
+1100 & 6.2 & 12.4& 0.10 & 0.16 \\
+1200 & 6.8 & 13.6& 0.12 & 0.18 \\
+1400 & 7.8 & 15.6& 0.15 & 0.22 \\
+1500 & 8.5 & 17.0& 0.17 & 0.25 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+设某管径对应的技工消耗为 $L_t(D)$（工日/10m）、普工消耗为 $L_g(D)$（工日/10m）、汽车起重机消耗为 $M_c(D)$（台班/10m）、载重汽车消耗为 $M_t(D)$（台班/10m），管道长度为 $L$ (m)，综合人工单价为 $P_{\text{labor}} = 128$ 元/工日。则人工费和机械费分别为：
+
+\begin{align}
+C_{\text{labor}} &= \left(L_t(D) + L_g(D)\right) \cdot \frac{L}{10} \cdot P_{\text{labor}} \\
+C_{\text{mach}} &= M_c(D) \cdot \frac{L}{10} \cdot P_{\text{crane}} \;+\; M_t(D) \cdot \frac{L}{10} \cdot P_{\text{truck}} \;+\; \frac{V_{\text{excav}}}{100} \cdot P_{\text{excavator}} \cdot 0.5
+\end{align}
+
+公式中第三项为挖掘机土方开挖费用，按每 100 m$^3$ 开挖量消耗 0.5 台班估算。机械台班单价列于表 \ref{tab:machine_price}，分别为汽车起重机 12 t 型 1800 元/台班、载重汽车 8 t 型 1200 元/台班、挖掘机 1 m$^3$ 型 2800 元/台班。
+
+\begin{table}[htbp]
+\centering
+\caption{机械台班与人工单价}
+\label{tab:machine_price}
+\begin{tabular}{llr}
+\toprule
+\textbf{资源名称} & \textbf{规格} & \textbf{单价（元/台班或工日）} \\
+\midrule
+挖掘机      & 1 m$^3$           & 2800 \\
+汽车起重机  & 12 t              & 1800 \\
+载重汽车    & 8 t               & 1200 \\
+综合人工    & 技工+普工加权     & 128 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{检查井与提升泵站}
+
+检查井的综合单价已将砌筑、井盖、踏步和防坠网的造价纳入，按管径分级确定（表 \ref{tab:manhole_price}）。检查井沿管道按 40 m 间距布置，单段管道的检查井费用为：
+
+\begin{equation}
+C_{\text{mh}} = P_{\text{mh}}(D) \cdot \frac{L}{40}
+\end{equation}
+
+\begin{table}[htbp]
+\centering
+\caption{检查井综合单价}
+\label{tab:manhole_price}
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{管径 (mm)} & 300 & 400 & 500 & 600 & 800 & 1000 & 1200 & 1500 \\
+\midrule
+\textbf{单价 (元/座)} & 3500 & 4200 & 5000 & 6000 & 8500 & 12000 & 16000 & 24000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+若管网计算结果中存在「污水提升」标记，即 Excel 输入表格的第 8 列取值大于零，表明该管段需设置污水提升泵站。泵站的基础造价为 70 万元，每米提升扬程增加 0.5 万元：
+
+\begin{equation}
+C_{\text{pump}} = \left(70 + 0.5 \cdot H_{\text{lift}}\right) \times 10^4 \quad (\text{元})
+\end{equation}
+
+管径汇总用于材料统计与单位长度造价校核。按管径分类的总长度 $L_{\text{total}}(D)$ 等于所有该管径管段的长度之和，管道总延长为各管径长度之和 $L_{\text{total}} = \sum_D L_{\text{total}}(D)$。单位长度造价为管网总造价除以总延长：
+
+\begin{equation}
+c_{\text{unit\_pipe}} = \frac{C_{\text{pipe\_total}}}{L_{\text{total}}} \quad (\text{元/m})
+\end{equation}
+
+\section{施工措施项目}
+
+依据 2019 黑龙江定额第十一册（措施项目），污水处理厂施工除主体结构外，必须计取以下四项措施费用。
+
+施工降水针对埋深超过 3 m 的构筑物基坑设置井点降水系统，按建筑工程费的 $2\%$ 估算：$C_{\text{dewater}} = 0.02 \cdot C_{\text{civil}}$。
+
+场地准备与临时设施涵盖施工道路铺设、围挡搭设、临时办公生活用房建设、材料堆场及加工棚搭建等内容，按建筑工程费的 $5\%$ 计取：$C_{\text{temp}} = 0.05 \cdot C_{\text{civil}}$。
+
+施工环保措施包括施工期扬尘控制（洒水降尘、密目网覆盖）、施工噪声屏障设置、施工废水收集与处理等，按建筑工程费的 $1.5\%$ 计取：$C_{\text{env}} = 0.015 \cdot C_{\text{civil}}$。
+
+调试与试运行涵盖活性污泥接种与培养、药剂投加调试、全部设备的联动试车以及试运行期间的水质检测等，按设备购置费的 $3\%$ 计取：$C_{\text{commission}} = 0.03 \cdot C_{\text{equip}}$。
+
+措施项目费为上述四项之和：
+
+\begin{equation}
+C_{\text{measures}} = C_{\text{dewater}} + C_{\text{temp}} + C_{\text{env}} + C_{\text{commission}}
+\end{equation}
+
+\section{其他费用}
+
+其他费用以建筑工程费与安装工程费之和（即建安费）为基数，分别按以下四项费率计取：建设单位管理费 $5.0\%$，涵盖项目建设全过程的组织、协调和管理支出；勘察设计费 $4.0\%$，涵盖工程勘察、方案设计、施工图设计及相关技术服务；工程监理费 $2.5\%$，涵盖施工阶段的质量、进度、投资控制和安全管理；前期工作费 $1.0\%$，涵盖项目建议书、可行性研究、环境影响评价等前期支出。费率汇总于表 \ref{tab:other_rates}，合计费率为 $12.5\%$：
+
+\begin{equation}
+C_{\text{other}} = (C_{\text{civil}} + C_{\text{install}}) \times (0.05 + 0.04 + 0.025 + 0.01)
+\end{equation}
+
+\begin{table}[htbp]
+\centering
+\caption{其他费用费率}
+\label{tab:other_rates}
+\begin{tabular}{llr}
+\toprule
+\textbf{费用名称} & \textbf{计算基数} & \textbf{费率} \\
+\midrule
+建设单位管理费 & 建安费 & $5.0\%$ \\
+勘察设计费     & 建安费 & $4.0\%$ \\
+工程监理费     & 建安费 & $2.5\%$ \\
+前期工作费     & 建安费 & $1.0\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{预备费与税金}
+
+基本预备费用于应对设计变更、工程量增减和不可预见因素导致的费用增加，按建筑工程费、管网工程费、施工措施费、设备购置费、安装工程费和其他费用六项之和的 $10\%$ 计取：
+
+\begin{equation}
+C_{\text{contingency}} = 0.10 \times (C_{\text{civil}} + C_{\text{pipe}} + C_{\text{measures}} + C_{\text{equip}} + C_{\text{install}} + C_{\text{other}})
+\end{equation}
+
+建筑业增值税税率 $9\%$，以含预备费的建设总成本为计税基数：
+
+\begin{equation}
+C_{\text{tax}} = 0.09 \times (C_{\text{civil}} + C_{\text{pipe}} + C_{\text{measures}} + C_{\text{equip}} + C_{\text{install}} + C_{\text{other}} + C_{\text{contingency}})
+\end{equation}
+
+\section{工程总造价}
+
+将前述全部分项费用汇总，得工程总造价（含增值税）的封闭计算公式。该公式将概算分解为八个独立分项，每一项均有明确的计量依据和费率标准，从而确保了概算的透明性和可追溯性：
+
+\begin{equation}
+\boxed{
+C_{\text{total}} = C_{\text{civil}} + C_{\text{pipe}} + C_{\text{measures}} + C_{\text{equip}} + C_{\text{install}} + C_{\text{other}} + C_{\text{contingency}} + C_{\text{tax}}
+}
+\end{equation}
+
+\section{造价指标校验}
+
+\subsection{单位处理规模造价}
+
+为了评价概算结果的合理性，引入单位处理规模造价指标，定义为工程总造价除以设计平均日处理流量：
+
+\begin{equation}
+c_{\text{unit}} = \frac{C_{\text{total}}}{Q_{\text{daily}}} \quad (\text{元}/(\text{m}^3 \cdot \text{d}))
+\end{equation}
+
+根据 T/BCEBCA 1--2023 标准的统计结果，采用常规二级生化处理加深度处理工艺、出水执行一级 A 排放标准的城镇污水处理厂，其单位造价参考区间为 $3000 \sim 5000$ 元/(m$^3\cdot$d)。若概算得到的 $c_{\text{unit}}$ 落在此区间之内，可判定概算结果在统计意义上合理。
+
+\subsection{鹤岗项目校验}
+
+以鹤岗市经济开发区污水处理厂为例进行实际校验。项目设计参数为：平均日处理规模 $Q_{\text{avg}} = 34,760.7$ m$^3$/d，最大设计流量 $Q_{\text{max}} = 0.57$ m$^3$/s，总变化系数 $K_z = 1.4$。全流程共包含调节池、粗格栅、细格栅、旋流沉砂池、辐流初沉池、CASS 反应器、高密度沉淀池、V 型滤池和紫外消毒池九个市政处理单元，以及矿井水调节池、平流沉砂池、混凝反应池和磁分离四个矿井水处理单元，v3.4 版本新增污泥输送泵站、浓缩池、消化池、脱水间、干化和污泥泵站等七个污泥处理单元，v3.4 新增 AAO 二级处理单元和辐流式二沉池社区模组，合计 24 个处理构筑物。经软件按上述方法自动概算，折合单位处理规模造价约 3,550 元/(m$^3\cdot$d)，处于 $[3000, 5000]$ 的参考区间之内，概算结果合理。
+
+\section{方案比选中的概算应用}
+
+在软件的交互设计中，概算模块不仅用于最终报告的输出，还嵌入了方案比选的核心流程。当用户选中某个处理单元时，系统自动枚举该单元的全部可行参数组合（即方案空间），并对每一个可行方案调用向量化成本估算器计算其概算成本。由于同一模块的工艺设备配置是固定的——设备的种类和数量不随土建尺寸参数变化——方案之间的相对排序实际上由土建成本决定。因此，排序函数简化为土建成本与设备费之和：
+
+\begin{equation}
+\text{Rank}(s) = C_{\text{civil}}(s) + C_{\text{equip}}
+\end{equation}
+
+所有可行方案按该指标升序排列后，前 200 个方案呈现于方案浏览器中，成本最低的方案被标记为推荐方案并默认选中。这一机制使得用户无需逐个方案比较造价，系统自动将经济性最优的设计参数组合推送到用户面前。
+
+\end{document}

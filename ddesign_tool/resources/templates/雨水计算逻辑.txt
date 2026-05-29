@@ -1,0 +1,509 @@
+================================================================================
+                    雨水管道水力设计计算逻辑
+              （毕业设计 - 计算方法章节）
+================================================================================
+
+
+                    第 一 部 分
+          老式毕设的手动计算方式及理论公式
+    （适用于手工计算与毕业设计论文理论推导）
+================================================================================
+
+1. 设计依据与引用标准
+--------------------------------------------------------------------------------
+本计算严格依据 GB50014-2021《室外排水设计标准》：
+  · 表 5.2.4  最大设计充满度（雨水管道允许满流，h/D ≤ 1.0）
+  · 表 5.2.10 最小管径与最小设计坡度
+  · 暴雨强度公式采用推理公式法
+  · 管道水力计算采用曼宁公式（Manning Formula）
+
+与污水管道的核心区别：雨水设计流量由暴雨强度公式推导，而非直接给定；
+雨水管道允许满流设计；需累积上游汇水面积和汇流时间。
+
+2. 暴雨强度公式与设计流量（LaTeX 公式）
+--------------------------------------------------------------------------------
+
+2.1 暴雨强度公式（推理公式法）
+
+\[
+q = \frac{A \cdot (1 + C \cdot \lg P)}{(t_0 + t)^{n}}
+\qquad \text{(L/(s·ha))}
+\]
+
+其中：
+  $q$    —— 单位面积设计暴雨强度 (L/(s·ha))
+  $P$    —— 设计重现期（年），默认 $P = 3.0$
+  $t_0$  —— 地面集水时间（分钟），默认 $t_0 = 11.77$
+  $t$    —— 管内流行时间（分钟），从上游累计至本段起点
+  $A$    —— 地区暴雨公式系数，默认 $A = 2989.5$
+  $C$    —— 对数项系数，默认 $C = 0.95$
+  $n$    —— 暴雨衰减指数，默认 $n = 0.88$
+
+公式物理意义：
+  · 分子 $A(1 + C \lg P)$ 表示与重现期相关的暴雨强度基数
+  · 分母 $(t_0 + t)^n$ 表示降雨强度随历时增加而衰减的规律
+
+2.2 径流系数
+
+径流系数 $\Psi$（psi）表示降雨转化为径流的比例，综合反映地面渗透、
+蒸发等损失：
+
+\[
+\Psi = 0.785
+\]
+
+2.3 设计流量计算
+
+对于某管段 $i$，其设计流量（L/s）为：
+
+\[
+Q_{\text{design}}^{(i)} = F_{\text{cum}}^{(i)} \cdot q^{(i)} \cdot \Psi
+\]
+
+其中：
+  $F_{\text{cum}}^{(i)}$ —— 管段 $i$ 的累计汇水面积 (ha)
+  $q^{(i)}$ —— 对应于汇流时间 $t_0 + t_{\text{up}}$ 的暴雨强度
+
+面积单位换算（输入 m² → 计算 ha）：
+\[
+F \text{ (ha)} = \frac{F \text{ (m}^2\text{)}}{10000}
+\]
+
+3. 汇流时间计算（LaTeX 公式）
+--------------------------------------------------------------------------------
+
+汇流时间（time of concentration）是暴雨强度公式的核心参数，直接影响
+暴雨强度的大小。汇流时间越长，暴雨强度越小。
+
+3.1 地面集水时间
+
+\[
+t_0 = 11.77 \;\text{min}
+\]
+
+表示雨水从流域最远点流至第一个雨水口的时间。可根据实际地形调整。
+
+3.2 上游最大累计时间
+
+对于非起始管道，取所有上游支线累计时间的最大值（最远点控制原则）：
+
+\[
+t_{\text{up}}^{(i)} = \max_{u \in \text{upstream}(i)} \left\{ T_{\text{total}}^{(u)} \right\}
+\]
+
+3.3 本段管内流行时间
+
+雨水在本管段内的流行时间：
+
+\[
+t_{\text{pipe}}^{(i)} = \frac{L^{(i)}}{v^{(i)} \times 60}
+\qquad \text{(min)}
+\]
+
+其中 $L^{(i)}$ 为管段长度 (m)，$v^{(i)}$ 为管内设计流速 (m/s)，60 为秒转分钟因子。
+
+3.4 终点总汇流时间
+
+管段终点的总汇流时间（传递给下游管道使用）：
+
+\[
+T_{\text{total}}^{(i)} = t_{\text{up}}^{(i)} + t_{\text{pipe}}^{(i)}
+\]
+
+3.5 累计汇水面积
+
+\[
+F_{\text{cum}}^{(i)} = F_{\text{this}}^{(i)} + \sum_{u \in \text{upstream}(i)} F_{\text{cum}}^{(u)}
+\]
+
+4. 曼宁公式与非满管流几何关系（LaTeX 公式）
+--------------------------------------------------------------------------------
+
+雨水管道水力计算公式与污水管道完全一致，以下为自包含的完整描述。
+
+4.1 曼宁基本公式
+
+\[
+v = \frac{1}{n} \, R^{2/3} \, i^{1/2}
+\qquad\text{(m/s)}
+\]
+\[
+Q = A \cdot v
+\qquad\text{(m}^3\text{/s)}
+\]
+
+其中 $n = 0.014$（混凝土管），$R$ 为水力半径 (m)，$i$ 为管底坡度。
+
+4.2 圆管非满流几何关系
+
+设圆管内径 $D$ (m)，水深 $h$ (m)，充满度 $h/D$：
+
+\[
+\theta = 2 \arccos\!\left(1 - \frac{2h}{D}\right)
+\qquad \text{(水面圆心角, rad)}
+\]
+
+\[
+A = \frac{D^{2}}{8} \bigl( \theta - \sin\theta \bigr)
+\qquad \text{(过水断面面积, m}^2\text{)}
+\]
+
+\[
+\chi = \frac{D}{2} \, \theta
+\qquad \text{(湿周, m)}
+\]
+
+\[
+R = \frac{A}{\chi} =
+\frac{D}{4}\!\left(1 - \frac{\sin\theta}{\theta}\right)
+\qquad \text{(水力半径, m)}
+\]
+
+满流时（$h = D$）：$\theta = 2\pi$，$A = \pi D^{2}/4$，$\chi = \pi D$，$R = D/4$。
+
+4.3 反算坡度公式
+
+给定 $D$、$h$、$Q$ 时，反算所需水力坡度：
+
+\[
+i = \left( \frac{Q \cdot n}{A \cdot R^{2/3}} \right)^{2}
+\]
+
+
+5. 设计约束条件（规范表格）
+--------------------------------------------------------------------------------
+
+5.1 最大设计充满度
+
+雨水管道允许满流设计：
+
+\begin{tabular}{c|c}
+\hline
+管径范围 (mm) & 最大充满度 $h/D$ \\
+\hline
+所有管径      & 1.0 （满流） \\
+\hline
+\end{tabular}
+
+5.2 最小设计坡度（GB50014-2021 表 5.2.10）
+
+\begin{tabular}{c|c||c|c}
+\hline
+管径 (mm) & 最小坡度 & 管径 (mm) & 最小坡度 \\
+\hline
+300  & 0.0030 & 800  & 0.0008 \\
+400  & 0.0015 & 900  & 0.0008 \\
+500  & 0.0012 & 1000 & 0.0006 \\
+600  & 0.0010 & 1100 & 0.0006 \\
+700  & 0.0010 & 1200 & 0.0006 \\
+     &        & 1400 & 0.0005 \\
+     &        & 1500 & 0.0005 \\
+\hline
+\end{tabular}
+
+5.3 流速约束
+
+\[
+v_{\min} = 0.75 \;\text{m/s}, \quad v_{\max} = 1.5 \;\text{m/s}
+\]
+
+（雨水管自清流速要求比污水管更高，非金属管上限也更宽）
+
+5.4 初始覆土深度
+
+\[
+E_{\text{start}} = G_{\text{start}} - (1.5 + D)
+\]
+
+
+6. 单管段手动计算步骤
+--------------------------------------------------------------------------------
+
+对于雨水管段 $i$，已知上游数据和本段属性，手工计算流程如下：
+
+Step 1 - 收集上游数据：
+  $F_{\text{cum}}^{\text{up}} = \sum F_{\text{cum}}^{(u)}$（累计上游面积）
+  $t_{\text{up}} = \max\{ T_{\text{total}}^{(u)} \}$（最大上游时间）
+
+Step 2 - 计算累计面积：
+  $F_{\text{cum}} = F_{\text{cum}}^{\text{up}} + F_{\text{this}}$
+
+Step 3 - 计算汇流时间：
+  $t = t_0 + t_{\text{up}}$
+
+Step 4 - 计算暴雨强度：
+  \[
+  q = \frac{2989.5 \cdot (1 + 0.95 \cdot \lg 3.0)}{(11.77 + t_{\text{up}})^{0.88}}
+  \]
+
+Step 5 - 计算设计流量：
+  \[
+  Q = F_{\text{cum}} \cdot q \cdot 0.785 \qquad \text{(L/s)}
+  \]
+
+Step 6 - 选定试算管径 $D$ (mm)，查表得最大充满度 $(h/D)_{\max} = 1.0$
+
+Step 7 - 假设充满度 $h/D$（从 1.0 满流开始），计算 $h$、几何参数、反算坡度 $i$、
+  校核流速 $v$（具体子步骤同污水计算第 4 节 Step 4-8）
+
+Step 8 - 约束检查：
+  · $v \in [0.75, 1.5]$，$i \geq i_{\min}(D)$
+  · 不满足则降低 $h/D$ 重试，直到 $(h/D) \geq 0.1$
+
+Step 9 - 更换管径 $D$（+100mm），重复 Step 6-8
+
+Step 10 - 从所有可行方案中按坡度优先选最优
+
+Step 11 - 计算本段流行时间：
+  \[
+  t_{\text{pipe}} = \frac{L}{v \times 60}
+  \]
+  记录 $T_{\text{total}} = t_{\text{up}} + t_{\text{pipe}}$ 供下游使用。
+
+手工计算示例（起始管段，$L = 100$m，$F_{\text{this}} = 5000$ m²）：
+  $t = 11.77$ min（起始管段无上游时间）
+  $q = 2989.5 \times (1 + 0.95 \times \lg 3.0) / 11.77^{0.88} \approx 298.5$ L/(s·ha)
+  $F_{\text{cum}} = 5000 / 10000 = 0.5$ ha
+  $Q = 0.5 \times 298.5 \times 0.785 \approx 117.1$ L/s
+  试算 $D = 400$mm，满流 $h/D = 1.0$：
+    $A = \pi \times 0.4^2 / 4 = 0.126$ m²
+    $R = 0.4 / 4 = 0.1$ m
+    $i = (0.1171 \times 0.014 / (0.126 \times 0.1^{2/3}))^2 \approx 0.0026$
+    $v = (1/0.014) \times 0.1^{2/3} \times 0.0026^{1/2} \approx 0.93$ m/s
+    校验：$v \in [0.75, 1.5]$ ✓，$i \geq 0.0015$ ✓，方案可行。
+
+
+7. 高程计算与管道连接方式（LaTeX 公式）
+--------------------------------------------------------------------------------
+
+7.1 基本高程公式
+
+（与污水管道完全一致）
+
+\[
+d = D \cdot (h/D)
+\]
+\[
+E_{\text{end}} = E_{\text{start}} - i \cdot L
+\]
+\[
+W_{\text{start}} = E_{\text{start}} + d,\quad
+W_{\text{end}} = E_{\text{end}} + d
+\]
+\[
+C_{\text{start}} = G_{\text{start}} - E_{\text{start}},\quad
+C_{\text{end}} = G_{\text{end}} - E_{\text{end}}
+\]
+
+7.2 管道连接方式
+
+(1) 水面平接（$D_{\text{up}} = D_{\text{down}}$）：
+\[
+E_{\text{start}} = W_{\text{up,end}} - D_{\text{down}} \cdot (h/D)_{\text{down}}
+\]
+
+(2) 管顶平接（$D_{\text{up}} \neq D_{\text{down}}$）：
+\[
+E_{\text{start}} = (E_{\text{up,end}} + D_{\text{up}}) - D_{\text{down}}
+\]
+
+多条上游管道时取 $\min$ 值。下游管径必须 $\geq$ 上游任意单根管径。
+
+
+                    第 二 部 分
+              程序迭代计算逻辑框架
+    （自动化计算流程，取代手工试算）
+================================================================================
+
+8. 整体程序架构
+--------------------------------------------------------------------------------
+
+雨水计算为自包含模块（stom_pipes.py），直接复用污水系统的基础水力计算
+引擎（pipe_calculation.py 中的 DrainagePipeDesigner 类）：
+
+  ┌──────────────────────────────────────────────────┐
+  │                  stom_pipes.py                    │
+  │                                                   │
+  │  read_pipe_data()      → 读取Excel数据             │
+  │  build_pipe_dependency() → 构建上下游映射          │
+  │  topological_sort()    → Kahn拓扑排序              │
+  │  compute_unit_flow()   → 暴雨强度公式计算          │
+  │  design_pipe()         → 调用曼宁引擎 + 并联尝试    │
+  │  process_pipe()        → 单管段：累积-设计-高程    │
+  │  write_results()       → 结果写入Excel             │
+  └──────────────────────────────────────────────────┘
+                │
+                ▼ 复用
+  ┌──────────────────────────────┐
+  │ pipe_calculation.py          │
+  │ DrainagePipeDesigner 类      │
+  │  .design()  水力设计接口      │
+  │  .velocity() .flow_rate()    │
+  │  .required_slope()           │
+  └──────────────────────────────┘
+
+9. 数据读取与拓扑构建
+--------------------------------------------------------------------------------
+
+9.1 输入数据结构
+
+每行至少 6 列（不足 8 列自动补 0）：
+  列 1: 起点编号          列 4: 起点地面标高(m)
+  列 2: 终点编号          列 5: 终点地面标高(m)
+  列 3: 长度(m)           列 6: 本段汇水面积(m²)
+
+注：汇水面积输入单位为 m²，内部自动除以 10000 转为公顷 (ha)。
+
+9.2 上下游映射与拓扑排序
+
+逻辑与污水计算完全一致（参见污水文档第 9 节）：
+
+```
+start_to_pipes[endpoint] → 下游管道索引列表
+end_to_pipes[startpoint] → 上游管道索引列表
+
+Kahn BFS 拓扑排序 → order[]（上游先于下游）
+```
+
+10. 暴雨强度与流量累积（compute_unit_flow + process_pipe）
+------------------------------------------------------------------------------
+
+10.1 单位面积暴雨强度
+
+```
+def compute_unit_flow(t_min):
+    lgP = log10(RAIN_P)            # log10(3.0)
+    numerator = RAIN_A * (1 + RAIN_C * lgP)
+    denominator = (RAIN_T0 + t_min) ** RAIN_N
+    return numerator / denominator
+```
+
+RAIN_A=2989.5, RAIN_C=0.95, RAIN_P=3.0, RAIN_T0=11.77, RAIN_N=0.88
+
+10.2 面积与时间累积（process_pipe 核心流程）
+
+```
+upstream_cum_area = 0
+upstream_cum_time = 0
+upstream_max_diameter = 0
+
+for each upstream pipe u:
+    upstream_cum_area += designs[u].cum_area
+    upstream_cum_time = max(upstream_cum_time, designs[u].total_time)
+    upstream_max_diameter = max(upstream_max_diameter, designs[u].D)
+
+cum_area = upstream_cum_area + this_area_ha        # 本段 + 上游
+t_min = RAIN_T0 + upstream_cum_time                # 汇流时间
+q_unit = compute_unit_flow(t_min)                  # 暴雨强度
+Q_lps = cum_area * q_unit * RUNOFF_COEFF           # 设计流量 (0.785)
+```
+
+10.3 管内流行时间
+
+```
+v = design.velocity
+t_pipe = pipe.length / (v * 60)        # 分钟
+design.total_time = upstream_cum_time + t_pipe
+design.cum_area = cum_area
+```
+
+11. 水力设计与并联自动尝试（design_pipe）
+------------------------------------------------------------------------------
+
+11.1 水力设计调用
+
+```
+designer = DrainagePipeDesigner(
+    n=0.014, pipe_type="雨水",
+    min_velocity=0.75, max_velocity=1.5,
+    default_min_slope=0.001, min_recommended_fullness=0.1
+)
+```
+
+11.2 并联管道自动尝试
+
+```
+for parallel = 1 to MAX_PARALLEL_ATTEMPTS(15):
+
+    per_pipe_Q = Q_lps / parallel
+
+    all_solutions = designer.design(
+        Q=per_pipe_Q,
+        return_all=True,
+        optimization_criterion="slope",
+        D_max=1500
+    )
+
+    if all_solutions 为空: continue
+
+    valid = [s for s in all_solutions if s.D >= min_diameter]
+    if valid 为空: continue
+
+    # 按坡度优先排序，取最优
+    valid.sort(key=lambda x: (x.slope, x.D))
+    best = valid[0]
+    best.parallel = parallel
+    return best
+
+return None   # 15根并联仍无解
+```
+
+12. 高程计算与连接方式选择（process_pipe 后半段）
+------------------------------------------------------------------------------
+
+```
+D_m = design.D / 1000
+h_D = design.h_D
+slope = design.slope
+
+# 起始管道
+if 无上游:
+    start_invert = ground_start - (1.5 + D_m)
+
+# 有上游管道
+else:
+    for each upstream u:
+        if |D_up - D_down| < 1e-6:
+            candidate = water_end_up - D_down * h_D      # 水面平接
+        else:
+            candidate = (invert_end_up + D_up) - D_down    # 管顶平接
+    start_invert = min(candidates)                        # 最不利条件
+
+# 终点标高
+end_invert = start_invert - slope * length
+
+# 水面、埋深
+start_water = start_invert + D_m * h_D
+end_water   = end_invert   + D_m * h_D
+start_cover = ground_start - start_invert
+end_cover   = ground_end   - end_invert
+```
+
+13. 输入输出格式
+------------------------------------------------------------------------------
+
+13.1 输入 Excel 格式
+
+  工作表：可包含多张（跳过"计算结果"）
+  行 1:      标题行（跳过）
+  行 2-N:    数据行，第一列为空时停止
+  至少 6 列: 起点编号 | 终点编号 | 长度(m) | 起点地面标高(m) |
+              终点地面标高(m) | 本段汇水面积(m²)
+  （第 7、8 列可选，缺则自动补 0）
+
+13.2 输出 Excel 格式
+
+  "计算结果"工作表字段：
+    原始数据(6) + 累计汇水面积(m²) + 汇流时间(min) +
+    设计流量(L/s) + 管径(mm) + 充满度 + 坡度 +
+    流速(m/s) + 起点管内底(m) + 终点管内底(m) +
+    起点水面(m) + 终点水面(m) + 起点埋深(m) +
+    终点埋深(m) + 连接方式 + 来源
+
+  注：雨水计算不输出"并联数"（内部使用但不在结果表中展示）、"泵站扬程"
+  和"跌水井"字段（雨水管网重力自流，无提升和跌水井功能）。
+
+
+================================================================================
+                          -- 文档结束 --
+================================================================================

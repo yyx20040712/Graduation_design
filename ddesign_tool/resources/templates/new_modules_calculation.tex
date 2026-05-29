@@ -1,0 +1,651 @@
+\documentclass[12pt,a4paper]{ctexart}
+
+% ── 页面设置 ──
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue,
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small 排水工程设计工具 v3.5 — 新增模组计算逻辑}
+\fancyhead[R]{\small 2026-05}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\title{\textbf{排水工程设计工具 v3.5}\\[6pt]
+       \large 新增模组计算逻辑与设计方法}
+\author{yyx \\ 哈尔滨工业大学 环境工程}
+\date{2026年5月}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+% ═══════════════════════════════════════════════════════════════
+\section{概述}
+
+本文档详细描述排水工程设计工具 v3.5 中新增模组的计算逻辑、设计公式和约束条件。新增模组涵盖四大类别：
+
+\begin{itemize}[itemsep=0pt]
+    \item \textbf{集配水模组}（4个）：集水井、配水井、集配水井、配水渠
+    \item \textbf{高程模组}（2个）：进厂污水水面标高、管道运输水头损失
+    \item \textbf{社区模组}（3个）：巴氏计量槽、辐流式二沉池、污水提升泵房
+\end{itemize}
+
+所有模组遵循统一的 MC 式自包含架构（mod.json + \_\_init\_\_.py + discretization.json），均支持标量计算（calculate）和向量化批量计算（\_vectorized\_compute）。
+
+\section{集配水模组}
+
+集配水模组用于污水处理厂各处理单元之间的水量收集与均匀分配，属于 process\_stage = ``collection''。
+
+\subsection{集水井（jishuijing）}
+
+\subsubsection{功能描述}
+收集各来水管道污水，兼具水量调节和初步沉砂功能。多路来水汇入集水井后统一输送至后续处理单元。
+
+\subsubsection{设计参数}
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+参数 & 符号 & 默认值 & 范围 & 单位 \\
+\midrule
+水力停留时间 & HRT & 5.0 & 3.0$\sim$15.0 & min \\
+有效水深     & $h_{\text{eff}}$ & 3.0 & 2.0$\sim$5.0 & m \\
+超高         & $h_{\text{super}}$ & 0.5 & 0.3$\sim$1.0 & m \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{计算公式}
+
+\begin{enumerate}[label=(\arabic*), leftmargin=*]
+    \item \textbf{有效容积}：
+    \begin{equation}
+        V = \frac{Q_{\max} \times HRT}{60}
+    \end{equation}
+    式中：$Q_{\max}$——最大设计流量，m$^3$/h。
+
+    \item \textbf{池体面积}：
+    \begin{equation}
+        A = \frac{V}{h_{\text{eff}}}
+    \end{equation}
+
+    \item \textbf{池体尺寸}（正方形）：
+    \begin{equation}
+        L = B = \sqrt{A}
+    \end{equation}
+
+    \item \textbf{总高度}：
+    \begin{equation}
+        H = h_{\text{eff}} + h_{\text{super}}
+    \end{equation}
+\end{enumerate}
+
+\subsubsection{约束校核}
+\begin{itemize}[itemsep=0pt]
+    \item 停留时间 HRT $\geq$ 3.0 min
+    \item 有效水深 $h_{\text{eff}} \in [2.0, 5.0]$ m
+\end{itemize}
+
+\subsubsection{工程概算}
+
+混凝土量估算（壁厚 0.25m，底板厚 0.3m）：
+\begin{equation}
+    V_{\text{concrete}} = 2(L + B) \times t_{\text{wall}} \times h_{\text{eff}} + L \times B \times t_{\text{floor}}
+\end{equation}
+
+\subsection{配水井（peishuijing）}
+
+\subsubsection{功能描述}
+将上游来水通过薄壁堰或淹没孔口均匀分配到下游各并联处理构筑物，确保各处理线水量均衡。
+
+\subsubsection{设计参数}
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+参数 & 符号 & 默认值 & 范围 & 单位 \\
+\midrule
+水力停留时间 & HRT & 3.0 & 1.0$\sim$10.0 & min \\
+有效水深     & $h_{\text{eff}}$ & 2.5 & 1.5$\sim$4.0 & m \\
+超高         & $h_{\text{super}}$ & 0.5 & 0.3$\sim$1.0 & m \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{计算公式}
+
+与集水井相同（基于 HRT 法），停留时间更短（1$\sim$3 min），仅起分配作用。
+
+\begin{equation}
+    V = \frac{Q_{\max} \times HRT}{60}, \quad
+    L = B = \sqrt{V / h_{\text{eff}}}
+\end{equation}
+
+\subsubsection{约束校核}
+\begin{itemize}[itemsep=0pt]
+    \item 停留时间 HRT $\geq$ 1.0 min
+    \item 有效水深 $h_{\text{eff}} \in [1.5, 4.0]$ m
+\end{itemize}
+
+\subsection{集配水井（jipeishuijing）}
+
+\subsubsection{功能描述}
+兼具集水和配水功能的组合构筑物。上游多路来水先汇入集水区，经稳流后由配水区均匀分配至下游。适用于用地紧张或中小型污水处理厂。
+
+\subsubsection{设计参数}
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+参数 & 符号 & 默认值 & 范围 & 单位 \\
+\midrule
+水力停留时间 & HRT & 5.0 & 3.0$\sim$15.0 & min \\
+有效水深     & $h_{\text{eff}}$ & 3.0 & 2.0$\sim$5.0 & m \\
+超高         & $h_{\text{super}}$ & 0.5 & 0.3$\sim$1.0 & m \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{计算公式}
+
+与集水井完全一致（HRT 法），池体需考虑集水区与配水区的隔墙布置。
+
+\subsection{配水渠（peishuiqu）}
+
+\subsubsection{功能描述}
+通过堰口或闸孔向各处理单元均匀配水的明渠构筑物。适用于沿程多点配水场景，如多格滤池的进水分配。
+
+\subsubsection{设计参数}
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+参数 & 符号 & 默认值 & 范围 & 单位 \\
+\midrule
+渠内设计流速 & $v_{\text{design}}$ & 0.6 & 0.3$\sim$1.2 & m/s \\
+有效水深     & $h_{\text{eff}}$ & 1.5 & 0.5$\sim$3.0 & m \\
+渠宽         & $B$ & 1.0 & 0.5$\sim$3.0 & m \\
+超高         & $h_{\text{super}}$ & 0.4 & 0.3$\sim$0.8 & m \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{计算公式}
+
+\begin{enumerate}[label=(\arabic*), leftmargin=*]
+    \item \textbf{过水面积}：
+    \begin{equation}
+        A = B \times h_{\text{eff}}
+    \end{equation}
+
+    \item \textbf{实际流速}：
+    \begin{equation}
+        v_{\text{actual}} = \frac{Q}{A}
+    \end{equation}
+
+    \item \textbf{渠长}（假设停留 1 min）：
+    \begin{equation}
+        L = v_{\text{actual}} \times 60
+    \end{equation}
+
+    \item \textbf{总高度}：
+    \begin{equation}
+        H = h_{\text{eff}} + h_{\text{super}}
+    \end{equation}
+\end{enumerate}
+
+\subsubsection{约束校核}
+\begin{itemize}[itemsep=0pt]
+    \item 实际流速 $v_{\text{actual}} \in [0.3, 1.2]$ m/s（防止淤积）
+    \item 有效水深 $h_{\text{eff}} \in [0.5, 3.0]$ m
+\end{itemize}
+
+\newpage
+
+\section{高程模组}
+
+高程模组用于全厂高程系统的起算和构筑物间水头损失传播，属于 process\_stage = ``elevation''。
+
+\subsection{进厂污水水面标高（jcws\_smbg）}
+
+\subsubsection{功能描述}
+高程计算起点节点。设定进厂污水管水面标高和厂区地面标高，后续构筑物的水面标高沿拓扑顺序依次递减（减去水头损失）。
+
+\subsubsection{设计参数}
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+参数 & 符号 & 默认值 & 范围 & 单位 \\
+\midrule
+进厂水面标高 & $Z_{\text{water}}$ & 100.0 & 0$\sim$5000 & m \\
+进厂地面标高 & $Z_{\text{ground}}$ & 102.0 & 0$\sim$5000 & m \\
+进水管径     & $DN_{\text{inlet}}$ & 800.0 & 300$\sim$2000 & mm \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{高程计算逻辑}
+
+\begin{equation}
+    \begin{aligned}
+        Z_{\text{water}} &= Z_{\text{water\_inlet}} \quad \text{（用户设定）} \\
+        Z_{\text{bottom}} &= Z_{\text{water}} - \frac{DN}{1000} \quad \text{（管内底标高）} \\
+        \text{head\_loss} &= 0 \quad \text{（起始节点，无水头损失）}
+    \end{aligned}
+\end{equation}
+
+\textbf{重要}：jcws\_smbg 始终使用自身参数计算高程，不从上游继承。地面标高和水面标高向下游传播。
+
+\subsection{管道运输水头损失（gdys\_stss）}
+
+\subsubsection{功能描述}
+计算两构筑物之间连接管渠的水头损失。只需手动输入设计流量 $Q$ 和管段长度 $L$，管径、坡度、流速、充满度均由内置的 \texttt{DrainagePipeDesigner} 自动设计。
+
+调用 \texttt{DrainagePipeDesigner.design(Q)} 自动搜索 DN 300$\sim$1500 mm 范围内满足 GB50014-2021 约束的最优管径组合（坡度最小优先）。
+
+\subsubsection{设计参数}
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+参数 & 符号 & 默认值 & 范围 & 单位 \\
+\midrule
+设计流量 & $Q$ & 0.57 & 0.01$\sim$10.0 & m$^3$/s \\
+管段长度 & $L$ & 50.0 & 5$\sim$500 & m \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{内部固定参数}
+\begin{itemize}[itemsep=0pt]
+    \item Manning 粗糙系数：$n = 0.014$（混凝土管）
+    \item 局部阻力系数：$\xi = 1.5$（进口 0.5 + 出口 1.0）
+    \item 管道类型：污水管
+    \item 搜索范围：DN 300$\sim$1500 mm
+\end{itemize}
+
+\subsubsection{计算公式}
+
+\begin{enumerate}[label=(\arabic*), leftmargin=*]
+    \item \textbf{自动设计}（\texttt{DrainagePipeDesigner.design()}）：
+    给定 $Q$（L/s），在 DN = 300, 400, $\dots$, 1500 范围内，对每个管径从最大充满度向下迭代：
+    \begin{equation}
+        h = \frac{h}{D} \times D, \quad
+        i_{\text{req}} = \left(\frac{n \cdot Q}{A(h) \cdot R(h)^{2/3}}\right)^2, \quad
+        v = \frac{1}{n} R(h)^{2/3} i_{\text{req}}^{1/2}
+    \end{equation}
+    选择满足流速 0.6$\sim$1.5 m/s 且坡度最小的管径组合。
+
+    \item \textbf{沿程水头损失}：
+    \begin{equation}
+        h_f = i \times L
+    \end{equation}
+    式中：$i$——设计坡度，$L$——管段长度 m。
+
+    \item \textbf{局部水头损失}：
+    \begin{equation}
+        h_m = \xi \cdot \frac{v^2}{2g}
+    \end{equation}
+
+    \item \textbf{总水头损失}：
+    \begin{equation}
+        h_{\text{total}} = h_f + h_m
+    \end{equation}
+\end{enumerate}
+
+\subsubsection{约束校核}
+\begin{itemize}[itemsep=0pt]
+    \item 总水头损失 $\leq$ 2.0 m（单段管道）
+    \item 设计流速 $v \in [0.6, 1.5]$ m/s
+    \item 充满度 $h/D \leq$ GB50014 限值（DN$\leq$300: 0.55, DN$\leq$450: 0.65, DN$\leq$900: 0.70, DN$\geq$1000: 0.75）
+\end{itemize}
+
+\subsubsection{高程传播}
+
+下游水面标高 = 上游水面标高 $- h_{\text{total}}$，下游管底标高 = 下游水面标高 $-$ 管内水深 $h$。
+
+\newpage
+
+\section{社区模组}
+
+社区模组位于 \texttt{mods/community/} 目录，是用户或第三方开发的扩展模组，遵循 MC 式自包含架构。
+
+\subsection{巴氏计量槽（bashi\_jiliangcao）}
+
+\subsubsection{功能描述}
+巴歇尔量水槽（Parshall Flume），用于污水处理厂进出水流量的明渠计量。喉道收缩段使水流加速形成临界流，通过测量上游水位 $h_a$ 反算流量。
+
+设计依据：CJ/T 3008.5-93《巴歇尔量水槽》、GB50014-2021。
+
+\subsubsection{设计参数}
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+参数 & 符号 & 默认值 & 范围 & 单位 \\
+\midrule
+喉道宽度 & $b$ & 0.30 & 0.152$\sim$0.60 & m \\
+\bottomrule
+\end{tabular}
+\caption{标准喉宽：0.152, 0.228, 0.30, 0.45, 0.60 m}
+\end{table}
+
+\subsubsection{标准系数表}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}ccc@{}}
+\toprule
+喉宽 $b$ (m) & 流量系数 $C$ & 指数 $n$ \\
+\midrule
+0.152 & 0.381  & 1.580 \\
+0.228 & 0.535  & 1.530 \\
+0.30  & 0.679  & 1.521 \\
+0.45  & 1.038  & 1.537 \\
+0.60  & 1.403  & 1.548 \\
+\bottomrule
+\end{tabular}
+\caption{数据来源：CJ/T 3008.5-93 附录}
+\end{table}
+
+\subsubsection{计算公式}
+
+\begin{enumerate}[label=(\arabic*), leftmargin=*]
+    \item \textbf{上游水深}（自由出流条件）：
+    \begin{equation}
+        h_a = \left(\frac{Q}{C}\right)^{1/n}
+    \end{equation}
+    式中：$Q$——设计流量 m$^3$/s，$C, n$——由喉宽 $b$ 查表确定。
+
+    \item \textbf{渠道宽度}（喉宽 $\approx$ 渠道宽 $\times$ 1/3 $\sim$ 1/2）：
+    \begin{equation}
+        B_{\text{channel}} = 3b
+    \end{equation}
+
+    \item \textbf{下游水深}（淹没度极限）：
+    \begin{equation}
+        h_b = 0.6 \times h_a, \quad S = \frac{h_b}{h_a} \leq 0.6
+    \end{equation}
+
+    \item \textbf{行进流速}：
+    \begin{equation}
+        v = \frac{Q}{B_{\text{channel}} \cdot h_a}
+    \end{equation}
+
+    \item \textbf{弗劳德数}：
+    \begin{equation}
+        Fr = \frac{v}{\sqrt{g \cdot h_a}}
+    \end{equation}
+
+    \item \textbf{上下游直段长度}：
+    \begin{equation}
+        L_{\text{up}} = 10 B_{\text{channel}}, \quad
+        L_{\text{down}} = 5 B_{\text{channel}}
+    \end{equation}
+\end{enumerate}
+
+\subsubsection{约束校核}
+\begin{itemize}[itemsep=0pt]
+    \item 喉宽 $b$ 必须为标准值（CJ/T 3008.5-93）
+    \item 弗劳德数 $Fr < 1.0$（亚临界流）
+    \item 行进流速 $v \in [0.3, 2.0]$ m/s
+\end{itemize}
+
+\newpage
+
+\subsection{辐流式二沉池（erchunchi）}
+
+\subsubsection{功能描述}
+用于活性污泥法生物处理后的泥水分离。采用中心进水周边出水的辐流式沉淀池，配刮泥机排泥。与初沉池的主要区别：表面负荷更低、增加固体负荷校核、出水堰负荷更严格。
+
+设计依据：GB50014-2021 \S6.5、CJJ 131-2009。
+
+\subsubsection{设计参数}
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+参数 & 符号 & 默认值 & 范围 & 单位 \\
+\midrule
+池数量       & $n$ & 2 & 2$\sim$6 & 座 \\
+表面负荷     & $q'$ & 1.0 & 0.6$\sim$1.5 & m$^3$/(m$^2\cdot$h) \\
+固体负荷     & $G$ & 120.0 & 80$\sim$150 & kgMLSS/(m$^2\cdot$d) \\
+沉淀时间     & $T$ & 2.5 & 1.5$\sim$4.0 & h \\
+缓冲层高度   & $h_3$ & 0.3 & — & m \\
+池底坡度     & $i$ & 0.05 & — & — \\
+泥斗参数     & $R_1,R_2,h_5$ & — & — & m \\
+污泥含水率   & $P$ & 0.992 & — & — \\
+MLSS浓度     & $X$ & 3.5 & — & g/L \\
+回流比       & $R$ & 0.5 & — & — \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{计算公式}
+
+\begin{enumerate}[label=(\arabic*), leftmargin=*]
+    \item \textbf{沉淀面积}（按表面负荷）：
+    \begin{equation}
+        F_{\text{surface}} = \frac{Q_{\text{single}} \times 3600}{q'}
+    \end{equation}
+
+    \item \textbf{沉淀面积}（按固体负荷校核）：
+    \begin{equation}
+        Q_{\text{total}} = Q_{\text{single}}(1 + R), \quad
+        M_{\text{solid}} = Q_{\text{total}} \times 86400 \times \frac{X}{1000}, \quad
+        F_{\text{solid}} = \frac{M_{\text{solid}}}{G}
+    \end{equation}
+    取 $F = \max(F_{\text{surface}}, F_{\text{solid}})$。
+
+    \item \textbf{池径}：
+    \begin{equation}
+        D = \sqrt{\frac{4F}{\pi}}, \quad D \geq 16\text{ m（取整至0.5m）}
+    \end{equation}
+
+    \item \textbf{有效水深}：
+    \begin{equation}
+        h_2 = q'_{\text{actual}} \times T, \quad
+        \frac{D}{h_2} \in [6, 12]
+    \end{equation}
+
+    \item \textbf{总高度}：
+    \begin{equation}
+        H = h_1 + h_2 + h_3 + h_4 + h_5
+    \end{equation}
+
+    \item \textbf{出水堰负荷}（双侧堰）：
+    \begin{equation}
+        L_{\text{weir}} = 2\pi(D - 1), \quad
+        q_{\text{weir}} = \frac{Q_{\text{single}} \times 1000}{L_{\text{weir}}}
+    \end{equation}
+
+    \item \textbf{刮泥机线速}：
+    \begin{equation}
+        v_{\text{peripheral}} = \frac{\pi D \times 1.0}{60}
+    \end{equation}
+\end{enumerate}
+
+\subsubsection{约束校核}
+\begin{itemize}[itemsep=0pt]
+    \item 池径 $D \geq 16$ m
+    \item 实际表面负荷 $q'_{\text{actual}} \in [0.6, 1.5]$ m$^3$/(m$^2\cdot$h)
+    \item 固体负荷 $\leq 150$ kgMLSS/(m$^2\cdot$d)（GB50014）
+    \item 有效水深 $h_2 \geq 2.5$ m
+    \item 径深比 $D/h_2 \in [6, 12]$
+    \item 堰负荷 $\leq 1.7$ L/(s$\cdot$m)
+    \item 刮泥机线速 $\leq 2.0$ m/min（CJJ 131）
+\end{itemize}
+
+\subsubsection{污染物去除率}
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}cccccc@{}}
+\toprule
+BOD$_5$ & COD & SS & NH$_3$-N & TN & TP \\
+\midrule
+25\% & 20\% & 70\% & 5\% & 8\% & 10\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\newpage
+
+\subsection{污水提升泵房（wuni\_tisheng）}
+
+\subsubsection{功能描述}
+将上游来水提升至设计高程，以满足后续重力流处理单元的水头需求。设计内容包括：水泵选型、集水池容积、进出水管径、沿程+局部水头损失、总扬程计算。
+
+设计依据：GB50014-2021 \S6.2$\sim$\S6.4。
+
+\subsubsection{设计参数}
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+参数 & 符号 & 默认值 & 范围 & 单位 \\
+\midrule
+工作泵台数   & $n_{\text{work}}$ & 3 & 2$\sim$8 & 台 \\
+静扬程       & $H_{\text{st}}$ & 5.0 & 3.0$\sim$12.0 & m \\
+吸水管流速   & $v_{\text{suc}}$ & 1.0 & 0.7$\sim$1.5 & m/s \\
+出水管流速   & $v_{\text{dis}}$ & 1.5 & 0.8$\sim$2.5 & m/s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{内部固定参数}
+\begin{itemize}[itemsep=0pt]
+    \item 水泵效率 $\eta = 0.75$
+    \item 最小停留时间 $t_{\text{sump}} = 5$ min（GB50014 \S6.3.1）
+    \item 出水自由水头 $h_{\text{outlet}} = 1.5$ m
+    \item 集水池有效水深 $h_{\text{sump}} = 2.5$ m
+    \item 局部损失放大系数 $k_{\text{local}} = 1.2$
+    \item 吸水管长 $L_{\text{suc}} = 10$ m，出水管长 $L_{\text{dis}} = 50$ m
+\end{itemize}
+
+\subsubsection{计算公式}
+
+\begin{enumerate}[label=(\arabic*), leftmargin=*]
+    \item \textbf{单泵流量}：
+    \begin{equation}
+        Q_{\text{single}} = \frac{Q}{n_{\text{work}}}
+    \end{equation}
+
+    \item \textbf{管径计算}（满管流）：
+    \begin{equation}
+        D = \sqrt{\frac{4Q_{\text{single}}}{\pi v}}
+    \end{equation}
+
+    \item \textbf{Manning 沿程水头损失}：
+    \begin{equation}
+        R = \frac{D}{4}, \quad
+        i = \left(\frac{n \cdot v}{R^{2/3}}\right)^2, \quad
+        h_f = i \times L \times k_{\text{local}}
+    \end{equation}
+
+    \item \textbf{总扬程}：
+    \begin{equation}
+        H_{\text{total}} = H_{\text{st}} + h_{f,\text{suc}} + h_{f,\text{dis}} + h_{\text{outlet}}
+    \end{equation}
+
+    \item \textbf{轴功率}：
+    \begin{equation}
+        P = \frac{\rho g Q_{\text{single}} H_{\text{total}}}{\eta} \times 10^{-3} \quad \text{（kW）}
+    \end{equation}
+
+    \item \textbf{集水池容积}：
+    \begin{equation}
+        V_{\text{sump}} = Q_{\text{single}} \times t_{\text{sump}} \times 60, \quad
+        L_{\text{sump}} \approx \sqrt{\frac{V_{\text{sump}}}{1.8 \cdot h_{\text{sump}}}}
+    \end{equation}
+
+    \item \textbf{备用泵}（GB50014 \S6.4.1）：
+    \begin{equation}
+        n_{\text{standby}} = \begin{cases}
+            1, & n_{\text{work}} \leq 4 \\
+            2, & n_{\text{work}} > 4
+        \end{cases}
+    \end{equation}
+\end{enumerate}
+
+\subsubsection{约束校核}
+\begin{itemize}[itemsep=0pt]
+    \item 吸水管流速 $v_{\text{suc}} \in [0.7, 1.5]$ m/s
+    \item 出水管流速 $v_{\text{dis}} \in [0.8, 2.5]$ m/s
+    \item 总扬程 $H_{\text{total}} \in [5, 30]$ m
+    \item 集水池有效容积 $\geq$ 最小容积
+\end{itemize}
+
+\subsubsection{高程特性}
+
+\textbf{重要}：泵站节点的水头损失为\textbf{负值}（水面升高）。高程计算引擎检测到 $H_{\text{st}} > 0$ 时自动将水头损失设为 $-H_{\text{total}}$，即下游水面标高 = 上游水面标高 + $H_{\text{total}}$。
+
+\newpage
+
+\section{高程计算系统集成}
+
+\subsection{高程传播规则}
+
+全厂高程计算由 \texttt{elevation\_calculator.py} 后处理引擎沿 DAG 拓扑顺序执行：
+
+\begin{enumerate}[label=\textbf{规则 \arabic*：}, leftmargin=*]
+    \item \textbf{起始节点}（jcws\_smbg）：始终使用自身参数（$Z_{\text{water\_inlet}}$），不从上游继承。
+    \item \textbf{下游节点}：水面标高 = $\max$(上游水面标高) $-$ 本节点水头损失。
+    \item \textbf{地面标高}：上游 $\max$ 传播，无上游时默认 102.0 m。
+    \item \textbf{泵站节点}：水头损失为负值（扬程），下游水面升高。
+    \item \textbf{污泥合并}（wuni\_hebing）：池底标高 = $\min$(上游池底) $-$ 运输损耗。
+\end{enumerate}
+
+\subsection{水头损失获取优先级}
+
+对于每个构筑物，水头损失按以下优先级获取：
+
+\begin{enumerate}[label=优先级 \arabic*：, leftmargin=*]
+    \item 泵站节点：读取 $H_{\text{pump}}$ / $H_{\text{st}}$ 参数 → 返回负值。
+    \item mod.json 中的 elevation\_loss.value（若为数字）。
+    \item gdys\_stss 专项处理：从计算结果提取 $h_f$, $h_m$, $h_{\text{total}}$，拼接详细描述。
+    \item 从 NodeResult.dimensions 通用提取（``水头损失'', ``过栅水头损失 h1''等）。
+    \item 默认经验值表 \_DEFAULT\_HEAD\_LOSS（覆盖 40+ 构筑物）。
+    \item 保守默认 0.2 m。
+\end{enumerate}
+
+\subsection{高程约束校核}
+
+每个节点计算完成后自动添加以下高程校核项：
+
+\begin{itemize}[itemsep=0pt]
+    \item 超高 $\geq 0.3$ m（GB50014）
+    \item 水面标高 $>$ 池底标高
+    \item 水头损失 $\leq 3.0$ m（单个构筑物）
+    \item 跌水检测（$\Delta Z > 1.0$ m → 提示设跌水井）
+\end{itemize}
+
+\newpage
+
+\section{参考标准}
+
+\begin{itemize}[itemsep=0pt]
+    \item GB50014-2021《室外排水设计标准》
+    \item GB 18918-2002《城镇污水处理厂污染物排放标准》
+    \item CJJ 131-2009《城镇污水处理厂污泥处理技术规程》
+    \item CJ/T 3008.5-93《巴歇尔量水槽》
+    \item 《给水排水设计手册》第 1 册（常用资料）、第 5 册（城镇排水）
+\end{itemize}
+
+\end{document}

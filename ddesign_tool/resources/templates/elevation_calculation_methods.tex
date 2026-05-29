@@ -1,0 +1,452 @@
+\documentclass[12pt,a4paper]{ctexart}
+
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+\title{污水处理厂高程计算——水头损失计算方法与经验值}
+\author{yyx | 哈尔滨工业大学 环境工程}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{概述}
+
+污水处理厂高程计算是确定各处理构筑物之间水面标高衔接和水头损失分配的设计过程。
+其目的是确保污水和污泥在重力流条件下顺利通过各处理单元，合理确定提升泵站的扬程，
+并为土建施工提供各构筑物的池底标高和埋深数据。
+
+\subsection{设计依据}
+
+\begin{itemize}[nosep]
+    \item GB50014-2021《室外排水设计标准》§5 排水管渠和附属构筑物
+    \item CJJ 131-2009《城镇污水处理厂污泥处理技术规程》
+    \item 《给水排水设计手册》第1册（常用资料）、第5册（城镇排水）、第9册（专用机械）
+    \item 2019年版《黑龙江省市政工程消耗量定额》第六册（水处理工程）
+\end{itemize}
+
+\subsection{计算原则}
+
+\begin{enumerate}[nosep]
+    \item 以受纳水体最高水位（或排放口标高）为起点，逆流程向上推算各级水面标高
+    \item 总水头损失 = 各构筑物水头损失 + 沿程水头损失 + 局部水头损失
+    \item 以最大设计流量（含Kz）作为计算流量
+    \item 提升泵站扬程应满足最不利工况下的水位差要求
+    \item 相邻构筑物水面差 $\Delta Z > 1.0$m 时应设跌水井
+\end{enumerate}
+
+\section{沿程水头损失}
+
+\subsection{谢才公式 (Chezy Formula)}
+
+\begin{equation}
+    v = C \sqrt{R i}
+    \label{eq:chezy}
+\end{equation}
+
+式中：
+\begin{itemize}[nosep]
+    \item $v$ —— 断面平均流速，m/s
+    \item $C$ —— 谢才系数，$C = \frac{1}{n} R^{1/6}$ (Manning)
+    \item $R$ —— 水力半径，m
+    \item $i$ —— 水力坡度
+\end{itemize}
+
+\subsection{Manning公式 (GB50014-2021推荐)}
+
+\begin{equation}
+    v = \frac{1}{n} R^{2/3} i^{1/2}
+    \label{eq:manning}
+\end{equation}
+
+沿程水头损失：
+\begin{equation}
+    h_f = i \cdot L = \left( \frac{n v}{R^{2/3}} \right)^2 \cdot L
+    \label{eq:hf}
+\end{equation}
+
+式中：
+\begin{itemize}[nosep]
+    \item $n$ —— 粗糙系数：混凝土管0.013$\sim$0.014，塑料管0.009$\sim$0.011
+    \item $L$ —— 管段长度，m
+    \item 其余符号同前
+\end{itemize}
+
+\subsection{达西-魏斯巴赫公式 (Darcy-Weisbach)}
+
+\begin{equation}
+    h_f = \lambda \frac{L}{D} \frac{v^2}{2g}
+    \label{eq:dw}
+\end{equation}
+
+式中：
+\begin{itemize}[nosep]
+    \item $\lambda$ —— 沿程阻力系数，紊流区按Colebrook公式计算
+    \item $D$ —— 管径，m
+    \item $g$ —— 重力加速度，9.81 m/s$^2$
+\end{itemize}
+
+\subsection{圆管满流水力半径}
+
+\begin{equation}
+    R = \frac{D}{4} \quad \text{(满流)}
+    \label{eq:r_full}
+\end{equation}
+
+\section{局部水头损失}
+
+\subsection{通用公式}
+
+\begin{equation}
+    h_m = \xi \frac{v^2}{2g}
+    \label{eq:hm}
+\end{equation}
+
+式中：
+\begin{itemize}[nosep]
+    \item $\xi$ —— 局部阻力系数，查表\ref{tab:local_xi}
+    \item $v$ —— 局部阻力发生后的断面平均流速，m/s
+\end{itemize}
+
+\subsection{常见局部阻力系数}
+
+\begin{table}[htbp]
+\centering
+\caption{常见局部阻力系数 $\xi$ （来源：《给水排水设计手册》第1册）}
+\label{tab:local_xi}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{局部阻力类型} & \textbf{$\xi$ 值} & \textbf{备注} \\
+\midrule
+管道进口（锐缘）    & 0.5        & 进口未做圆角 \\
+管道进口（圆角）    & 0.1$\sim$0.25 & 进口做圆角处理 \\
+管道出口（淹没）    & 1.0        & 淹没出流至水池 \\
+90°弯头            & 0.5$\sim$1.1 & R/D=1$\sim$2 \\
+45°弯头            & 0.3$\sim$0.4 & \\
+三通（分流）        & 1.5        & 等径三通 \\
+三通（合流）        & 3.0        & 等径三通 \\
+闸阀（全开）        & 0.1$\sim$0.5 & \\
+蝶阀（全开）        & 0.2$\sim$0.3 & \\
+止回阀              & 1.5$\sim$2.5 & \\
+渐扩管              & 0.1$\sim$0.3 & 扩散角$\leq$8° \\
+渐缩管              & 0.05$\sim$0.1 & \\
+格栅（清渣前）      & 按式\ref{eq:grid_xi}计算 & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{格栅局部水头损失}
+
+\begin{equation}
+    h_1 = \beta \left( \frac{s}{b} \right)^{4/3} \frac{v^2}{2g} \sin\alpha
+    \label{eq:grid}
+\end{equation}
+
+\begin{equation}
+    \xi_{\text{格栅}} = \beta \left( \frac{s}{b} \right)^{4/3} \sin\alpha
+    \label{eq:grid_xi}
+\end{equation}
+
+式中：
+\begin{itemize}[nosep]
+    \item $\beta$ —— 栅条形状系数：矩形=2.42，圆形=1.79，带半圆矩形=1.83
+    \item $s$ —— 栅条厚度，mm
+    \item $b$ —— 栅条间隙，mm
+    \item $\alpha$ —— 格栅倾角，°，一般为60°$\sim$75°
+    \item 堵塞系数 $k=3$（GB50014规定，格栅堵塞后水头损失增大倍数）
+\end{itemize}
+
+\section{孔口出流}
+
+\subsection{薄壁孔口自由出流}
+
+\begin{equation}
+    Q = \mu A \sqrt{2g H}
+    \label{eq:orifice}
+\end{equation}
+
+\begin{equation}
+    H = \frac{Q^2}{2g (\mu A)^2}
+    \label{eq:orifice_h}
+\end{equation}
+
+式中：
+\begin{itemize}[nosep]
+    \item $Q$ —— 孔口流量，m$^3$/s
+    \item $\mu$ —— 流量系数：薄壁孔口0.60$\sim$0.62，管嘴出口0.82
+    \item $A$ —— 孔口截面积，m$^2$
+    \item $H$ —— 孔口作用水头，m
+\end{itemize}
+
+\subsection{淹没孔口出流}
+
+\begin{equation}
+    Q = \mu A \sqrt{2g \Delta H}
+    \label{eq:orifice_sub}
+\end{equation}
+
+式中 $\Delta H$ 为孔口上下游水位差。
+
+\section{堰流}
+
+\subsection{薄壁堰}
+
+\begin{equation}
+    Q = m_0 b \sqrt{2g} H^{3/2}
+    \label{eq:thin_weir}
+\end{equation}
+
+\begin{equation}
+    H = \left( \frac{Q}{m_0 b \sqrt{2g}} \right)^{2/3}
+    \label{eq:thin_weir_h}
+\end{equation}
+
+工程常用简化公式（矩形薄壁堰，无侧收缩）：
+\begin{equation}
+    Q = 1.84 b H^{3/2} \quad (\text{单位: m}^3/\text{s}, m)
+    \label{eq:thin_weir_simple}
+\end{equation}
+
+式中：
+\begin{itemize}[nosep]
+    \item $m_0$ —— 薄壁堰流量系数，0.40$\sim$0.42
+    \item $b$ —— 堰宽，m
+    \item $H$ —— 堰上水头，m
+\end{itemize}
+
+\subsection{实用堰}
+
+\begin{equation}
+    Q = \varepsilon m b \sqrt{2g} H_0^{3/2}
+    \label{eq:practical_weir}
+\end{equation}
+
+式中：
+\begin{itemize}[nosep]
+    \item $\varepsilon$ —— 侧收缩系数
+    \item $m$ —— 实用堰流量系数：WES剖面0.49$\sim$0.52，克-奥剖面0.45$\sim$0.49
+    \item $H_0$ —— 计入行进流速的上游水头，m
+\end{itemize}
+
+\subsection{宽顶堰}
+
+\begin{equation}
+    Q = \varepsilon m b \sqrt{2g} H_0^{3/2}
+    \label{eq:broad_weir}
+\end{equation}
+
+式中 $m$ 为宽顶堰流量系数，$0.32 \leq \delta/H \leq 2.5$ 时取0.32$\sim$0.385。
+
+\section{跌水}
+
+\subsection{跌水判定标准}
+
+根据GB50014-2021 §5.5，当上下游管段的水面落差满足以下条件时，应设置跌水井：
+\begin{equation}
+    \Delta Z \geq 1.0 \text{ m}
+    \label{eq:drop_threshold}
+\end{equation}
+
+\subsection{跌水井消能}
+
+跌水井内水流为跌落式，其总水头损失应计入：
+\begin{equation}
+    H_{\text{drop}} = \Delta Z_{\text{invert}} + h_{\text{entrance}} + h_{\text{exit}}
+    \label{eq:drop_total}
+\end{equation}
+
+式中 $\Delta Z_{\text{invert}}$ 为上下游管内底标高差。
+
+\section{隔板转弯损失}
+
+在廊道式反应池（如絮凝池、推流式反应器）中，水流经隔板转弯时产生局部损失：
+
+\begin{equation}
+    h_b = \xi_b \frac{v^2}{2g}
+    \label{eq:baffle}
+\end{equation}
+
+式中：
+\begin{itemize}[nosep]
+    \item $\xi_b$ —— 隔板转弯阻力系数：90°弯1.0$\sim$1.5，180°折返2.5$\sim$3.5
+    \item $v$ —— 廊道内流速，m/s
+\end{itemize}
+
+\section{各处理单元经验水头损失值}
+
+污水处理构筑物的水头损失主要产生在进出口、溢流堰和必要的跌水处。
+流经构筑物本体内部的水头损失相对较小。初步设计时可按下表经验值估算。
+
+\begin{longtable}{@{}lll@{}}
+\caption{各处理单元经验水头损失值（来源：《给水排水设计手册》第5册）} \\
+\toprule
+\textbf{构筑物类型} & \textbf{水头损失 (m)} & \textbf{备注} \\
+\midrule
+\endfirsthead
+\multicolumn{3}{c}{\tablename\ \thetable{} （续）} \\
+\toprule
+\textbf{构筑物类型} & \textbf{水头损失 (m)} & \textbf{备注} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+% 预处理
+粗格栅          & 0.10 $\sim$ 0.25  & 含栅前壅水 \\
+细格栅          & 0.10 $\sim$ 0.26  & 同上 \\
+旋流沉砂池      & 0.15 $\sim$ 0.25  & 含进出口损失 \\
+平流沉砂池      & 0.15 $\sim$ 0.25  & 含进出口损失 \\
+辐流初沉池      & 0.20 $\sim$ 0.40  & 含中心筒+出水堰 \\
+% 二级处理
+CASS反应器      & 0.30 $\sim$ 0.50  & 含进水+滗水 \\
+A$^2$O反应池    & 0.30 $\sim$ 0.50  & 含隔板转弯 \\
+二沉池          & 0.40 $\sim$ 0.60  & 辐流式，中心进水 \\
+% 深度处理
+高密度沉淀池    & 0.40 $\sim$ 0.60  & 含混合+絮凝+沉淀+斜管 \\
+V型滤池         & 2.00 $\sim$ 3.00  & 含过滤水头+反冲洗 \\
+紫外消毒池      & 0.20 $\sim$ 0.30  & 明渠式 \\
+% 集配水
+集水井          & 0.10 $\sim$ 0.20  & 含进口跌水 \\
+配水井          & 0.15 $\sim$ 0.25  & 含配水堰跌落 \\
+集配水井        & 0.20 $\sim$ 0.30  & 集水+配水组合 \\
+配水渠          & 0.05 $\sim$ 0.15  & 沿程配水堰 \\
+% 调节
+调节池          & 0.20 $\sim$ 0.40  & 含进出口 \\
+% 矿井水
+混凝反应池      & 0.20 $\sim$ 0.40  & 含搅拌器 \\
+磁分离          & 0.15 $\sim$ 0.25  & 磁盘分离机 \\
+% 污泥处理
+污泥输送泵站    & 透传（泵扬程）    & 正向提升 \\
+污泥浓缩池      & 0.20 $\sim$ 0.40  & 重力浓缩 \\
+污泥消化池      & 0.30 $\sim$ 0.50  & 厌氧消化 \\
+污泥脱水间      & 0.15 $\sim$ 0.25  & 含进泥+滤液 \\
+污泥干化        & 0.10 $\sim$ 0.20  & 热干化/太阳能 \\
+污泥合并        & 0.05             & 单纯合并，透传 \\
+\bottomrule
+\end{longtable}
+
+\section{连接管渠水力计算}
+
+构筑物之间的连接管渠应按最大设计流量进行水力计算：
+
+\subsection{计算步骤}
+
+\begin{enumerate}[nosep]
+    \item 确定设计流量 $Q_{\max}$（已含Kz）
+    \item 选择管径 $D$，满足最小流速要求（污水$v_{\min}=0.6$m/s）
+    \item 按Manning公式计算管段水力坡度 $i$
+    \item 计算沿程损失：$h_f = i \cdot L$
+    \item 统计局部阻力件，计算局部损失：$h_m = \sum \xi \cdot v^2/(2g)$
+    \item 总水头损失：$h_{\text{total}} = h_f + h_m$
+    \item 校核：$D$ 不大于上游管径，$v$ 满足不淤流速
+\end{enumerate}
+
+\subsection{连接管段标准管径}
+
+\begin{table}[htbp]
+\centering
+\caption{污水管最小设计坡度（GB50014-2021 表5.2.10）}
+\label{tab:min_slope}
+\begin{tabular}{@{}cccc@{}}
+\toprule
+\textbf{管径 $D$ (mm)} & \textbf{最小坡度 $i_{\min}$} & \textbf{管径 $D$ (mm)} & \textbf{最小坡度 $i_{\min}$} \\
+\midrule
+300  & 0.0030  & 700  & 0.0010 \\
+400  & 0.0015  & 800  & 0.0008 \\
+500  & 0.0012  & 900  & 0.0008 \\
+600  & 0.0010  & 1000 & 0.0006 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{高程计算流程}
+
+\subsection{计算方法}
+
+污水处理厂高程计算采用\textbf{逆推法}：
+
+\begin{enumerate}[nosep]
+    \item \textbf{确定起始标高}：受纳水体最高水位 → 排放口标高
+    \item \textbf{逆流程推算}：$Z_{i} = Z_{i+1} + \sum h_{\text{loss},i\rightarrow i+1}$
+    \item \textbf{水面标高链}：进厂水面 → 各构筑物水面 → 出水排放
+    \item \textbf{池底标高}：$Z_{\text{bottom}} = Z_{\text{water}} - h_{\text{eff}}$
+    \item \textbf{埋深}：$\Delta_{\text{bury}} = Z_{\text{ground}} - Z_{\text{bottom}}$
+    \item \textbf{跌水井判定}：若 $Z_{\text{water},i} - Z_{\text{water},i+1} > 1.0$m → 设跌水井
+    \item \textbf{提升泵站}：$Z_{i+1} = Z_i + H_{\text{pump}}$（正向提升）
+\end{enumerate}
+
+\subsection{计算流程图}
+
+\begin{verbatim}
+进水水面标高 (jcws_smbg)
+    │
+    ▼ (水头损失累计)
+[构筑物1] → 水头损失1
+    │
+    ▼ (gdys_stss 管道损失)
+[构筑物2] → 水头损失2
+    │
+    ▼
+   ...
+    │
+    ▼
+[排放口] —— 最终水面标高
+\end{verbatim}
+
+\section{污泥线高程}
+
+污泥处理线的高程计算与污水线类似，但有以下特点：
+
+\begin{itemize}[nosep]
+    \item 污泥重力浓缩池 → 消化池 → 脱水间 通常按重力流布置
+    \item 提升泵站的设置应尽量减少需提升的污泥量
+    \item 污泥管道坡度应大于污水管（高浓度悬浮液易堵塞）
+    \item 消化池进泥管应从池顶或池壁引入，出泥管从池底引出
+\end{itemize}
+
+\section{提升泵站扬程计算}
+
+\begin{equation}
+    H_{\text{pump}} = \Delta Z_{\text{geometric}} + \sum h_f + \sum h_m + H_{\text{free}}
+    \label{eq:pump_head}
+\end{equation}
+
+式中：
+\begin{itemize}[nosep]
+    \item $\Delta Z_{\text{geometric}}$ —— 进出水几何高差，m
+    \item $\sum h_f$ —— 管道沿程水头损失总和，m
+    \item $\sum h_m$ —— 管道局部水头损失总和，m
+    \item $H_{\text{free}}$ —— 自由水头，1$\sim$2 m
+\end{itemize}
+
+\section{设计值选取原则}
+
+\begin{enumerate}[nosep]
+    \item \textbf{安全余量}：计算水头损失后宜增加10\%$\sim$20\%的安全余量
+    \item \textbf{并联运行}：当某构筑物停运时，其余并联构筑物及连接管渠应能通过全部流量，此时水头损失增大，应校核
+    \item \textbf{远期校核}：按远期设计流量校核水头损失
+    \item \textbf{淤积余量}：考虑到管道可能淤积，适当增加可调水头
+\end{enumerate}
+
+\section{参考文献}
+
+\begin{enumerate}[nosep]
+    \item GB50014-2021. 室外排水设计标准[S]. 北京: 中国计划出版社, 2021.
+    \item CJJ 131-2009. 城镇污水处理厂污泥处理技术规程[S]. 北京: 中国建筑工业出版社, 2009.
+    \item 北京市市政工程设计研究总院. 给水排水设计手册（第1册）常用资料[M]. 第3版. 北京: 中国建筑工业出版社, 2014.
+    \item 北京市市政工程设计研究总院. 给水排水设计手册（第5册）城镇排水[M]. 第3版. 北京: 中国建筑工业出版社, 2017.
+    \item 严煦世, 刘遂庆. 给水排水管网系统[M]. 第3版. 北京: 中国建筑工业出版社, 2015.
+    \item 张自杰. 排水工程（下册）[M]. 第5版. 北京: 中国建筑工业出版社, 2015.
+\end{enumerate}
+
+\end{document}

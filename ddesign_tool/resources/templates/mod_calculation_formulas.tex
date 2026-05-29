@@ -1,0 +1,883 @@
+\documentclass[12pt,a4paper]{ctexart}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry,booktabs,array,longtable}
+\usepackage{hyperref}
+\geometry{margin=2.5cm}
+\title{排水工程设计工具 v3.4\\全模组核心计算流程与数学公式}
+\author{杨元鑫 \\ 哈尔滨工业大学 环境工程}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{调节池 (tiaojiechi)}
+% ============================================================
+
+\subsection{工艺原理}
+调节池设于污水处理流程前端，用于均化水质水量波动，为后续处理单元提供稳定的水力负荷。设计基于水力停留时间（HRT）法。
+
+\subsection{设计参数}
+\begin{itemize}
+  \item $n$ — 池数（座），取值范围 $[1, 8]$
+  \item $\text{HRT}$ — 设计停留时间（h），取值范围 $[4.0, 12.0]$
+  \item $h_{\text{eff}}$ — 有效水深（m），取值范围 $[4.0, 5.0]$（GB50014-2021：宜取4\textasciitilde5 m）
+  \item $r_{LB}$ — 长宽比，取值范围 $[1.5, 3.0]$
+\end{itemize}
+
+\subsection{核心公式}
+单池设计流量：
+\begin{equation}
+Q_{\text{single}} = \frac{Q_{\text{avg,hourly}}}{n}
+\end{equation}
+
+有效容积：
+\begin{equation}
+V_{\text{eff}} = Q_{\text{single}} \cdot \text{HRT}
+\end{equation}
+
+有效面积：
+\begin{equation}
+A_{\text{eff}} = \frac{V_{\text{eff}}}{h_{\text{eff}}}
+\end{equation}
+
+平面尺寸（按设定长宽比分配）：
+\begin{equation}
+L = \left\lceil \sqrt{A_{\text{eff}} \cdot r_{LB}} \right\rceil_{0.5}, \quad
+B = \left\lceil \frac{A_{\text{eff}}}{L} \right\rceil_{0.5}
+\end{equation}
+
+搅拌功率（单位容积功率 $\rho_P \ge 12$ W/m$^3$）：
+\begin{equation}
+P_{\text{mix}} = \rho_P \cdot V_{\text{eff}} / 1000 \quad (\text{kW})
+\end{equation}
+
+\subsection{约束校核}
+\begin{itemize}
+  \item 长宽比：$L/B \in [1.5, 3.0]$
+  \item 实际 HRT：$\text{HRT}_{\text{actual}} = V_{\text{actual}} / Q_{\text{single}} \ge \text{HRT} - 0.5$ h
+  \item 有效水深：$h_{\text{eff}} \in [4.0, 5.0]$ m
+\end{itemize}
+
+% ============================================================
+\section{粗格栅 / 细格栅 (cugeshan / xigeshan)}
+% ============================================================
+
+\subsection{工艺原理}
+格栅用于拦截污水中较粗大的悬浮物和漂浮物，保护后续处理单元和水泵。粗格栅设于进水泵房前，细格栅设于沉砂池前。
+
+\subsection{设计参数}
+\begin{itemize}
+  \item $n$ — 格栅台数
+  \item $b$ — 栅条间隙（mm）：粗格栅 $[50, 100]$，细格栅 $[1.5, 10]$
+  \item $s$ — 栅条宽度（mm）：粗格栅 10（矩形栅条），细格栅 3（楔形钢丝）
+  \item $\alpha$ — 格栅安装倾角（°），通常 $60\sim75^\circ$
+  \item $h$ — 栅前水深（m）
+  \item $v$ — 过栅流速（m/s），$[0.6, 1.0]$
+\end{itemize}
+
+\subsection{核心公式}
+栅条间隙数：
+\begin{equation}
+n_{\text{gap}} = \frac{Q_{\text{max}} \cdot \sqrt{\sin \alpha}}{b \cdot h \cdot v}
+\end{equation}
+
+栅槽宽度：
+\begin{equation}
+B = S \cdot (n_{\text{gap}} - 1) + b \cdot n_{\text{gap}}
+\end{equation}
+其中 $S$ 为栅条宽度（m）。
+
+过栅水头损失：
+\begin{equation}
+h_f = \beta \cdot \left(\frac{S}{b}\right)^{4/3} \cdot \frac{v^2}{2g} \cdot \sin \alpha
+\end{equation}
+其中 $\beta$ 为栅条形状系数（矩形取 2.42）。
+
+栅渣量：
+\begin{equation}
+W = \frac{Q_{\text{avg}} \cdot W_1 \cdot 86400}{K_z \cdot 1000} \quad (\text{m}^3/\text{d})
+\end{equation}
+其中 $W_1$ 为栅渣量标准（粗格栅 0.02，细格栅 0.08 m$^3$/(10$^3$ m$^3$污水)）。
+
+\subsection{约束校核}
+\begin{itemize}
+  \item 过栅流速：$v \in [0.6, 1.0]$ m/s
+  \item 渠内流速：$v_1 \in [0.4, 0.9]$ m/s
+  \item 栅槽宽度校核：$B_1 < B$（进水渠宽小于栅槽宽）
+  \item 水头损失：$h_1 \leq 0.3$ m
+\end{itemize}
+
+% ============================================================
+\section{旋流沉砂池 (chenshachi)}
+% ============================================================
+
+\subsection{工艺原理}
+旋流沉砂池利用机械力控制水流流态，使砂粒在离心力和重力作用下沉降分离。采用钟氏（JETA）旋流沉砂池设计。
+
+\subsection{设计参数}
+\begin{itemize}
+  \item $n$ — 池数
+  \item $q_{\text{surf}}$ — 表面负荷（m$^3$/(m$^2\cdot$h)），$[150, 220]$
+  \item $t$ — 停留时间（s），$[25, 60]$（峰值流量可降至25s）
+\end{itemize}
+
+\subsection{核心公式}
+单池设计流量：
+\begin{equation}
+Q_{\text{single}} = \frac{Q_{\text{design}}}{n}
+\end{equation}
+
+沉淀面积：
+\begin{equation}
+A = \frac{Q_{\text{single}} \cdot 3600}{q_{\text{surf}}}
+\end{equation}
+
+池径：
+\begin{equation}
+D = \left\lceil \sqrt{\frac{4A}{\pi}} \right\rceil_{0.5}
+\end{equation}
+
+有效水深：
+\begin{equation}
+h_2 = \frac{Q_{\text{single}} \cdot t}{A}
+\end{equation}
+
+砂斗容积（锥体 + 圆柱段）：
+\begin{equation}
+V_{\text{storage}} = V_{\text{cone}} + V_{\text{cyl}}
+\end{equation}
+
+\subsection{约束校核}
+\begin{itemize}
+  \item 径深比：$D/h_2 \in [1.5, 5.0]$
+  \item 停留时间：$t \in [25, 60]$ s
+  \item 表面负荷合理范围
+\end{itemize}
+
+% ============================================================
+\section{辐流式初沉池 (chuchenchi)}
+% ============================================================
+
+\subsection{工艺原理}
+辐流式初沉池用于去除污水中可沉降的悬浮固体，降低后续生物处理单元的有机负荷。污水从中心管进入，径向流向周边出水堰。
+
+\subsection{设计参数}
+\begin{itemize}
+  \item $n$ — 池数
+  \item $q'$ — 设计表面负荷（m$^3$/(m$^2\cdot$h)），$[1.5, 3.0]$
+  \item $T$ — 沉淀时间（h），$[1.0, 2.0]$
+\end{itemize}
+
+\subsection{核心公式}
+沉淀面积：
+\begin{equation}
+F = \frac{Q_{\text{max}}}{n \cdot q'}
+\end{equation}
+
+池径（取整至 0.5 m，且 $\ge 16$ m）：
+\begin{equation}
+D = \max\left(16,\; \left\lceil \sqrt{\frac{4F}{\pi}} \right\rceil_{0.5}\right)
+\end{equation}
+
+实际表面负荷：
+\begin{equation}
+q'_{\text{actual}} = \frac{Q_{\text{max}}}{n \cdot \pi D^2 / 4}
+\end{equation}
+
+有效水深：
+\begin{equation}
+h_2 = q'_{\text{actual}} \cdot T
+\end{equation}
+
+堰负荷（双侧出水堰）：
+\begin{equation}
+q_{\text{weir}} = \frac{Q_{\text{max}}}{2 \cdot n \cdot \pi D} \quad (\text{L/(s}\cdot\text{m)})
+\end{equation}
+
+污泥产量：
+\begin{equation}
+S_{\text{dry}} = \frac{Q_{\text{avg}} \cdot \Delta \text{SS}}{1000} \quad (\text{kg/d})
+\end{equation}
+
+\subsection{约束校核}
+\begin{itemize}
+  \item 池径：$D \ge 16$ m
+  \item 径深比：$D/h_2 \in [4, 15]$
+  \item 有效水深：$h_2 \ge 2.0$ m
+  \item 堰负荷：$\le 2.9$ L/(s$\cdot$m)（双侧堰）
+  \item 刮泥机线速度：$\le 3.0$ m/min
+\end{itemize}
+
+% ============================================================
+\section{CASS 反应器 (cass)}
+% ============================================================
+
+\subsection{工艺原理}
+CASS（Cyclic Activated Sludge System）是SBR工艺的改进形式，在单一反应池内按时间顺序完成进水、曝气、沉淀、滗水四个阶段，省去二沉池和污泥回流系统。CASS池前端设生物选择区以抑制丝状菌膨胀。
+
+\subsection{设计参数}
+\begin{itemize}
+  \item $n$ — 池数
+  \item $N_s$ — BOD-污泥负荷（kgBOD/(kgMLSS$\cdot$d)），$[0.05, 0.15]$
+  \item $X$ — 混合液污泥浓度 MLSS（mg/L），$[2500, 4500]$
+  \item $\theta_c$ — 污泥龄（d），$[15, 30]$
+  \item $T_c$ — 周期时长（h），$[4, 6]$
+  \item $\lambda$ — 充水比，$[0.15, 0.40]$
+  \item $H$ — 有效水深（m），$[4.0, 6.0]$
+\end{itemize}
+
+\subsection{核心公式}
+BOD 去除量：
+\begin{equation}
+\Delta S = S_0 - S_e \quad (\text{mg/L})
+\end{equation}
+
+污泥产率系数（温度修正）：
+\begin{equation}
+Y_{\text{obs}} = \frac{Y}{1 + K_d \cdot \theta_c}
+\end{equation}
+
+每日排泥量：
+\begin{equation}
+P_x = Y_{\text{obs}} \cdot Q \cdot \Delta S / 1000 \quad (\text{kg/d})
+\end{equation}
+
+反应器有效容积：
+\begin{equation}
+V = \frac{Q_{\text{avg}} \cdot \Delta S}{N_s \cdot X \cdot 1000} \times \frac{T_c}{24}
+\end{equation}
+
+单池容积：
+\begin{equation}
+V_{\text{single}} = \frac{V}{n}
+\end{equation}
+
+平面尺寸（长宽比 2\textasciitilde4）：
+\begin{equation}
+A_{\text{single}} = V_{\text{single}} / H, \quad
+L = \left\lceil \sqrt{A_{\text{single}} \cdot r_{LB}} \right\rceil_{0.5}, \quad
+B = \left\lceil A_{\text{single}} / L \right\rceil_{0.5}
+\end{equation}
+
+需氧量：
+\begin{equation}
+O_2 = Q_{\text{avg}} \cdot (a \cdot \Delta S + b \cdot X \cdot V / 1000) / 1000 \quad (\text{kg/d})
+\end{equation}
+其中 $a = 0.5$（BOD需氧系数），$b = 0.12$（内源呼吸需氧系数）。
+
+\subsection{约束校核}
+\begin{itemize}
+  \item 充水比一致性：$\lambda = V_{\text{fill}} / V_{\text{single}}$，偏差 $< 15\%$
+  \item 长宽比：$L/B \in [1.5, 5]$
+  \item 宽高比：$B/H$ 合理范围
+  \item 污泥龄一致性校核
+  \item 供氧能力校核
+  \item 安全距离（最低水位与滗水器）$\ge 0.5$ m
+\end{itemize}
+
+% ============================================================
+\section{AAO 反应池 (aao)}
+% ============================================================
+
+\subsection{工艺原理}
+AAO（Anaerobic-Anoxic-Oxic）工艺是典型的生物脱氮除磷工艺，由厌氧池、缺氧池和好氧池串联组成。厌氧段释磷，缺氧段反硝化脱氮，好氧段硝化吸磷并去除有机物。
+
+\subsection{设计参数}
+\begin{itemize}
+  \item $n$ — 系列数（池组数）
+  \item $\text{BOD}_5$ — 进水 BOD$_5$ 浓度（mg/L）
+  \item $\text{TN}$ — 进水总氮（mg/L）
+  \item $\text{TP}$ — 进水总磷（mg/L）
+  \item $t_{\text{anaerobic}}$ — 厌氧停留时间（h），$[1.0, 2.0]$
+  \item $t_{\text{anoxic}}$ — 缺氧停留时间（h），$[2.0, 4.0]$
+  \item $t_{\text{oxic}}$ — 好氧停留时间（h），$[6.0, 12.0]$
+  \item $\text{MLSS}$ — 污泥浓度（mg/L），$[3000, 4000]$
+  \item $R$ — 污泥回流比，$[50\%, 100\%]$
+  \item $r$ — 混合液回流比，$[100\%, 400\%]$
+\end{itemize}
+
+\subsection{核心公式}
+总有效容积：
+\begin{equation}
+V_{\text{total}} = Q_{\text{avg}} \cdot (t_{\text{anaerobic}} + t_{\text{anoxic}} + t_{\text{oxic}}) / 24
+\end{equation}
+
+各段容积按停留时间比例分配：
+\begin{equation}
+V_{\text{ana}} = V_{\text{total}} \cdot \frac{t_{\text{anaerobic}}}{t_{\text{total}}}, \quad
+V_{\text{anox}} = V_{\text{total}} \cdot \frac{t_{\text{anoxic}}}{t_{\text{total}}}, \quad
+V_{\text{ox}} = V_{\text{total}} \cdot \frac{t_{\text{oxic}}}{t_{\text{total}}}
+\end{equation}
+
+BOD-污泥负荷：
+\begin{equation}
+N_s = \frac{Q_{\text{avg}} \cdot \text{BOD}_5}{1000 \cdot \text{MLSS} \cdot V_{\text{ox}}}
+\end{equation}
+
+硝化所需好氧泥龄：
+\begin{equation}
+\theta_{c,\text{nit}} = \frac{1}{\mu_{\text{nit}}} \cdot 1.103^{(15-T)} \quad (\text{d})
+\end{equation}
+
+反硝化速率：
+\begin{equation}
+r_{\text{dn}} = r_{\text{dn},20} \cdot 1.08^{(T-20)} \quad (\text{kgNO}_3\text{-N/(kgMLVSS}\cdot\text{d)})
+\end{equation}
+
+\subsection{约束校核}
+\begin{itemize}
+  \item 总停留时间：$t_{\text{total}} \in [8, 20]$ h
+  \item BOD-污泥负荷：$N_s \in [0.05, 0.15]$
+  \item 泥龄：$\theta_c \ge \theta_{c,\text{nit}}$
+  \item 混合液回流比合理范围
+\end{itemize}
+
+% ============================================================
+\section{高密度沉淀池 (gaomidu)}
+% ============================================================
+
+\subsection{工艺原理}
+高密度沉淀池集混凝、絮凝、沉淀于一体，通过投加混凝剂和絮凝剂、污泥回流以及斜管/斜板沉淀实现高效固液分离。用于深度除磷和SS精细去除。
+
+\subsection{设计参数}
+\begin{itemize}
+  \item $n$ — 池数
+  \item $t_{\text{mix}}$ — 混合时间（min），$[1, 3]$
+  \item $t_{\text{floc}}$ — 絮凝时间（min），$[8, 15]$
+  \item $q_{\text{surf}}$ — 斜管区表面负荷（m$^3$/(m$^2\cdot$h)），$[6, 14]$
+\end{itemize}
+
+\subsection{核心公式}
+混合区容积：
+\begin{equation}
+V_{\text{mix}} = \frac{Q_{\text{max}} \cdot t_{\text{mix}} \cdot 60}{n}
+\end{equation}
+
+絮凝区容积：
+\begin{equation}
+V_{\text{floc}} = \frac{Q_{\text{max}} \cdot t_{\text{floc}} \cdot 60}{n}
+\end{equation}
+
+斜管沉淀区面积：
+\begin{equation}
+A_{\text{tube}} = \frac{Q_{\text{max}} \cdot 3600}{n \cdot q_{\text{surf}}}
+\end{equation}
+
+总池面积：
+\begin{equation}
+A_{\text{total}} = A_{\text{tube}} + A_{\text{mix}} + A_{\text{floc}}
+\end{equation}
+
+\subsection{约束校核}
+\begin{itemize}
+  \item 表面负荷：$q_{\text{surf}} \in [6, 14]$ m$^3$/(m$^2\cdot$h)
+  \item 轴向流速（斜管内）：$\le 5$ mm/s
+  \item 固体通量合理范围
+\end{itemize}
+
+% ============================================================
+\section{V 型滤池 (vxinglvchi)}
+% ============================================================
+
+\subsection{工艺原理}
+V型滤池采用均质粗砂滤料，V型进水槽布水均匀，气水反冲洗效率高。用于深度去除SS和保证出水浊度。
+
+\subsection{设计参数}
+\begin{itemize}
+  \item $n$ — 滤格数，$[2, 6]$
+  \item $v$ — 设计滤速（m/h），$[5, 8]$
+  \item $h_{\text{media}}$ — 滤料层厚度（m），$[1.2, 1.5]$
+  \item $h_{\text{water}}$ — 滤层上水深（m），$\ge 1.2$
+\end{itemize}
+
+\subsection{核心公式}
+过滤总面积：
+\begin{equation}
+A_{\text{total}} = \frac{Q_{\text{max}} \cdot 3600}{v}
+\end{equation}
+
+单格面积：
+\begin{equation}
+A_{\text{single}} = A_{\text{total}} / n
+\end{equation}
+
+强制滤速（一格反冲时）：
+\begin{equation}
+v_{\text{force}} = \frac{Q_{\text{max}} \cdot 3600}{A_{\text{total}} - A_{\text{single}}} \le 10 \text{ m/h}
+\end{equation}
+
+反冲洗水量（不超过产水量的 5\%）：
+\begin{equation}
+Q_{\text{backwash}} = A_{\text{single}} \cdot q_{\text{backwash}} / 1000 \quad (\text{m}^3/\text{s})
+\end{equation}
+
+\subsection{约束校核}
+\begin{itemize}
+  \item 滤速：$v \in [5, 8]$ m/h
+  \item 强制滤速：$v_{\text{force}} \le 10$ m/h
+  \item 滤层上水深：$h_{\text{water}} \ge 1.2$ m
+  \item 反冲洗水量比 $\le 5\%$
+\end{itemize}
+
+% ============================================================
+\section{紫外消毒池 (ziwai)}
+% ============================================================
+
+\subsection{工艺原理}
+紫外线消毒利用UV-C波段（254 nm）紫外光破坏微生物DNA结构，实现消毒灭菌。不产生消毒副产物，无余氯影响受纳水体。
+
+\subsection{设计参数}
+\begin{itemize}
+  \item $n$ — 渠道数，$\ge 2$（一用一备）
+  \item $D_{\text{UV}}$ — UV 有效剂量（mJ/cm$^2$），出水一级A取 $[20, 30]$
+  \item $v$ — 渠内流速（m/s），$[0.15, 0.7]$
+  \item $h$ — 有效水深（m），$[0.8, 1.8]$
+\end{itemize}
+
+\subsection{核心公式}
+单渠流量：
+\begin{equation}
+Q_{\text{single}} = \frac{Q_{\text{max}}}{n}
+\end{equation}
+
+过流面积：
+\begin{equation}
+A_{\text{flow}} = \frac{Q_{\text{single}}}{v} = B_{\text{ch}} \cdot h
+\end{equation}
+
+渠道宽度（由水深反推或由灯管排布确定）：
+\begin{equation}
+B_{\text{ch}} = \frac{Q_{\text{single}}}{v \cdot h}
+\end{equation}
+
+灯管排数（每排提供一定剂量）：
+\begin{equation}
+N_{\text{rows}} = \left\lceil \frac{D_{\text{UV}}}{\text{dose\_per\_row}} \right\rceil
+\end{equation}
+
+实际照射时间：
+\begin{equation}
+t_{\text{exposure}} = \frac{L_{\text{channel}}}{v} \quad (\text{s})
+\end{equation}
+
+\subsection{约束校核}
+\begin{itemize}
+  \item 渠道数：$n \in [2, 3]$
+  \item 渠内流速：$v \in [0.15, 0.7]$ m/s
+  \item UV 剂量达标
+\end{itemize}
+
+% ============================================================
+\section{辐流式二沉池 (erchunchi) — 社区模组}
+% ============================================================
+
+\subsection{工艺原理}
+辐流式二沉池设于生物处理单元之后，用于泥水分离，上清液进入深度处理，沉降污泥部分回流、部分排入污泥处理系统。
+
+\subsection{设计参数}
+\begin{itemize}
+  \item $n$ — 池数
+  \item $q'$ — 表面负荷（m$^3$/(m$^2\cdot$h)），$[0.6, 1.5]$
+  \item $T$ — 沉淀时间（h），$[2.0, 4.0]$
+  \item $R$ — 污泥回流比，$[50\%, 100\%]$
+\end{itemize}
+
+\subsection{核心公式}
+沉淀面积（含回流）：
+\begin{equation}
+F = \frac{Q_{\text{max}} \cdot (1 + R)}{n \cdot q'}
+\end{equation}
+
+池径：
+\begin{equation}
+D = \max\left(16,\; \left\lceil \sqrt{\frac{4F}{\pi}} \right\rceil_{0.5}\right)
+\end{equation}
+
+有效水深：
+\begin{equation}
+h_2 = q'_{\text{actual}} \cdot T
+\end{equation}
+
+固体通量校核：
+\begin{equation}
+G = \frac{Q_{\text{max}} \cdot (1 + R) \cdot \text{MLSS}}{n \cdot A_{\text{actual}}} \quad (\text{kg/(m}^2\cdot\text{h)})
+\end{equation}
+
+\subsection{约束校核}
+\begin{itemize}
+  \item 池径：$D \ge 16$ m
+  \item 径深比：$D/h_2 \in [6, 12]$
+  \item 固体通量：$G \in [3, 6]$ kg/(m$^2\cdot$h)
+  \item 堰负荷：$\le 1.7$ L/(s$\cdot$m)（二沉池标准更严）
+\end{itemize}
+
+% ============================================================
+\section{污水提升泵房 (wuni\_tisheng) — 社区模组}
+% ============================================================
+
+\subsection{工艺原理}
+当污水需要提升至较高高程以实现后续重力流处理时，设置污水提升泵房。泵房包括集水池和泵房两部分，水泵将集水池内污水提升后经压力管道输送至下游。
+
+\subsection{设计参数}
+\begin{itemize}
+  \item $n_{\text{work}}$ — 工作泵台数，$\ge 2$，$\le 8$（GB50014-2021 §6.4.1）
+  \item $H_{\text{st}}$ — 静扬程（m），设计提升高度
+  \item $v_{\text{suction}}$ — 吸水管流速（m/s），$[0.7, 1.5]$（§6.4.4）
+  \item $v_{\text{discharge}}$ — 出水管流速（m/s），$[0.8, 2.5]$（§6.4.4）
+\end{itemize}
+
+\subsection{核心公式}
+单泵设计流量：
+\begin{equation}
+Q_{\text{single}} = \frac{Q_{\text{design}}}{n_{\text{work}}}
+\end{equation}
+
+管径计算（满管流）：
+\begin{equation}
+D_{\text{suction}} = \sqrt{\frac{4 Q_{\text{single}}}{\pi \cdot v_{\text{suction}}}}, \quad
+D_{\text{discharge}} = \sqrt{\frac{4 Q_{\text{single}}}{\pi \cdot v_{\text{discharge}}}}
+\end{equation}
+
+沿程水头损失（曼宁公式，$n = 0.013$ 混凝土管）：
+\begin{align}
+R &= \frac{D}{4} \quad (\text{满管水力半径}) \\
+i &= \left(\frac{n \cdot v}{R^{2/3}}\right)^2 \quad (\text{水力坡度}) \\
+h_f &= i \cdot L \quad (\text{沿程水头损失})
+\end{align}
+
+总水头损失（含局部损失，放大系数 $k_{\text{local}} = 1.2$）：
+\begin{equation}
+H_{\text{loss}} = k_{\text{local}} \cdot (h_{f,\text{suction}} + h_{f,\text{discharge}})
+\end{equation}
+
+总扬程：
+\begin{equation}
+H_{\text{total}} = H_{\text{st}} + H_{\text{loss}} + h_{\text{outlet}} \quad (\text{m})
+\end{equation}
+其中 $h_{\text{outlet}} = 1.5$ m 为出水自由水头。
+
+水泵轴功率：
+\begin{equation}
+P_{\text{shaft}} = \frac{\rho g Q_{\text{single}} H_{\text{total}}}{1000 \cdot \eta} \quad (\text{kW})
+\end{equation}
+其中 $\rho = 1000$ kg/m$^3$，$g = 9.81$ m/s$^2$，$\eta = 0.75$。
+
+集水池有效容积（GB50014-2021 §6.3.1）：
+\begin{equation}
+V_{\text{sump}} \ge Q_{\text{single}} \cdot t_{\text{min}} \cdot 60 \quad (\text{m}^3)
+\end{equation}
+其中 $t_{\text{min}} = 5$ min（污水泵站最小停留时间）。
+
+集水池平面尺寸（2:1 长宽比）：
+\begin{equation}
+A_{\text{sump}} = \frac{V_{\text{sump}}}{h_{\text{sump,eff}}}, \quad
+L_{\text{sump}} = \left\lceil 2\sqrt{A_{\text{sump}}/2} \right\rceil_{0.5}, \quad
+B_{\text{sump}} = \left\lceil A_{\text{sump}}/L_{\text{sump}} \right\rceil_{0.5}
+\end{equation}
+
+备用泵台数（§6.4.1）：
+\begin{equation}
+n_{\text{standby}} = \begin{cases}
+1, & n_{\text{work}} \le 4 \\
+2, & n_{\text{work}} \ge 5
+\end{cases}
+\end{equation}
+
+\subsection{约束校核}
+\begin{itemize}
+  \item 吸水管流速：$v_{\text{suction}} \in [0.7, 1.5]$ m/s
+  \item 出水管流速：$v_{\text{discharge}} \in [0.8, 2.5]$ m/s
+  \item 总扬程：$H_{\text{total}} \in [5, 30]$ m
+  \item 集水池容积：$V_{\text{sump,actual}} \ge V_{\text{sump,min}}$
+\end{itemize}
+
+% ============================================================
+\section{巴氏计量槽 (bashi\_jiliangcao) — 社区模组}
+% ============================================================
+
+\subsection{工艺原理}
+巴氏计量槽（Parshall Flume）是一种标准化明渠流量测量装置。水流通过喉道收缩段时产生临界流，上游水位与流量呈确定的水力关系，通过测量上游水深即可准确推算流量。
+
+\subsection{设计参数}
+\begin{itemize}
+  \item $b$ — 喉道宽度（m），5种标准值：$0.152, 0.228, 0.30, 0.45, 0.60$
+  \item 喉宽选取原则：$b \approx (1/3\sim1/2) \times$ 渠道宽度
+\end{itemize}
+
+\subsection{核心公式}
+巴歇尔量水槽流量公式（自由出流条件）：
+\begin{equation}
+Q = C \cdot h_a^n \quad (\text{m}^3/\text{s})
+\end{equation}
+其中 $h_a$ 为上游水深（m），$C$ 和 $n$ 为与喉宽 $b$ 相关的经验系数。
+
+标准喉宽系数表（CJ/T3008.5-93）：
+\begin{center}
+\begin{tabular}{c|c|c}
+\toprule
+$b$ (m) & $C$ & $n$ \\
+\midrule
+0.152 & 0.381 & 1.58 \\
+0.228 & 0.535 & 1.53 \\
+0.30  & 0.679 & 1.521 \\
+0.45  & 1.038 & 1.537 \\
+0.60  & 1.403 & 1.548 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+由设计流量反算上游水深：
+\begin{equation}
+h_a = \left(\frac{Q}{C}\right)^{1/n}
+\end{equation}
+
+渠道宽度：
+\begin{equation}
+B_{\text{channel}} = 3b
+\end{equation}
+
+下游水深（自由出流极限，淹没度 $S \le 0.6$）：
+\begin{equation}
+h_b = 0.6 \cdot h_a, \quad S = \frac{h_b}{h_a} = 0.6
+\end{equation}
+
+行进流速：
+\begin{equation}
+v_{\text{approach}} = \frac{Q}{B_{\text{channel}} \cdot h_a}
+\end{equation}
+
+弗劳德数（须为亚临界流）：
+\begin{equation}
+Fr = \frac{v_{\text{approach}}}{\sqrt{g \cdot h_a}} < 1.0
+\end{equation}
+
+上游直段长度（淹没自由流，CJ/T3008.5-93）：
+\begin{equation}
+L_{\text{up}} \ge 10 \cdot B_{\text{channel}}
+\end{equation}
+
+下游直段长度：
+\begin{equation}
+L_{\text{down}} \ge 5 \cdot B_{\text{channel}}
+\end{equation}
+
+\subsection{约束校核}
+\begin{itemize}
+  \item 喉宽为标准值：$b \in \{0.152, 0.228, 0.30, 0.45, 0.60\}$
+  \item 弗劳德数：$Fr < 1.0$（亚临界流）
+  \item 行进流速：$v_{\text{approach}} \in [0.3, 2.0]$ m/s
+  \item 淹没度：$S \le 0.6$（自由出流条件）
+\end{itemize}
+
+% ============================================================
+\section{矿井水处理模块}
+% ============================================================
+
+\subsection{矿井水调节池 (kw\_tiaojiechi)}
+矿井水调节池用于均化矿井涌水的水量和水质波动。设计公式与市政调节池相同，但参数范围根据矿井水特点调整。
+
+\subsection{平流沉砂池 (kw\_chenshachi)}
+平流沉砂池利用水平流动使砂粒在重力作用下沉降。设计基于水平流速和停留时间。
+
+核心公式：
+\begin{equation}
+L_{\text{ch}} = v_h \cdot t, \quad A = \frac{Q_{\text{max}}}{v_h}, \quad B = \frac{A}{h_{\text{eff}}}
+\end{equation}
+
+\subsection{混凝反应池 (kw\_ningjiao)}
+混凝反应池用于矿井水混凝沉淀预处理，投加PAC/PAM形成絮体。设计基于反应时间和速度梯度。
+
+\subsection{磁分离 (kw\_cifenli)}
+磁盘分离机利用永磁磁盘吸附水中磁性絮体，适用于矿井水高悬浮物快速分离。撬装设备，无土建池体。
+
+% ============================================================
+\section{污泥处理模块}
+% ============================================================
+
+\subsection{污泥数据模型}
+污泥数据由 SludgeFlow 数据类封装：
+\begin{itemize}
+  \item $Q_{\text{wet}}$ — 湿污泥量（m$^3$/d）
+  \item $DS$ — 干固体量（kg/d）
+  \item $P_{\text{moisture}}$ — 含水率，$\in [0, 1]$
+  \item $VS_{\text{ratio}}$ — 挥发性固体占比，$\in [0, 1]$
+\end{itemize}
+
+上下游污泥流的合并采用干固量加权平均：
+\begin{equation}
+P_{\text{merged}} = \frac{\sum DS_i \cdot P_i}{\sum DS_i}, \quad
+VS_{\text{merged}} = \frac{\sum DS_i \cdot VS_i}{\sum DS_i}
+\end{equation}
+
+\subsection{污泥合并节点 (wuni\_hebing)}
+纯数据合并节点，多个 SLUDGE 输入端汇集为一股混合污泥。无设计参数，仅做干固量加权合并后透传。
+
+\subsection{污泥输送泵站 (wuni\_shusong)}
+多股污泥汇集后泵送至下游处理单元。设计含泵台数、管径、流速计算。
+
+设计流速（污泥管道）：
+\begin{equation}
+v_{\text{pipe}} = \frac{4 Q_{\text{wet}} / 86400}{\pi D^2} \quad (\text{m/s})
+\end{equation}
+其中 $v_{\text{pipe}} \in [1.0, 2.0]$ m/s（GB50014-2021 §7.1）。
+
+\subsection{污泥浓缩池 (wuni\_nongsuo)}
+重力浓缩池，依据 GB50014-2021 §7.2。
+
+浓缩面积：
+\begin{equation}
+A = \frac{DS}{q_{\text{solid}}}, \quad q_{\text{solid}} \in [30, 60] \text{ kgDS/(m}^2\cdot\text{d)}
+\end{equation}
+
+池径（圆形浓缩池）：
+\begin{equation}
+D = \max\left(5.0,\; \left\lceil \sqrt{\frac{4A}{\pi \cdot n}} \right\rceil_{0.5}\right)
+\end{equation}
+
+浓缩时间与有效水深：
+\begin{equation}
+V_{\text{single}} = \frac{Q_{\text{wet,in}} \cdot T_{\text{thicken}}}{24 \cdot n}, \quad
+h_{\text{eff}} = \frac{V_{\text{single}}}{A_{\text{actual}}}
+\end{equation}
+
+出泥量（含水率变化）：
+\begin{equation}
+Q_{\text{wet,out}} = \frac{DS \cdot \text{recovery}}{(1 - P_{\text{out}}) \cdot 1000}
+\end{equation}
+其中 $P_{\text{out}} \in [0.94, 0.98]$，固体回收率 $\approx 95\%$。
+
+\subsection{污泥消化池 (wuni\_xiaohua)}
+中温厌氧消化（35$^\circ$C），依据 GB50014-2021 §7.3。
+
+消化时间：$\theta_{\text{digest}} \in [15, 30]$ d
+
+有效容积：
+\begin{equation}
+V = \frac{Q_{\text{wet,in}} \cdot \theta_{\text{digest}}}{n}
+\end{equation}
+
+池径（圆形消化池）：
+\begin{equation}
+D = \left\lceil \sqrt{\frac{4V}{\pi \cdot H_{\text{eff}}}} \right\rceil_{0.5}
+\end{equation}
+
+VS 降解量：
+\begin{equation}
+\Delta VS = DS \cdot VS_{\text{ratio}} \cdot \eta_{VS}, \quad \eta_{VS} \in [40\%, 55\%]
+\end{equation}
+
+沼气产量：
+\begin{equation}
+V_{\text{biogas}} = \Delta VS \cdot r_{\text{gas}} \quad (\text{m}^3/\text{d})
+\end{equation}
+其中 $r_{\text{gas}} \in [0.8, 1.0]$ m$^3$/kgVS。
+
+消化后干固量：
+\begin{equation}
+DS_{\text{out}} = DS - \Delta VS
+\end{equation}
+
+容积负荷：
+\begin{equation}
+L_V = \frac{DS \cdot VS_{\text{ratio}}}{V} \quad (\text{kgVS/(m}^3\cdot\text{d)})
+\end{equation}
+
+\subsection{污泥脱水间 (wuni\_tuoshui)}
+带式压滤或离心脱水，依据 GB50014-2021 §7.4。
+
+日运行时间：
+\begin{equation}
+T_{\text{run}} = \frac{Q_{\text{wet,in}}}{n_{\text{machines}} \cdot q_{\text{capacity}}} \le 20 \text{ h/d}
+\end{equation}
+
+出泥量（含水率降至 $\le 80\%$）：
+\begin{equation}
+Q_{\text{wet,out}} = \frac{DS \cdot \text{recovery}}{(1 - P_{\text{out}}) \cdot 1000}
+\end{equation}
+
+PAM 日耗量：
+\begin{equation}
+M_{\text{PAM}} = \frac{DS \cdot d_{\text{PAM}}}{1000} \quad (\text{kg/d})
+\end{equation}
+其中 $d_{\text{PAM}} \in [3, 5]$ g/kgDS。
+
+\subsection{污泥干化 (wuni\_ganhua)}
+热干化或太阳能干化，依据 GB50014-2021 §7.5。蒸发速率 $q_{\text{evap}}$ 在热干化模式下单位为 kgH$_2$O/(m$^2\cdot$h)，在太阳能模式下单位为 kgH$_2$O/(m$^2\cdot$d)。
+
+蒸发水量：
+\begin{equation}
+m_{\text{evap}} = DS \cdot \left(\frac{1}{1-P_{\text{in}}} - \frac{1}{1-P_{\text{out}}}\right) \quad (\text{kg/d})
+\end{equation}
+
+干化面积（按干化方式分支）：
+\begin{equation}
+A_{\text{dry}} = \begin{cases}
+\dfrac{m_{\text{evap}}}{q_{\text{evap}} \cdot 24}, & \text{热干化}\\[8pt]
+\dfrac{m_{\text{evap}}}{q_{\text{evap}}}, & \text{太阳能干化}
+\end{cases} \quad (\text{m}^2)
+\end{equation}
+其中热干化 $q_{\text{evap}} \in [4, 15]$ kgH$_2$O/(m$^2\cdot$h)，太阳能 $q_{\text{evap}} \in [5, 15]$ kgH$_2$O/(m$^2\cdot$d)。
+
+热耗：
+\begin{equation}
+Q_{\text{heat}} = \frac{m_{\text{sensible}} + m_{\text{evap}} \cdot h_{\text{latent}}}{\eta_{\text{thermal}}} \quad (\text{MJ/d})
+\end{equation}
+
+折合标准煤（1 tce $= 29307$ MJ）：
+\begin{equation}
+\text{coal\_equiv} = \frac{Q_{\text{heat}}}{29307} \quad (\text{tce/d})
+\end{equation}
+
+减量率：
+\begin{equation}
+R_{\text{reduction}} = \frac{Q_{\text{wet,in}} - Q_{\text{wet,out}}}{Q_{\text{wet,in}}} \times 100\%
+\end{equation}
+
+\subsection{污泥泵站 (wuni\_bengzhan)}
+单股污泥加压输送。设计与输送泵站类似，但流量为单股污泥参数。
+
+\section{数据模型与约束体系}
+
+\subsection{水量模型 WaterFlow}
+管网输入节点通过用户设定的 $Q_{\text{design}}$（最大设计流量，已含 $K_z$）和 $K_z$（总变化系数）自动计算日均流量，不再依赖 Excel 读取：
+
+\begin{equation}
+Q_{\text{avg,daily}} = \frac{Q_{\text{design}}}{K_z} \times 86400 \quad (\text{m}^3/\text{d})
+\end{equation}
+
+单位换算：
+\begin{equation}
+Q_{\text{avg,hourly}} = Q_{\text{avg,daily}} / 24, \quad
+Q_{\text{avg,second}} = Q_{\text{avg,daily}} / 86400
+\end{equation}
+
+$K_z$ 取值范围 $[1.1, 2.5]$，$Q_{\text{design}}$ 取值范围 $[0.01, 10.0]$ m$^3$/s。两参数均可通过滑块或直接输入调整，调整后 $Q_{\text{avg,daily}}$ 即时重算并向下游传递。
+
+\subsection{水质模型 WaterQuality}
+污染物去除遵循一阶去除模型：
+\begin{equation}
+C_{\text{out},i} = C_{\text{in},i} \cdot (1 - r_i)
+\end{equation}
+其中 $r_i$ 为该处理单元对第 $i$ 项指标的去除率。
+
+出水达标判定：
+\begin{equation}
+C_{\text{out},i} \le C_{\text{standard},i} \quad \forall i \in \{\text{BOD}_5, \text{COD}, \text{SS}, \text{NH}_3\text{-N}, \text{TN}, \text{TP}\}
+\end{equation}
+
+\subsection{方案空间枚举}
+对于每个处理单元，自由变量组成的离散网格通过向量化批量计算产生全部可行解：
+\begin{equation}
+\mathcal{S} = \{\mathbf{p} \in \mathcal{G} : o_k(\mathbf{p}) = \text{True}, \forall k\}
+\end{equation}
+其中 $\mathcal{G}$ 为自由变量离散网格，$o_k$ 为第 $k$ 个硬约束条件。
+
+方案按安全裕度（robustness）排序，安全裕度定义为各约束裕度的加权平均：
+\begin{equation}
+R(\mathbf{p}) = \frac{1}{|\mathcal{C}|} \sum_{k=1}^{|\mathcal{C}|} w_k \cdot \min\left(1, \frac{\text{margin}_k}{\text{limit}_k}\right)
+\end{equation}
+
+\end{document}

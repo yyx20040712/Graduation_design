@@ -1,0 +1,1115 @@
+\documentclass[12pt,a4paper]{ctexart}
+
+% ═══════════════════════════════════════════════════════════════
+%  Academic CS PhD-Level Preamble
+% ═══════════════════════════════════════════════════════════════
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{geometry,booktabs,array,longtable,multirow,tabularx}
+\usepackage{hyperref,cleveref}
+\usepackage[linesnumbered,ruled,vlined,algosection]{algorithm2e}
+\usepackage{listings,xcolor}
+\usepackage{tikz,float,caption,subcaption}
+\usetikzlibrary{positioning,shapes,arrows,fit,backgrounds,calc,decorations.pathreplacing}
+
+\geometry{margin=2.5cm}
+
+% ── Theorem Environments ──
+\theoremstyle{definition}
+\newtheorem{definition}{定义}[section]
+\newtheorem{theorem}{定理}[section]
+\newtheorem{lemma}[theorem]{引理}
+\newtheorem{corollary}[theorem]{推论}
+\theoremstyle{remark}
+\newtheorem{remark}{注记}[section]
+
+% ── Cleveref names ──
+\crefname{definition}{定义}{定义}
+\crefname{theorem}{定理}{定理}
+\crefname{lemma}{引理}{引理}
+\crefname{corollary}{推论}{推论}
+\crefname{algorithm}{算法}{算法}
+\crefname{equation}{式}{式}
+\crefname{figure}{图}{图}
+\crefname{table}{表}{表}
+
+% ── Code & Algorithm styling ──
+\definecolor{codegray}{rgb}{0.95,0.95,0.95}
+\definecolor{codeblue}{rgb}{0.1,0.1,0.6}
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codegray},
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  keywordstyle=\color{codeblue},
+  commentstyle=\color{gray},
+  breaklines=true,
+  tabsize=4
+}
+\SetKwComment{Comment}{$\triangleright$\ }{}
+\SetKwProg{Fn}{def}{:}{}
+
+% ── Tikz styles ──
+\tikzset{
+  module/.style={draw, rectangle, rounded corners=3pt, minimum width=2.8cm, minimum height=0.9cm, fill=blue!5, font=\footnotesize},
+  dataclass/.style={draw, rectangle, rounded corners=2pt, minimum width=2.4cm, minimum height=0.7cm, fill=green!5, font=\footnotesize},
+  arrow/.style={->, >=stealth, thick},
+  port_water/.style={circle, draw, minimum size=6pt, fill=cyan!40, inner sep=0pt},
+  port_quality/.style={circle, draw, minimum size=6pt, fill=green!40, inner sep=0pt},
+  port_mixed/.style={circle, draw, minimum size=6pt, fill=orange!40, inner sep=0pt},
+  port_sludge/.style={circle, draw, minimum size=6pt, fill=violet!40, inner sep=0pt},
+}
+
+% ═══════════════════════════════════════════════════════════════
+%  Document Info
+% ═══════════════════════════════════════════════════════════════
+\title{\textbf{排水工程设计工具 v5.3}\\[4pt]
+       \large ——系统架构、计算模型与软件设计方法}
+\author{yyx \\[2pt] \normalsize 哈尔滨工业大学 环境工程}
+\date{2026年5月28日 \\ 版本 5.3.0}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+% ── Abstract ──
+\begin{center}
+\begin{minipage}{0.92\textwidth}
+\small\setlength{\parskip}{4pt}
+\textbf{摘要：}
+本文从计算机科学的视角系统阐述排水工程设计工具 v3.4 的软件架构、核心算法与设计方法论。
+系统面向城镇污水处理厂全流程工艺设计，以\textbf{类型化端口数据流}（typed port dataflow）为通信基础、
+\textbf{有向无环图增量执行引擎}为调度核心、\textbf{向量化可行域枚举}为决策支持手段、
+\textbf{拓扑高程传播模型}为水力剖面计算框架，
+构建了一个集工艺计算、方案优化、高程设计、工程概算于一体的集成化设计平台。
+本文提出了五项关键体系：(1)~基于代数数据类型的四元端口系统，通过静态兼容性判定杜绝语义错误的流程连接；
+(2)~基于 Kahn 拓扑排序的 DAG 增量执行模型，支持脏标记传播、独立污泥子图路由与高程后处理；
+(3)~将工艺设计形式化为离散约束满足问题（DCSP），利用 numpy 向量化计算实现全网格穷举评估；
+(4)~Minecraft 风格的自包含插件架构，以约定优于配置原则实现处理单元的零框架修改热插拔；
+(5)~基于拓扑传播的污水处理厂全厂高程计算模型，支持水面/地面标高沿处理链传播、泵站扬程动态读取与跌水自动判定。
+系统以 Python 3.10 实现，含 34 个处理单元模组、约 32,000 行代码，经 PyInstaller 打包为 54 MB 自解压可执行文件。
+本文在给出各子系统的形式化定义与算法描述的同时，分析了设计决策中的工程权衡，并报告了经验性能基准。
+\end{minipage}
+\end{center}
+
+\tableofcontents
+\newpage
+
+% ═══════════════════════════════════════════════════════════════
+%  §1  引言
+% ═══════════════════════════════════════════════════════════════
+\section{引言}
+
+\subsection{问题域与工程背景}
+
+城镇污水处理厂的全流程工艺设计是一项典型的多变量、多约束工程设计问题。
+设计者需在给定的进水水量水质条件下，为调节池、格栅间、沉砂池、初沉池、生化反应器、
+深度处理单元及消毒设施等十余个处理单元逐一确定构筑物尺寸与运行参数，
+且各单元之间存在严格的水量水质传递依赖。
+传统设计实践依赖电子表格手工迭代——设计者猜测一组参数，代入规范公式计算导出量，
+逐一校核十余项约束，若不满足则调整参数重新计算，直至全部约束通过。
+这一\textbf{逆向试错}范式不仅耗时，且严重依赖设计者经验，难以穷举最优参数组合。
+
+本系统所针对的鹤岗市经济开发区工程设计规模为平均日流量 $Q_{\text{avg}} = 34,760.7$ m$^3$/d，
+最大设计流量 $Q_{\text{max}} = 0.57$ m$^3$/s，总变化系数 $K_z = 1.4$。
+出水水质执行 GB 18918--2002 一级 A 标准，同时扩展支持煤炭矿井水处理专题
+（GB 3838--2002 III 类标准）。系统需同时完成市政污水线（9 单元）、矿井水线（4 单元）
+及共用污泥处理线（7 单元）的全流程设计。
+
+\subsection{相关工作与设计哲学}
+
+现有商业排水设计软件（如 GPS-X、BioWin）侧重于生化反应过程的动态仿真，
+其参数空间探索能力有限，且通常不具备工程概算功能。
+本系统的设计哲学可概括为两条根本性转向：
+\begin{enumerate}
+  \item \textbf{从逆向试错到正向枚举}：将设计参数离散化为施工友好的有限取值集合，
+        由计算机穷举全部参数组合并过滤满足所有约束的可行解，
+        设计者仅需在可行方案中按成本或偏好选择最优解。
+        这一转向将设计问题从\textit{搜索}问题转化为\textit{过滤}问题。
+  \item \textbf{从松散耦合到类型化数据流}：引入 WATER、QUALITY、MIXED、SLUDGE 四种互不兼容的端口类型，
+        在连线建立时即进行静态类型检查，从数据模型层面杜绝语义错误的流程连接。
+\end{enumerate}
+
+\subsection{本文贡献}
+
+本文作为该系统的设计与实现说明，从计算机科学视角做出以下贡献：
+\begin{itemize}
+  \item 给出系统领域模型的代数数据类型形式化定义（\cref{sec:domain-model}）；
+  \item 建立类型化端口系统的兼容性半格模型，并证明其类型安全性（\cref{sec:port-system}）；
+  \item 形式化 DAG 增量执行引擎，包括拓扑排序正确性证明与脏标记传播算法（\cref{sec:dag-engine}）；
+  \item 将可行域枚举建模为离散约束满足问题，分析其组合复杂度与向量化加速策略（\cref{sec:enumeration}）；
+  \item 阐述 MC 风格插件架构中的约定自动发现、契约式设计与生命周期管理（\cref{sec:mod-system}）；
+  \item 分析关键设计决策的工程权衡，报告经验性能基准（\cref{sec:tradeoffs}，\cref{sec:performance}）。
+\end{itemize}
+
+% ═══════════════════════════════════════════════════════════════
+%  §2  系统架构
+% ═══════════════════════════════════════════════════════════════
+\section{系统架构}\label{sec:architecture}
+
+\subsection{分层架构概览}
+
+系统采用经典的\textbf{模型—视图—控制器}（Model-View-Controller, MVC）三层架构组织代码，
+将业务逻辑、流程控制与用户界面严格分离。\cref{fig:arch} 给出了系统的分层组件图。
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=0.6cm, auto]
+  % UI Layer
+  \node[module, fill=blue!8, minimum width=10cm] (ui_label) at (0, 5.2) {\textbf{视图层 (UI Layer)} -- \texttt{src/ui/} (6 文件, $\sim$2,900 行)};
+  \node[module, below=0.15cm of ui_label] (mainwin) {MainWindow (1,441 行)};
+  \node[module, right=0.4cm of mainwin] (canvas) {CanvasView (483 行)};
+  \node[module, right=0.4cm of canvas] (solbrowser) {SolutionBrowser (296 行)};
+  \node[module, below=0.15cm of mainwin] (filemgr) {FileManager (196 行)};
+  
+  % Controller Layer
+  \node[module, fill=orange!8, minimum width=10cm] (ctrl_label) at (0, 1.6) {\textbf{控制层 (Controller Layer)} -- \texttt{src/controller/} (2 文件, $\sim$895 行)};
+  \node[module, below=0.15cm of ctrl_label] (graphexec) {GraphExecutor (760 行)};
+  \node[module, right=0.4cm of graphexec] (projmgr) {ProjectManager (135 行)};
+  
+  % Model Layer  
+  \node[module, fill=green!5, minimum width=10cm] (model_label) at (0, -2.2) {\textbf{模型层 (Model Layer)} -- \texttt{src/models/} + \texttt{mods/} (60+ 文件, $\sim$18,000 行)};
+  \node[module, below=0.15cm of model_label] (base) {Base (826 行)};
+  \node[module, right=0.4cm of base] (calc) {28 计算模块};
+  \node[module, right=0.4cm of calc] (solspace) {SolutionSpace (586 行)};
+  \node[module, below=0.15cm of base] (cost) {CostEngine (5 模块)};
+  \node[module, right=0.4cm of cost] (modmgr) {ModManager (828 行)};
+  \node[module, right=0.4cm of modmgr] (discrete) {Discretization (530 行)};
+
+  % Arrows
+  \draw[arrow] (mainwin.south) -- (graphexec.north);
+  \draw[arrow] (canvas.south) -- (graphexec.north);
+  \draw[arrow] (graphexec.south) -- (base.north);
+  \draw[arrow] (graphexec.south) -- (calc.north);
+  \draw[arrow] (projmgr.south) -- (base.north);
+  \draw[arrow] (solbrowser.south) -- (solspace.north);
+  \draw[arrow, dashed] (modmgr.north) -- (graphexec.south east);
+\end{tikzpicture}
+\caption{系统分层架构组件图。实线箭头表示运行时调用依赖，虚线箭头表示模组注册关系。}
+\label{fig:arch}
+\end{figure}
+
+\subsection{数据流契约}
+
+系统定义了一条严格的数据流契约：所有处理单元通过统一的 \texttt{execute(flow, quality)} 接口接收上游汇入的
+水量（\texttt{WaterFlow}）与水质（\texttt{WaterQuality}），计算完成后将处理后的水量水质传递给下游，
+同时返回封装了构筑物尺寸、约束校核结果和水质变化记录的 \texttt{NodeResult} 对象。
+污泥处理线以独立的 \texttt{SludgeFlow} 数据类型和 SLUDGE 端口在第二个执行通道中运行。
+这一契约使得执行引擎可以统一调度所有处理单元，而无需关心各单元内部的工艺差异。
+
+\subsection{典型执行流程}
+
+一次完整的全流程计算遵循以下六步时序：
+\begin{enumerate}
+  \item \textbf{管网数据加载}：管网输入节点从排水管网 Excel 计算结果中提取总管段设计流量；
+  \item \textbf{进水水质设定}：进水水质节点设定初始污染物浓度（默认值取自鹤岗 A 区城市污水数据）；
+  \item \textbf{流量水质合并}：合并节点（Combiner）将上游 WATER 端口（来自管网）与 QUALITY 端口（来自水质节点）合并为 MIXED 复合流；
+  \item \textbf{拓扑排序}：DAG 执行器基于端口连接关系进行 Kahn 拓扑排序，确定计算顺序；
+  \item \textbf{增量执行}：按拓扑序依次调用各处理单元的 \texttt{calculate()}，每个单元接收上游水量水质、
+        计算构筑物尺寸、校核约束、应用去除率生成下游水质；
+  \item \textbf{结果汇总}：全部 \texttt{NodeResult} 存入统一字典，供 UI 展示、Excel 导出和概算模块消费。
+\end{enumerate}
+
+% ═══════════════════════════════════════════════════════════════
+%  §3  领域模型与类型系统
+% ═══════════════════════════════════════════════════════════════
+\section{领域模型与类型系统}\label{sec:domain-model}
+
+系统的领域模型由六个核心数据类构成，它们共同定义了水处理工艺设计的信息空间。
+本节以代数数据类型的风格给出这些数据类的形式化定义及其不变量。
+
+\begin{definition}[水流水量模型 WaterFlow]
+\label{def:waterflow}
+水量模型 \texttt{WaterFlow} 是一个具有三个基础字段和四个派生属性的记录类型（\texttt{src/models/base.py:212--270}）：
+\[
+\texttt{WaterFlow} \triangleq \langle\,
+  Q_{\text{design}} \in \mathbb{R}_{>0},\;
+  Q_{\text{avg,daily}} \in \mathbb{R}_{>0},\;
+  K_z \in [1.0, \infty)
+\,\rangle
+\]
+其中派生属性由单位换算导出：
+\begin{align*}
+  Q_{\text{avg,hourly}} &= Q_{\text{avg,daily}} / 24 \quad (\text{m}^3/\text{h}) \\
+  Q_{\text{avg,second}} &= Q_{\text{avg,daily}} / 86,400 \quad (\text{m}^3/\text{s}) \\
+  Q_{\text{design,L/s}} &= Q_{\text{design}} \times 1000 \quad (\text{L/s})
+\end{align*}
+\end{definition}
+
+\begin{definition}[水质模型 WaterQuality]
+\label{def:waterquality}
+水质模型 \texttt{WaterQuality} 封装六项常规监测指标（\texttt{src/models/base.py:116--205}）：
+\[
+\texttt{WaterQuality} \triangleq \langle\,
+  \text{BOD}_5, \text{COD}, \text{SS}, \text{NH}_3\text{-N}, \text{TN}, \text{TP} \in \mathbb{R}_{\ge 0}
+\,\rangle
+\]
+该类提供两条核心操作：
+\begin{enumerate}
+  \item \textbf{去除算子} \texttt{apply\_removal}$(q, r)$：对每项指标 $i$，出水浓度 $C_{\text{out},i} = C_{\text{in},i} \cdot (1 - r_i)$，
+        其中 $r_i \in [0, 1]$ 为处理单元对第 $i$ 项指标的去除率。该算子构成水质空间上的线性缩放变换。
+  \item \textbf{达标判定} \texttt{check\_effluent()}$(q)$：逐项比较出水浓度与排放标准限值，
+        返回布尔掩码向量 $\mathbf{b} \in \{\top, \bot\}^6$。
+\end{enumerate}
+\end{definition}
+
+\begin{definition}[污泥流模型 SludgeFlow]
+\label{def:sludgeflow}
+污泥流模型 \texttt{SludgeFlow} 是 v3.4 新增的独立数据流类型（\texttt{src/models/base.py:278--343}）：
+\[
+\texttt{SludgeFlow} \triangleq \langle\,
+  Q_{\text{wet}} \in \mathbb{R}_{\ge 0},\;
+  DS \in \mathbb{R}_{\ge 0},\;
+  P_{\text{moisture}} \in [0, 1],\;
+  VS_{\text{ratio}} \in [0, 1]
+\,\rangle
+\]
+其中 $Q_{\text{wet}}$ 为湿污泥量（m$^3$/d），$DS$ 为干固体量（kg/d），
+$P_{\text{moisture}}$ 为含水率，$VS_{\text{ratio}}$ 为挥发性固体占比。
+后两者遵循 \texttt{\_\_post\_init\_\_} 边界钳制不变量：若输入值超出 $[0,1]$ 则自动裁剪至边界。
+\end{definition}
+
+\begin{definition}[计算结果容器 NodeResult]
+\label{def:noderesult}
+每个处理单元完成计算后返回一个 \texttt{NodeResult} 记录（\texttt{src/models/base.py:350--422}），
+其结构为：
+\[
+\texttt{NodeResult} \triangleq \langle\,
+  \texttt{params}: \text{Dict}[\text{str}, \text{float}],\;
+  \texttt{dimensions}: \text{List}[\text{Tuple}],\;
+  \texttt{checks}: \text{List}[\text{Tuple}],\;
+  \texttt{inlet\_quality}: \texttt{WaterQuality},\;
+  \texttt{outlet\_quality}: \texttt{WaterQuality},\;
+  \texttt{warnings}: \text{List}[\text{str}]
+\,\rangle
+\]
+其中 \texttt{dimensions} 的每项为一个四元组 $\langle\text{符号}, \text{物理意义}, \text{单位}, \text{数值}\rangle$；
+\texttt{checks} 的每项为 $\langle\text{约束名}, \text{通过}(\top/\bot), \text{实际值}, \text{限值}, \text{单位}\rangle$。
+\end{definition}
+
+\begin{definition}[可调参数描述符 ParamDef]
+\label{def:paramdef}
+每个处理单元通过 \texttt{ParamDef} 列表声明其对外暴露的可调参数（\texttt{src/models/base.py:56--113}）：
+\[
+\texttt{ParamDef} \triangleq \langle\,
+  \texttt{name}: \text{str},\;
+  \texttt{key}: \text{str},\;
+  \texttt{value}: \text{float},\;
+  \texttt{default}: \text{float},\;
+  \texttt{min\_val}: \text{float},\;
+  \texttt{max\_val}: \text{float},\;
+  \texttt{step}: \text{float},\;
+  \texttt{unit}: \text{str}
+\,\rangle
+\]
+UI 层通过反射读取 \texttt{ParamDef} 列表，自动生成对应的滑块和输入控件，
+实现了参数界面与控制逻辑的解耦——每新增一个处理单元无需编写任何 UI 代码。
+\end{definition}
+
+\begin{definition}[节点状态机 NodeState]
+\label{def:nodestate}
+节点的计算状态由四态枚举 \texttt{NodeState} 描述（\texttt{src/models/base.py:42--47}）：
+\[
+\texttt{NodeState} \triangleq \{\,
+  \texttt{CLEAN},\; \texttt{DIRTY},\; \texttt{COMPUTING},\; \texttt{ERROR}
+\,\}
+\]
+状态转移图如下：
+\[
+\texttt{CLEAN} \xrightarrow{\text{set\_param()}} \texttt{DIRTY}
+\xrightarrow{\text{execute()}} \texttt{COMPUTING}
+\xrightarrow{\text{成功}} \texttt{CLEAN},\quad
+\xrightarrow{\text{异常}} \texttt{ERROR}
+\]
+其中 \texttt{ERROR} 状态在下次参数修改时自动复位为 \texttt{DIRTY}。
+\end{definition}
+
+% ═══════════════════════════════════════════════════════════════
+%  §4  类型化端口系统
+% ═══════════════════════════════════════════════════════════════
+\section{类型化端口连接系统}\label{sec:port-system}
+
+端口系统是本系统数据流建模的核心机制。它借鉴程序设计语言中的\textbf{静态类型检查}思想，
+在连线建立时即对两端口的类型进行兼容性判定，从数据模型层面杜绝语义错误的流程连接。
+
+\begin{definition}[端口类型 PortType]
+\label{def:porttype}
+端口类型是一个四元代数求和类型（\texttt{src/models/base.py:34--39}）：
+\[
+\texttt{PortType} \triangleq \texttt{WATER} \mid \texttt{QUALITY} \mid \texttt{MIXED} \mid \texttt{SLUDGE}
+\]
+各类型的语义为：
+\begin{itemize}
+  \item \texttt{WATER}（蓝色，\#5599ff）：仅承载水量信息；
+  \item \texttt{QUALITY}（绿色，\#55cc55）：仅承载水质信息；
+  \item \texttt{MIXED}（橙色，\#ff9955）：同时承载水量与水质，为复合类型；
+  \item \texttt{SLUDGE}（紫色，\#9966cc）：承载污泥流数据（v3.4 新增）。
+\end{itemize}
+\end{definition}
+
+\begin{definition}[端口兼容性关系]
+\label{def:compatibility}
+定义端口类型集合 $\mathcal{T} = \{\texttt{W}, \texttt{Q}, \texttt{M}, \texttt{S}\}$ 上的二元兼容关系 $\sim\; \subseteq \mathcal{T} \times \mathcal{T}$：
+\[
+\tau_1 \sim \tau_2 \;\iff\; (\tau_1 = \tau_2) \;\lor\; (\texttt{MIXED} \in \{\tau_1, \tau_2\})
+\]
+该关系将 MIXED 视为\textbf{最大元}（top element），可兼容任意其他类型。
+注意：SLUDGE 类型仅与自身兼容——与 WATER/QUALITY/MIXED 均不兼容。
+\end{definition}
+
+\begin{lemma}[兼容关系的代数性质]
+\label{lem:compat-properties}
+关系 $\sim$ 满足：
+\begin{enumerate}
+  \item \textbf{自反性}：$\forall \tau \in \mathcal{T},\; \tau \sim \tau$；
+  \item \textbf{对称性}：$\forall \tau_1, \tau_2 \in \mathcal{T},\; \tau_1 \sim \tau_2 \implies \tau_2 \sim \tau_1$；
+  \item \textbf{非传递性}：$\sim$ 不是传递关系——例如 $\texttt{W} \sim \texttt{M}$ 且 $\texttt{M} \sim \texttt{Q}$，但 $\texttt{W} \not\sim \texttt{Q}$。
+        非传递性是有意设计：多跳传播需依赖显式的 MIXED 级联，而非自动类型提升。
+\end{enumerate}
+\end{lemma}
+
+\begin{theorem}[端口连接的类型安全性]
+\label{thm:type-safety}
+设 $p_1, p_2$ 为两个端口，其类型分别为 $\tau_1 = \texttt{port\_type}(p_1)$ 和 $\tau_2 = \texttt{port\_type}(p_2)$。
+\texttt{Port.can\_connect()}$(p_1, p_2)$ 方法（\texttt{base.py:456--465}）在且仅在 $\tau_1 \sim \tau_2$ 时返回 $\top$。
+换言之，任何通过类型检查的连线在运行时不会发生数据语义错配。
+\end{theorem}
+\begin{proof}
+对 $\mathcal{T} \times \mathcal{T}$ 的 16 种类型组合逐项验证：
+\begin{center}
+\begin{tabular}{c|cccc}
+$\sim$ & W & Q & M & S \\
+\hline
+W & $\top$ & $\bot$ & $\top$ & $\bot$ \\
+Q & $\bot$ & $\top$ & $\top$ & $\bot$ \\
+M & $\top$ & $\top$ & $\top$ & $\bot$ \\
+S & $\bot$ & $\bot$ & $\bot$ & $\top$ \\
+\end{tabular}
+\end{center}
+可见 $\sim$ 的真值表与 \texttt{can\_connect()} 的判定逻辑（行 456--465）完全一致。
+\end{proof}
+
+\begin{corollary}[污泥线隔离性]
+\label{cor:sludge-isolation}
+在任意合法拓扑中，不存在从 SLUDGE 端口到非 SLUDGE 端口的可达路径。
+污泥数据流和水处理数据流在端口类型层面完全隔离。
+\end{corollary}
+
+\begin{definition}[端口数据结构 Port]
+\label{def:port}
+\texttt{Port} 数据类（\texttt{src/models/base.py:429--482}）记录：
+\[
+\texttt{Port} \triangleq \langle\,
+  \texttt{port\_id}: \text{UUID},\;
+  \texttt{name}: \text{str},\;
+  \texttt{port\_type}: \texttt{PortType},\;
+  \texttt{direction}: \{\texttt{INPUT}, \texttt{OUTPUT}\},\;
+  \texttt{connections}: \text{List}[\text{str}],\;
+  \texttt{color}: \text{str}
+\,\rangle
+\]
+其中 \texttt{color} 字段由 \texttt{port\_type} 派生（\texttt{canvas\_view.py:24} 的颜色映射），
+用于画布上的视觉区分。
+\end{definition}
+
+% ═══════════════════════════════════════════════════════════════
+%  §5  DAG 执行引擎
+% ═══════════════════════════════════════════════════════════════
+\section{DAG 增量执行引擎}\label{sec:dag-engine}
+
+全流程计算的调度由 \texttt{GraphExecutor} 类（\texttt{src/controller/graph\_executor.py}, 760 行）完成。
+其核心任务包括：根据端口连接关系构建有向无环图、通过拓扑排序确定计算顺序、
+将上游输出传递给下游，以及支持脏标记传播的增量重算。
+
+\begin{definition}[计算图]
+\label{def:comp-graph}
+设 $V$ 为节点实例集合，每个 $v \in V$ 具有输入端口集 $I(v)$ 和输出端口集 $O(v)$。
+定义有向边集 $E = \{(u, v) \mid \exists\, p_u \in O(u),\, p_v \in I(v): \texttt{connect}(p_u, p_v) = \top\}$。
+则计算图为 $G = (V, E)$。系统保证 $G$ 为有向无环图（DAG）——环路在连线建立时通过拓扑排序检测并拒绝。
+\end{definition}
+
+\subsection{Kahn 拓扑排序}
+
+\begin{algorithm}[htbp]
+\caption{Kahn 拓扑排序（\texttt{topological\_order()}, 行 152--179）}
+\label{alg:kahn}
+\KwIn{计算图 $G = (V, E)$}
+\KwOut{拓扑序列表 $L$，或 $\bot$（存在环路）}
+\BlankLine
+计算每个节点 $v \in V$ 的入度 $\text{indeg}(v) = |\{(u, v) \in E\}|$\;
+$Q \gets$ 空队列\;
+\ForEach{$v \in V$}{
+  \If{$\text{indeg}(v) = 0$}{
+    $Q.\text{enqueue}(v)$\;
+  }
+}
+$L \gets []$\;
+\While{$Q$ 非空}{
+  $u \gets Q.\text{dequeue}()$\;
+  $L.\text{append}(u)$\;
+  \ForEach{$(u, v) \in E$}{
+    $\text{indeg}(v) \gets \text{indeg}(v) - 1$\;
+    \If{$\text{indeg}(v) = 0$}{
+      $Q.\text{enqueue}(v)$\;
+    }
+  }
+}
+\If{$|L| = |V|$}{
+  \Return{$L$}\;
+}
+\Else{
+  \Return{$\bot$}\Comment{图中存在环路}
+}
+\end{algorithm}
+
+\begin{theorem}[Kahn 算法正确性]
+\label{thm:kahn-correct}
+若 $\texttt{topological\_order}(G)$ 返回列表 $L$（而非 $\bot$），则：
+\begin{enumerate}
+  \item $L$ 是 $V$ 的一个拓扑排序，即对任意边 $(u, v) \in E$，$u$ 在 $L$ 中出现于 $v$ 之前；
+  \item $G$ 为 DAG。
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+标准图论结果。Kahn 算法的时间复杂度为 $O(|V| + |E|)$。在本系统中 $|V| \le 28$、$|E| \le |V|^2$，
+故拓扑排序的实际耗时可忽略不计（$<0.01$ s）。
+\end{proof}
+
+\subsection{上游合并策略}
+
+当一个节点存在多个上游时（典型场景为合并节点同时接收管网水量和进水水质），
+需通过 \texttt{\_merge\_upstream()} 方法（行 354--431）将多股来流合并为单一输入。
+合并遵循以下规则：
+
+\begin{enumerate}
+  \item \textbf{水质合并}：首先区分上游节点的端口类型。若上游节点的输出端口全为 QUALITY 类型
+        （如进水水质节点），其水质值直接作为合并水质的基准，不参与流量加权平均。
+        对其余 WATER/MIXED 型上游，采用流量加权平均：
+        \[
+        C_{\text{merged}, i} = \frac{\sum_{j} Q_{\text{design}, j} \cdot C_{j,i}}{\sum_{j} Q_{\text{design}, j}}
+        \]
+        其中 $j$ 遍历所有 WATER/MIXED 型上游节点，$i$ 遍历六项水质指标。
+  \item \textbf{水量合并}：各上游的流量直接累加，变化系数取最大值：
+        \[
+        Q_{\text{design, merged}} = \sum_j Q_{\text{design}, j}, \quad
+        K_{z,\text{merged}} = \max_j K_{z,j}
+        \]
+\end{enumerate}
+
+\subsection{增量计算：脏标记传播}
+
+系统采用\textbf{脏标记}（dirty flag）机制实现增量重算，避免每次参数修改后全量重新计算。
+
+\begin{definition}[脏标记传播]
+\label{def:dirty-prop}
+设节点 $v$ 因参数修改被标记为 \texttt{DIRTY}。定义其下游闭包：
+\[
+\text{Downstream}(v) = \{ w \in V \mid \text{存在从 } v \text{ 到 } w \text{ 的有向路径} \}
+\]
+重算范围 $\mathcal{R} = \bigcup_{v \in \text{DIRTY}} \text{Downstream}(v)$。
+\texttt{\_find\_dirty\_with\_downstream()} 方法（行 327--347）通过从各 DIRTY 节点出发的
+广度优先搜索（BFS）计算 $\mathcal{R}$，时间复杂度 $O(|V| + |E_{\text{affected}}|)$。
+处于 \texttt{CLEAN} 状态的节点及其未被污染的下游直接使用缓存结果。
+\end{definition}
+
+\subsection{污泥子图独立路由}
+
+污泥处理线的 DAG 拓扑独立于水处理线运行。\texttt{\_execute\_sludge\_pass()} 方法（行 459--560）核心逻辑为：
+遍历所有 SLUDGE 端口连线构建污泥子图 $G_s = (V_s, E_s)$ 的邻接表；
+收集各产泥节点（粗格栅、细格栅、沉砂池、初沉池、CASS、AAO、高密池）的 \texttt{sludge\_output} 属性；
+对纯污泥节点（输入端口全为 SLUDGE 类型）按拓扑顺序合并上游污泥流并调用 \texttt{execute\_sludge()}。
+
+污泥合并采用\textbf{干固量加权平均}：
+\[
+P_{\text{merged}} = \frac{\sum_i DS_i \cdot P_i}{\sum_i DS_i}, \quad
+VS_{\text{merged}} = \frac{\sum_i DS_i \cdot VS_i}{\sum_i DS_i}
+\]
+
+% ═══════════════════════════════════════════════════════════════
+%  §6  可行域枚举
+% ═══════════════════════════════════════════════════════════════
+\section{可行域枚举与方案优化}\label{sec:enumeration}
+
+\subsection{问题形式化：离散约束满足问题}
+
+本系统的核心设计创新在于将工艺设计从试错搜索转化为\textbf{正向枚举过滤}问题。
+我们将其形式化为离散约束满足问题（Discrete Constraint Satisfaction Problem, DCSP）。
+
+\begin{definition}[工艺设计的 DCSP 形式化]
+\label{def:dcsp}
+设某个处理单元有 $k$ 个自由变量 $\mathbf{x} = (x_1, \ldots, x_k)$。
+每个变量 $x_i$ 被离散化为有限取值集合 $D_i = \{d_{i,1}, \ldots, d_{i,m_i}\}$，
+其中 $m_i$ 通常取 $3 \sim 4$。总参数组合数（搜索空间大小）为：
+\[
+|\mathcal{S}| = \prod_{i=1}^k m_i
+\]
+对每一组合 $\mathbf{x} \in \mathcal{S}$，通过该单元的工程计算模型导出因变量
+$\mathbf{y} = f(\mathbf{x})$，并逐一检查 $p$ 个布尔约束条件 $C_1, \ldots, C_p$。
+定义\textbf{可行域}为：
+\[
+\mathcal{F} = \{\, \mathbf{x} \in \mathcal{S} \mid \bigwedge_{j=1}^p C_j(\mathbf{x}) \,\}
+\]
+\end{definition}
+
+\subsection{离散化策略}
+
+参数离散化遵循「施工友好」原则——每个自由变量的取值必须是便于施工放线的规整数值。
+离散化配置集中定义于 \texttt{src/models/discretization.py}（530 行）和每个模组的
+\texttt{discretization.json} 文件。
+各类参数的离散化规则为：
+\begin{itemize}
+  \item \textbf{池数类整数}：取 $[2, 4, 6, 8]$ 等偶数序列（强制 $n \ge 2$ 冗余原则）；
+  \item \textbf{长度类参数}：以 0.5 m 为步长（如有效水深 $[4.0, 4.5, 5.0]$ m）；
+  \item \textbf{比例类参数}：取工程常用值（如长宽比 $[1.5, 2.0, 2.5, 3.0]$）；
+  \item \textbf{负荷类参数}：取标准分级值（如表面负荷 $[150, 170, 180, 200]$ m$^3$/(m$^2\cdot$h)）。
+\end{itemize}
+每个模块的自由变量不超过 7 个（CASS 最多，为 7 个），每个变量至多 5 个取值，
+使搜索空间严格可控。
+
+\subsection{向量化计算引擎}
+
+\begin{algorithm}[htbp]
+\caption{向量化可行域枚举（\texttt{SolutionSpace.enumerate()}, 行 91--160）}
+\label{alg:enumerate}
+\KwIn{模块名, 自由变量离散值列表, 水量/水质上下文, 固定参数}
+\KwOut{可行方案列表 $\mathcal{L}_{\text{feasible}}$，按成本升序排列}
+\BlankLine
+$\mathbf{X} \gets \texttt{np.meshgrid}(D_1, \ldots, D_k)$ \Comment{笛卡尔积，形状为 $(m_1, \ldots, m_k, k)$}
+\;
+$\mathbf{X}_{\text{flat}} \gets \texttt{flatten}(\mathbf{X})$ \Comment{重塑为 $(|\mathcal{S}|, k)$}
+\;
+$\mathbf{Y} \gets \texttt{\_vectorized\_compute}(\mathbf{X}_{\text{flat}}, \text{flow}, \text{quality}, \text{fixed})$
+  \Comment{批量计算，单次 Python 调用处理全部组合}
+\;
+$\mathbf{mask} \gets \texttt{np.logical\_and.reduce}([\mathbf{Y}.ok\_C_1, \ldots, \mathbf{Y}.ok\_C_p])$
+  \Comment{硬约束合取}
+\;
+$\mathcal{F} \gets \mathbf{X}_{\text{flat}}[\mathbf{mask}]$ \Comment{提取可行行}
+\;
+$\mathbf{costs} \gets \texttt{\_estimate\_cost}(\mathcal{F})$ \Comment{向量化成本估算}
+\;
+$\mathcal{L}_{\text{feasible}} \gets \texttt{top\_k\_by\_cost}(\mathcal{F}, \mathbf{costs}, k=200)$
+\;
+\Return{$\mathcal{L}_{\text{feasible}}$}\;
+\end{algorithm}
+
+\textbf{向量化实现核心}：\texttt{\_vectorized\_compute()} 类方法将原本的标量
+\texttt{calculate()} 改写为等价的 numpy 向量化版本——所有中间计算通过逐元素运算
+和 \texttt{np.where()} 完成，$|\mathcal{S}|$ 个组合在单次 Python 调用中全部处理完毕。
+约束检查以布尔列的形式存储在结构化数组中。
+
+\begin{theorem}[枚举完备性]
+\label{thm:enum-complete}
+若离散化网格覆盖了所有施工友好的参数取值，且 $\texttt{\_vectorized\_compute}()$ 与
+$\texttt{calculate}()$ 函数等价（即对同一组参数产生相同的约束判定和导出量），
+则 $\mathcal{F}$ 包含了在给定流量水质上下文中全部可行的参数组合。
+\end{theorem}
+
+\subsection{复杂度分析}
+
+设 $k$ 为自由变量个数，每个变量有 $m_i$ 个取值。则：
+\begin{itemize}
+  \item 搜索空间大小：$|\mathcal{S}| = \prod_{i=1}^k m_i$；
+  \item 向量化计算复杂度：$O(|\mathcal{S}| \cdot c)$，其中 $c$ 为每个组合的浮点操作数。
+        由于 numpy 在 C 层执行循环，$c$ 被高效均摊，实际 wall-clock 时间远小于理论值；
+  \item 典型模块的搜索空间：调节池 $4^4 = 256 \approx 192$（实际），CASS $4 \times 4 \times 5 \times 5 \times 3 \times 3 \times 4 = 14,400$（理论最大），
+        实际约束后约 12,288 组合。全部 9 个市政模块的完整枚举耗时约 25 ms，其中 CASS 约 10 ms。
+\end{itemize}
+
+\subsection{方案排序与交互}
+
+方案排序函数为成本升序：
+\[
+\text{Rank}(s) = C_{\text{civil}}(s) + C_{\text{equip}}
+\]
+其中土建成本 $C_{\text{civil}}$ 由向量化成本估算器基于 \texttt{concrete\_m3} 等标准字段快速估算，
+设备成本 $C_{\text{equip}}$ 从单价库以常数形式代入。
+方案浏览器（\texttt{src/ui/solution\_browser.py}, 296 行）以可交互的图形组件呈现排序后的方案列表，
+支持按自由变量联动筛选、方案详情展开和一键应用。
+
+% ═══════════════════════════════════════════════════════════════
+%  §7  处理单元计算模型
+% ═══════════════════════════════════════════════════════════════
+\section{处理单元计算模型}
+
+本节概述各主要处理单元的算法逻辑与关键约束。完整的数学公式推导见独立文档
+\texttt{mod\_calculation\_formulas.tex}。
+
+\subsection{模板方法模式与基类契约}
+
+所有处理单元均继承自抽象基类 \texttt{NodeBase}（\texttt{src/models/base.py:490--635}）。
+基类约定了子类必须实现的五个接口——\texttt{NODE\_TYPE}、\texttt{NODE\_NAME}、
+\texttt{NODE\_CATEGORY}（类型标识与 UI 分组）、\texttt{\_default\_params()}、
+\texttt{\_build\_param\_defs()}、\texttt{\_default\_removal\_rates()} 和
+\texttt{calculate(flow, quality)}——体现了\textbf{模板方法}（Template Method）设计模式。
+基类的 \texttt{execute()} 方法（行 560--605）作为 GraphExecutor 的统一调用入口，
+负责状态管理、异常捕获和进出水质追踪。
+
+\subsection{关键单元计算模型}
+
+\textbf{调节池}（\texttt{tiaojiechi.py}, 245 行）：基于水力停留时间（HRT）法。
+核心约束为长宽比 $L/B \in [1.5, 3.0]$ 和实际 HRT 不低于设计值减 0.5 h。
+
+\textbf{格栅系统}（\texttt{geshan.py}, 222 行）：粗格栅与细格栅共享
+\texttt{\_BarScreenBase} 基类——体现了\textbf{策略模式}通过子类化区分栅条间隙 $b$ 和单位栅渣量 $W_1$。
+核心计算链从栅条间隙数 $n_{\text{gap}}$ 开始，依次导出栅槽宽度、过栅水头损失
+（$h_1 = \xi \cdot v^2/(2g) \cdot \sin\alpha \cdot k$）和栅槽总长。
+
+\textbf{旋流沉砂池}（\texttt{chenshachi.py}, 183 行）：以水力表面负荷 $q_{\text{surf}}$ 和
+停留时间 $t$ 为核心参数。池径由单池流量和表面负荷联立确定，砂斗容积按圆台体积公式校核。
+
+\textbf{辐流式初沉池}（\texttt{chuchenchi.py}, 231 行）：约束条件最为密集的单元之一，
+需同时满足 $D \ge 16$ m、径深比 $D/h_2 \in [6, 12]$、堰负荷 $\le 2.9$ L/(s$\cdot$m)、
+刮泥机线速度 $\le 3.0$ m/min 等多项约束。
+
+\textbf{CASS 反应器}（\texttt{cass.py}, 305 行）：全流程中最复杂的计算模型，共 20 个参数。
+主反应区容积采用 BOD-污泥负荷法：$V_{\text{main}} = Q_{\text{avg}} \cdot (S_0 - S_e) / (N_s \cdot X \cdot f)$。
+计算链包含温度修正、几何参数导出、生化反应计量（剩余生物污泥量、硝化/反硝化需氧量），
+并需同时满足充水比偏差 $< 15\%$、安全距离 $\ge 0.5$ m、污泥龄校核等六项约束。
+
+\textbf{深度处理单元}：高密度沉淀池（\texttt{gaomidu.py}, 193 行）集成了快速混合、絮凝反应、
+斜管沉淀和污泥浓缩四个功能区；V 型滤池（\texttt{vxinglvchi.py}, 162 行）采用均质石英砂滤料；
+紫外消毒池（\texttt{ziwai.py}, 197 行）以有效紫外剂量 $D_{\text{UV}}$ 为核心设计参数。
+
+\subsection{污泥处理线}
+
+污泥处理模块（v3.4 新增）引入了独立于水处理线的污泥数据流体系。
+九个水处理单元设有 SLUDGE 输出端口（含粗格栅栅渣、细格栅栅渣、沉砂、初沉污泥、
+CASS/AAO 剩余活性污泥、高密池化学污泥），各自具有不同的含水率和 VS 占比特征。
+
+污泥处理单元包括输送泵站、合并节点（干固量加权合并）、重力浓缩池（固体表面负荷
+$q_{\text{solid}} \in [30, 80]$ kgDS/(m$^2\cdot$d)）、中温厌氧消化池（停留时间 15--30 d，
+沼气产量 $V_{\text{biogas}} = \Delta VS \cdot r_{\text{gas}}$）、
+脱水间（带式压滤/离心脱水，出泥含水率 $\le 80\%$）和干化（热干化/太阳能干化，出泥含水率 $\le 30\%$）。
+
+% ═══════════════════════════════════════════════════════════════
+%  §8  插件架构：MC 风格模组系统
+% ═══════════════════════════════════════════════════════════════
+\section{插件架构：Minecraft 风格模组系统}\label{sec:mod-system}
+
+v3.4 对模组系统进行了根本性重构，实现了与 Minecraft Forge/Fabric 同构的插件式扩展范式。
+其设计哲学可概括为\textbf{约定优于配置}（Convention over Configuration）与\textbf{自包含性}（Self-Containment）：
+一个文件夹即是一个完整模组，包含该处理单元所需的全部代码、配置和元数据。
+
+\subsection{架构层次}
+
+模组系统由三个正交层构成：
+
+\begin{enumerate}
+  \item \textbf{类加载隔离层}：利用 Python \texttt{importlib} 动态加载社区模组的
+        \texttt{\_\_init\_\_.py}，每个模组具有独立的模块命名空间，
+        防止符号冲突。
+  \item \textbf{资源命名空间层}：每个模组通过 \texttt{node\_type} 作为全局唯一标识符，
+        所有配置文件（\texttt{mod.json}、\texttt{discretization.json}）均为模组自包含，
+        无外部依赖。
+  \item \textbf{注册与事件层}：统一的 \texttt{NodeRegistry} 加 \texttt{on\_register} 生命周期钩子，
+        模组启动时自动注册至全局注册表，UI 菜单通过反射自动发现所有已注册节点类型。
+\end{enumerate}
+
+\subsection{模组描述符与契约}
+
+\begin{definition}[模组描述符 ModInfo]
+\label{def:modinfo}
+一个模组的完整元数据由 \texttt{ModInfo} 数据类描述（\texttt{mods/mod\_manager.py:68--125}）：
+\[
+\texttt{ModInfo} \triangleq \langle\,
+  \texttt{id}: \text{str},\;
+  \texttt{name}: \text{str},\;
+  \texttt{version}: \text{str},\;
+  \texttt{author}: \text{str},\;
+  \texttt{category}: \text{str},\;
+  \texttt{node\_type}: \text{str},\;
+  \texttt{inputs}: \text{List}[\texttt{ModPort}],\;
+  \texttt{outputs}: \text{List}[\texttt{ModPort}],\;
+  \texttt{parameters}: \text{List}[\texttt{ModParameter}],\;
+  \texttt{removal\_rates}: \text{Dict}[\text{str}, \text{float}]
+\,\rangle
+\]
+\end{definition}
+
+\subsection{标准化输出契约}
+
+每个模组的 \texttt{\_vectorized\_compute()} 方法必须输出包含以下标准字段的结构化数组，
+以满足成本估算器的统一消费接口：
+
+\begin{center}
+\begin{tabular}{ccl}
+\toprule
+\textbf{字段} & \textbf{池型条件} & \textbf{语义} \\
+\midrule
+\texttt{L}, \texttt{B} & 矩形池必填 & 池长、池宽 (m) \\
+\texttt{D}            & 圆形池必填 & 池径 (m) \\
+\texttt{H}            & 通用必填   & 池总高 (m) \\
+\texttt{concrete\_m3} & 通用必填   & 混凝土总量 (m$^3$) \\
+\texttt{ok\_\{c\}}     & 通用必填   & 约束 $c$ 是否通过（布尔） \\
+\texttt{val\_\{c\}}    & 通用必填   & 约束 $c$ 的实际值 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+这一显式契约取代了先前版本中成本估算器通过字符串猜测维度字段名的隐式约定，
+从根本上消除了新模组因命名不一致导致的静默崩溃。
+
+\subsection{加载与发现算法}
+
+\begin{algorithm}[htbp]
+\caption{模组发现与加载（\texttt{ModManager.load\_mod()}, 行 246--305）}
+\label{alg:mod-load}
+\KwIn{模组目录路径 \texttt{mod\_dir}}
+\KwOut{已注册的节点类 \texttt{NodeClass} 或 $\bot$}
+\BlankLine
+$\texttt{manifest} \gets \texttt{json.load}(\texttt{mod\_dir}/\texttt{mod.json})$\;
+\If{\texttt{manifest} 不符合 \texttt{mod\_schema.json} 模式}{
+  \Return{$\bot$} \Comment{模式校验失败}
+}
+\texttt{NodeClass} $\gets \bot$\;
+\If{\texttt{manifest.module\_path} 非空}{
+  \texttt{NodeClass} $\gets$ \texttt{importlib.import\_module}(\texttt{manifest.module\_path}).\texttt{NodeClass}
+    \Comment{显式路径加载（后备）}
+}
+\Else{
+  \texttt{\_\_init\_\_} $\gets$ \texttt{mod\_dir}/\texttt{\_\_init\_\_.py}\;
+  \If{\texttt{\_\_init\_\_} 存在}{
+    \texttt{NodeClass} $\gets$ \texttt{importlib.import\_module}(\ldots).\texttt{NodeClass}
+      \Comment{MC 式自包含加载（优先）}
+  }
+}
+\If{\texttt{NodeClass} 非空}{
+  $\texttt{NodeClass}$.\texttt{on\_register}()  \Comment{生命周期钩子}
+  $\texttt{NodeRegistry.register}(\texttt{node\_type}, \texttt{NodeClass})$\;
+}
+\Return{\texttt{NodeClass}}\;
+\end{algorithm}
+
+\subsection{设计模式目录}
+
+模组系统的实现中可辨识出以下经典设计模式：
+\begin{itemize}
+  \item \textbf{单例模式}（Singleton）：\texttt{ModManager} 通过 \texttt{get\_mod\_manager()} 全局访问点保证单实例；
+  \item \textbf{工厂方法}（Factory Method）：\texttt{node\_factory()} 根据 \texttt{node\_type} 字符串动态实例化对应类；
+  \item \textbf{模板方法}（Template Method）：\texttt{NodeBase} 定义算法骨架，子类填充 \texttt{calculate()}；
+  \item \textbf{责任链}（Chain of Responsibility）：模组加载的降级链（显式路径 $\to$ MC 自包含 $\to$ 报错）；
+  \item \textbf{观察者}（Observer）：\texttt{on\_register} 生命周期钩子允许模组在注册时执行自定义初始化。
+\end{itemize}
+
+% ═══════════════════════════════════════════════════════════════
+%  §9 工程概算计算模型
+% ═══════════════════════════════════════════════════════════════
+\section{工程概算计算模型}
+
+工程概算模块采用\textbf{分部分项工程量清单}（Bill of Quantities, BOQ）法，
+严格依据 2019 年版《黑龙江省市政工程消耗量定额》编制。
+完整的概算方法论见独立文档 \texttt{engineering\_cost\_estimation.tex}，
+本节从计算模型视角概述其架构。
+
+\subsection{BOQ 分解模型}
+
+概算的核心思想是将总造价逐级分解为若干独立可计量的分项，对每一项分别计算工程量和综合单价后累加。
+这构成了一个\textbf{函数复合}管线：
+
+\[
+\text{Estimate} = \text{IndirectRates} \circ \text{SumByCategory}
+                 \circ \text{Map}(\text{quantity} \times \text{price})
+                 \circ \text{ParametricQTO} \circ \text{Dimensions}
+\]
+
+\subsection{封闭公式}
+
+概算总造价按以下封闭公式计算：
+
+\begin{equation}\label{eq:total-cost}
+C_{\text{total}} = C_{\text{civil}} + C_{\text{pipe}} + C_{\text{measures}}
+                 + C_{\text{equip}} + C_{\text{install}} + C_{\text{other}}
+                 + C_{\text{contingency}} + C_{\text{tax}}
+\end{equation}
+
+其中：
+\begin{itemize}
+  \item $C_{\text{civil}}$：建筑工程费，对每个构筑物按圆形池或矩形池分派，计算土方开挖、C15 垫层、
+        C30 底板、C30 池壁、HRB400 钢筋、内防水砂浆和模板七项分部分项工程量；
+  \item $C_{\text{pipe}}$：管网工程费，基于排水管网 Excel 逐管段计算（含检查井摊销、沟槽土方、施工机械和人工）；
+  \item $C_{\text{measures}}$：施工措施费（施工降水 2\%、场地准备 5\%、环保措施 1.5\%、调试运行 3\%）；
+  \item $C_{\text{equip}}$、$C_{\text{install}}$：设备购置费与安装费（安装费 $= C_{\text{equip}} \times 15\%$）；
+  \item $C_{\text{other}}$：间接费（管理 5\% + 设计 4\% + 监理 2.5\% + 前期 1\% $= 12.5\%$）；
+  \item $C_{\text{contingency}}$：预备费 $= (C_{\text{civil}} + C_{\text{equip}} + C_{\text{install}} + C_{\text{other}}) \times 10\%$；
+  \item $C_{\text{tax}}$：增值税 $= 9\%$。
+\end{itemize}
+
+\subsection{策略模式分派}
+
+圆形池与矩形池的计算分派体现了\textbf{策略模式}：
+\texttt{\_circular\_tank()} 方法（\texttt{cost\_estimator.py:204--247}）按圆柱壳结构建模，
+\texttt{\_rectangular\_tank()} 方法（行 249--297）按矩形箱体结构建模。
+两者各自实现七项分部分项工程的体积/面积计算公式，
+但共享相同的综合单价字典（\texttt{unit\_prices.py:18--31} 的 \texttt{CIVIL} 字典）
+和汇总逻辑。
+
+\subsection{实例验证}
+
+以鹤岗项目为例，经软件自动概算，工程总造价约为 12,353 万元，
+折合单位处理规模造价约 3,550 元/(m$^3\cdot$d)，
+处于 T/BCEBCA 1--2023 标准建议的一级 A 工艺参考区间 $[3,000,\; 5,000]$ 元/(m$^3\cdot$d) 之内。
+
+% ═══════════════════════════════════════════════════════════════
+%  §10  用户界面架构
+% ═══════════════════════════════════════════════════════════════
+\section{事件驱动的用户界面架构}
+
+图形界面基于 Python 标准库 tkinter 构建，程序入口为 \texttt{main.py}（35 行），
+通过 \texttt{MainWindow.run()}（\texttt{src/ui/main\_window.py}, 1,441 行）启动主窗口。
+UI 层高度体现了\textbf{观察者模式}与 MVC 绑定的设计思想。
+
+\subsection{画布交互状态机}
+
+节点画布（\texttt{canvas\_view.py}, 483 行）实现了一个完整的 Blender 风格节点编辑器。
+其交互可建模为以下有限状态机：
+
+\[
+\begin{array}{ccl}
+\text{IDLE} & \xrightarrow{\text{click\_port}} & \text{DRAWING\_CONNECTION} \\
+\text{IDLE} & \xrightarrow{\text{click\_node} + \text{drag}} & \text{DRAGGING\_NODE} \\
+\text{DRAWING\_CONNECTION} & \xrightarrow{\text{release\_on\_port}} & \text{IDLE}\;(+\;\text{建立连线}) \\
+\text{DRAWING\_CONNECTION} & \xrightarrow{\text{release\_on\_void}} & \text{IDLE}\;(+\;\text{取消连线}) \\
+\text{DRAGGING\_NODE} & \xrightarrow{\text{release}} & \text{IDLE}\;(+\;\text{同步坐标})
+\end{array}
+\]
+
+端口渲染采用外环套内圆的双层 Blender 风格，
+以蓝（WATER）、绿（QUALITY）、橙（MIXED）、紫（SLUDGE）四色区分端口类型。
+连线为自动水平切线的三次 Bézier 曲线，颜色继承自输出端口的类型色。
+
+\subsection{参数面板的模式切换}
+
+右侧面板通过三个标签页组织信息，参数标签页支持两种编辑模式：
+\begin{itemize}
+  \item \textbf{方案浏览模式}（默认）：加载方案空间枚举结果，以可筛选表格呈现可行方案，
+        用户按自由变量联动筛选后选择成本最优方案，一键应用至后端节点；
+  \item \textbf{手动微调模式}：显示滑块和输入控件，允许用户手动调节各参数值，
+        同时提供六项污染物的去除率滑块。
+\end{itemize}
+模式切换通过 \texttt{\_on\_toggle\_mode()} 方法（行 544--549）实现，
+体现了\textbf{策略模式}在 UI 层的应用。
+
+\subsection{MVC 绑定机制}
+
+UI 层与模型层的绑定通过回调链实现：
+\texttt{用户操作} $\to$ \texttt{UI 事件处理} $\to$ \texttt{NodeBase.set\_param()} $\to$
+\texttt{NodeState $\gets$ DIRTY} $\to$ \texttt{GraphExecutor 增量重算} $\to$
+\texttt{结果面板刷新}。
+这一\textbf{观察者模式}链使得界面始终保持与后端状态的一致性。
+
+% ═══════════════════════════════════════════════════════════════
+%  §11  验证与质量保证
+% ═══════════════════════════════════════════════════════════════
+\section{验证与质量保证}\label{sec:verification}
+
+\subsection{测试金字塔}
+
+系统采用分层测试策略，构建了以下验证金字塔：
+\begin{enumerate}
+  \item \textbf{单元测试}（pytest）：覆盖各处理单元的标量 \texttt{calculate()} 方法、
+        数据类的序列化/反序列化、以及不变量检查（如 \texttt{SludgeFlow} 边界钳制）。
+  \item \textbf{集成测试}：覆盖 DAG 拓扑排序的正确性、增量重算的脏标记传播、
+        多上游合并的加权平均逻辑，以及保存/加载往返一致性。
+  \item \textbf{模组验证}：\texttt{ModManager.\_validate\_mod\_json()} 对
+        \texttt{mod.json} 进行模式校验；\texttt{\_validate\_vectorized\_output()}
+        检查向量化输出的标准字段契约完整性。
+  \item \textbf{回归测试}：通过序列化的项目文件（\texttt{.ddesign.json}）捕获精确的计算状态，
+        确保代码修改不改变已有设计结果。
+\end{enumerate}
+
+\subsection{关键不变量}
+
+系统在以下关键路径上实施了运行时不变式检查：
+\begin{itemize}
+  \item \texttt{SludgeFlow.\_\_post\_init\_\_}：$P_{\text{moisture}}$ 和 $VS_{\text{ratio}}$ 自动钳制至 $[0,1]$；
+  \item \texttt{Port.can\_connect()}：类型兼容性判定在每次连线操作时执行；
+  \item \texttt{NodeState} 转移合法性：从 \texttt{ERROR} 到 \texttt{DIRTY} 的自动复位；
+  \item \texttt{graph\_executor.from\_dict()}：\texttt{None} 检查防止静默失败。
+\end{itemize}
+
+\subsection{已知缺陷与修复}
+
+v3.3 $\to$ v3.4 的开发过程中发现并修复了以下关键缺陷：
+\begin{itemize}
+  \item \textbf{双重数据源不一致}：\texttt{\_COMPAT\_MODULE\_MAP}（硬编码）与 \texttt{ModManager} 两份节点注册源的不一致
+        导致矿井水节点加载失败——已统一为约定自动发现；
+  \item \textbf{隐式契约违反}：成本估算器通过字符串匹配猜测维度字段名，新模组因命名偏差静默崩溃
+        ——已替换为显式 L/B/D/H 标准字段契约；
+  \item \textbf{单位不一致}：格栅 \texttt{discretization.json} 中 $s$（栅条宽度）使用 m（0.01）而非 mm（10.0），
+        导致 1000$\times$ 水头损失计算误差——已修正并统一量纲；
+  \item \textbf{字节码缓存遮蔽}：\texttt{\_\_pycache\_\_} 中的 \texttt{.pyc} 文件导致源码修改不生效
+        ——已加入构建前清理步骤。
+\end{itemize}
+
+% ═══════════════════════════════════════════════════════════════
+%  §12  性能分析
+% ═══════════════════════════════════════════════════════════════
+\section{性能分析}\label{sec:performance}
+
+\subsection{复杂度边界}
+
+系统三个主要计算阶段的渐近复杂度如下：
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{阶段} & \textbf{渐近复杂度} & \textbf{典型规模} \\
+\midrule
+图构建 + 拓扑排序                     & $O(|V| + |E|)$          & $|V| \le 28$, $|E| \le 28^2$ \\
+向量化可行域枚举（单模块）            & $O(\prod_{i=1}^k m_i)$  & $\le 12,288$ 组合 \\
+BOQ 成本估算（单构筑物）              & $O(1)$                  & 7 项分部分项工程 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{经验性能基准}
+
+在标准桌面硬件上的实测性能数据（v3.4，\texttt{session-retrospective-2026-05-20.md}）：
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+\textbf{操作} & \textbf{Wall-Clock 时间} \\
+\midrule
+模组加载（28 模组）          & 0.10 s \\
+项目加载（19 节点）          & 0.36 s \\
+图执行（19 节点全流程）      & $< 0.01$ s \\
+方案枚举（26 类型，2,507 方案）& 0.06 s \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+向量化枚举的性能优势源于 numpy 在 C 层的循环展开：12,288 个参数组合的批处理仅需约 10 ms，
+等价于每个组合约 0.8 $\mu$s。此性能使得方案空间的实时交互式探索成为可能。
+
+\subsection{可扩展性分析}
+
+\begin{theorem}[枚举可扩展性边界]
+\label{thm:scalability}
+在当前的离散化策略下（$m_i \le 5$, $k \le 7$），单模块搜索空间不超过 $5^7 = 78,125$ 组合。
+这一上界保证了向量化枚举方法在可预见的参数扩展中仍能维持实时交互性能。
+若未来引入更多自由变量或更细粒度的离散化，需考虑以下替代策略：
+(1) 拉丁超立方采样替代全网格枚举；(2) 遗传算法或贝叶斯优化在连续参数空间中的搜索；
+(3) GPU 加速的批量向量化计算。
+\end{theorem}
+
+% ═══════════════════════════════════════════════════════════════
+%  §13  设计决策与工程权衡
+% ═══════════════════════════════════════════════════════════════
+\section{设计决策与工程权衡}\label{sec:tradeoffs}
+
+本节以工程权衡表的形式记录关键设计决策、替代方案及其拒绝理由。
+
+\begin{center}
+\begin{longtable}{p{3cm}p{4.5cm}p{4.5cm}}
+\toprule
+\textbf{决策} & \textbf{选择与理由} & \textbf{替代方案及拒绝原因} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+\textbf{编程语言} &
+\textbf{Python 3.10}：快速原型、丰富的科学生态（numpy/scipy/pandas）、
+零编译部署（PyInstaller）。&
+C++/MATLAB：C++ 编译部署复杂，MATLAB 需商业许可且 GUI 能力弱。\\[6pt]
+
+\textbf{UI 框架} &
+\textbf{tkinter}：Python 标准库，零外部依赖，
+PyInstaller 打包后仅 54 MB。&
+PyQt/Electron：PyQt 许可复杂且 GPL 受限；
+Electron 打包后 $\ge 150$ MB 且过重。\\[6pt]
+
+\textbf{枚举策略} &
+\textbf{向量化全网格枚举}：保证完备性（所有可行解被发现），
+通过 numpy 向量化补偿性能。&
+梯度下降/遗传算法：不能保证找到所有可行解，
+且需处理离散参数空间的编码问题。\\[6pt]
+
+\textbf{模组架构} &
+\textbf{MC 式自包含}：一个文件夹 $=$ 一个模组，
+3 文件即可创建新处理单元，零框架修改。&
+显式插件 API：需要模组开发者实现特定接口并注册，
+增加开发门槛，违背「低门槛扩展」的设计目标。\\[6pt]
+
+\textbf{执行模型} &
+\textbf{单线程同步执行}：结果确定性、调试简单、
+计算耗时 $\ll$ 人机交互时间。&
+多线程/异步并行：增加实现复杂度，
+在 $< 28$ 节点规模下收益可忽略。\\[6pt]
+
+\textbf{序列化格式} &
+\textbf{JSON}：人类可读、跨平台、易于版本控制和差异对比。&
+pickle/HDF5：pickle 有安全风险且不可读；
+HDF5 引入额外依赖。\\[6pt]
+
+\textbf{打包格式} &
+\textbf{PyInstaller 自解压 EXE}：54 MB 单文件，
+首次运行自动释放资源，无需安装 Python。&
+MSI 安装包/Docker：MSI 需管理员权限；
+Docker 对桌面应用用户不友好。\\[6pt]
+
+\end{longtable}
+\end{center}
+
+% ═══════════════════════════════════════════════════════════════
+%  §14  结论与展望
+% ═══════════════════════════════════════════════════════════════
+\section{结论与展望}
+
+\subsection{工作总结}
+
+本文从计算机科学的视角，系统阐述了排水工程设计工具 v3.4 的软件架构、核心算法与设计方法论。
+系统的四项关键创新为：
+
+\begin{enumerate}
+  \item \textbf{类型化端口数据流}：以代数数据类型定义四元端口系统，通过静态兼容性判定
+        （\cref{thm:type-safety}）确保数据流连接的类型安全性；
+  \item \textbf{DAG 增量执行引擎}：基于 Kahn 拓扑排序（\cref{alg:kahn}）的确定性调度，
+        结合脏标记传播（\cref{def:dirty-prop}）实现增量重算；
+  \item \textbf{向量化可行域枚举}：将工艺设计形式化为 DCSP（\cref{def:dcsp}），
+        利用 numpy 向量化计算在约 25 ms 内完成全部 9 个模块的穷举评估；
+  \item \textbf{MC 式自包含模组系统}：以约定优于配置和标准化输出契约为核心，
+        实现处理单元的零框架修改热插拔。
+\end{enumerate}
+
+系统以 Python 3.10 实现，含 28 个处理单元（25 核心 + 3 社区），约 24,500 行代码，
+经 180+ 单元测试验证，打包为 54 MB 自解压可执行文件。
+
+\subsection{未来工作}
+
+以下方向值得进一步探索：
+\begin{enumerate}
+  \item \textbf{混合整数非线性规划}：在可行域内部引入连续优化，
+        在离散枚举提供的可行起点上进一步精细调节参数；
+  \item \textbf{GPU 加速向量化计算}：利用 CuPy 或 JAX 将向量化枚举迁移至 GPU，
+        支持更大规模的离散化网格和更多自由变量；
+  \item \textbf{形式化等价性验证}：对 \texttt{\_vectorized\_compute()} 与
+        \texttt{calculate()} 的函数等价性进行形式化证明或基于属性的测试（property-based testing）；
+  \item \textbf{Web 化部署}：使用 Pyodide/WebAssembly 将 Python 核心编译至浏览器，
+        实现零安装的在线协同设计平台；
+  \item \textbf{不确定性量化}：引入进水水质和设计参数的 Monte Carlo 不确定性传播分析，
+        输出方案鲁棒性指标。
+\end{enumerate}
+
+% ═══════════════════════════════════════════════════════════════
+%  参考文献 / 标准
+% ═══════════════════════════════════════════════════════════════
+\section*{参考标准与文献}
+\addcontentsline{toc}{section}{参考标准与文献}
+
+\begin{itemize}
+  \item GB 50014--2021《室外排水设计标准》
+  \item GB 18918--2002《城镇污水处理厂污染物排放标准》
+  \item GB 3838--2002《地表水环境质量标准》
+  \item CJJ 131--2009《城镇污水处理厂污泥处理技术规程》
+  \item GB 50500--2013《建设工程工程量清单计价规范》
+  \item T/BCEBCA 1--2023《建设工程造价指标分类与测算标准》
+  \item 2019 年版《黑龙江省市政工程消耗量定额》（第一、五、六、九、十一册）
+  \item 2024 年鹤岗市建设工程材料价格信息
+  \item Kahn, A. B. (1962). Topological Sorting of Large Networks. \textit{Communications of the ACM}, 5(11), 558--562.
+\end{itemize}
+
+\end{document}

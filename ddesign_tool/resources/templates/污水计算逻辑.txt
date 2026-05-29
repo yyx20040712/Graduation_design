@@ -1,0 +1,539 @@
+================================================================================
+                    污水管道水力设计计算逻辑
+              （毕业设计 - 计算方法章节）
+================================================================================
+
+
+                    第 一 部 分
+          老式毕设的手动计算方式及理论公式
+    （适用于手工计算与毕业设计论文理论推导）
+================================================================================
+
+1. 设计依据与引用标准
+--------------------------------------------------------------------------------
+本计算严格依据 GB50014-2021《室外排水设计标准》：
+  · 表 5.2.4  最大设计充满度
+  · 表 5.2.10 最小管径与最小设计坡度
+  · 管道水力计算采用曼宁公式（Manning Formula）
+
+混凝土圆管粗糙系数 n = 0.014（非满管流统一取值）。
+
+2. 曼宁公式与非满管流几何关系（LaTeX 公式）
+--------------------------------------------------------------------------------
+
+2.1 曼宁基本公式
+
+曼宁公式是明渠均匀流水力计算的基本公式，适用于污水管道非满管流状态：
+
+\[
+v = \frac{1}{n} \, R^{2/3} \, i^{1/2}
+\qquad\text{(m/s)}
+\]
+
+\[
+Q = A \cdot v
+\qquad\text{(m}^3\text{/s)}
+\]
+
+其中：
+  $v$   —— 断面平均流速 (m/s)
+  $n$   —— 管壁粗糙系数（混凝土管取 0.014）
+  $R$   —— 水力半径 (m)，$R = A / \chi$
+  $i$   —— 水力坡度，均匀流时等于管底坡度
+  $Q$   —— 流量 (m³/s)
+  $A$   —— 过水断面面积 (m²)
+
+2.2 圆管非满流几何关系
+
+设圆管内径为 $D$ (m)，水深为 $h$ (m)，定义充满度为 $h/D$。
+
+(1) 水面所对圆心角 $\theta$ (rad)：
+
+\[
+\theta = 2 \arccos\!\left(1 - \frac{2h}{D}\right)
+\]
+
+边界条件：$h \leq 0$ 时 $\theta = 0$；$h \geq D$ 时 $\theta = 2\pi$。
+
+(2) 过水断面面积 $A$ (m²)：
+
+\[
+A = \frac{D^{2}}{8} \bigl( \theta - \sin\theta \bigr)
+\]
+
+满管时简化为 $A = \pi D^{2} / 4$。
+
+(3) 湿周 $\chi$ (m)：
+
+\[
+\chi = \frac{D}{2} \, \theta
+\]
+
+满管时简化为 $\chi = \pi D$。
+
+(4) 水力半径 $R$ (m)：
+
+\[
+R = \frac{A}{\chi} =
+\frac{D}{4}\!\left(1 - \frac{\sin\theta}{\theta}\right)
+\]
+
+2.3 反算坡度公式
+
+在给定管径 $D$、水深 $h$ 和设计流量 $Q$ 时，由曼宁公式反推所需水力坡度：
+
+\[
+i = \left( \frac{Q \cdot n}{A \cdot R^{2/3}} \right)^{2}
+\]
+
+推导：由 $Q = A \cdot \frac{1}{n} R^{2/3} i^{1/2}$
+$\;\Rightarrow\; i^{1/2} = \frac{Q \cdot n}{A \cdot R^{2/3}}$
+$\;\Rightarrow\;$ 平方即得上式。
+
+
+3. 设计约束条件（规范表格）
+--------------------------------------------------------------------------------
+
+3.1 最大设计充满度（GB50014-2021 表 5.2.4）
+
+\begin{tabular}{c|c}
+\hline
+管径范围 (mm)       & 最大充满度 $h/D$ \\
+\hline
+200 $\sim$ 300      & 0.55 \\
+350 $\sim$ 450      & 0.65 \\
+500 $\sim$ 900      & 0.70 \\
+$\geq$ 1000         & 0.75 \\
+\hline
+\end{tabular}
+
+3.2 最小设计坡度（GB50014-2021 表 5.2.10）
+
+\begin{tabular}{c|c||c|c}
+\hline
+管径 (mm) & 最小坡度 & 管径 (mm) & 最小坡度 \\
+\hline
+300  & 0.0030 & 800  & 0.0008 \\
+400  & 0.0015 & 900  & 0.0008 \\
+500  & 0.0012 & 1000 & 0.0006 \\
+600  & 0.0010 & 1100 & 0.0006 \\
+700  & 0.0010 & 1200 & 0.0006 \\
+     &        & 1400 & 0.0005 \\
+     &        & 1500 & 0.0005 \\
+\hline
+\end{tabular}
+
+注：1300mm 管径已被淘汰，表中不含。
+
+3.3 流速约束
+
+\[
+v_{\min} = 0.6 \;\text{m/s}, \quad v_{\max} = 1.0 \;\text{m/s}
+\]
+
+（非金属管，防止淤积和冲刷）
+
+3.4 初始覆土深度
+
+起始管道（无上游）的管内底标高按下式确定：
+
+\[
+E_{\text{start}} = G_{\text{start}} - (H_{\text{cover}} + D)
+\]
+
+其中 $H_{\text{cover}} = 1.5$ m 为初始覆土深度，$G_{\text{start}}$ 为起点地面标高。
+
+
+4. 单管段手动计算步骤
+--------------------------------------------------------------------------------
+
+对于给定设计流量 $Q$ (L/s) 的单一管段，手工计算流程如下：
+
+Step 1 - 单位换算：$Q_{\text{m}^3/\text{s}} = Q / 1000$
+
+Step 2 - 选定试算管径 $D$ (mm)，换算为米：$D_{\text{m}} = D / 1000$
+
+Step 3 - 查表得该管径的最大充满度 $(h/D)_{\max}$
+
+Step 4 - 假设充满度 $h/D$（从最大值开始），计算水深 $h = (h/D) \times D_{\text{m}}$
+
+Step 5 - 计算几何参数：
+\[
+\theta = 2\arccos(1 - 2h/D_{\text{m}})
+\]
+\[
+A = \frac{D_{\text{m}}^{2}}{8}(\theta - \sin\theta)
+\]
+\[
+R = \frac{D_{\text{m}}}{4}\left(1 - \frac{\sin\theta}{\theta}\right)
+\]
+
+Step 6 - 反算所需坡度：
+\[
+i = \left( \frac{Q_{\text{m}^3/\text{s}} \cdot 0.014}{A \cdot R^{2/3}} \right)^{2}
+\]
+
+Step 7 - 校核流速：
+\[
+v = \frac{1}{0.014} \cdot R^{2/3} \cdot i^{1/2}
+\]
+
+Step 8 - 约束检查：
+  · 若 $v < 0.6$ 或 $v > 1.0$ → 降低充满度 $h/D$，返回 Step 4
+  · 若 $i < i_{\min}(D)$ → 降低充满度 $h/D$，返回 Step 4
+  · 若满足全部约束 → 记录该方案，尝试下一管径
+
+Step 9 - 更换管径 $D$（增加 100mm），重复 Step 2-8
+
+Step 10 - 从所有可行方案中选择最优：
+  坡度优先：选坡度 $i$ 最小的方案（埋深最浅，经济最优）
+  管径优先：选管径 $D$ 最小的方案
+
+手工计算示例（$Q = 20$ L/s）：
+  试算 $D = 300$mm，$(h/D)_{\max} = 0.55$：
+    $h = 0.165$m
+    $\theta = 2\arccos(1 - 2\times 0.165/0.3) = 2\arccos(-0.1) \approx 3.342$ rad
+    $A = (0.09/8)(3.342 - \sin 3.342) \approx 0.043$ m²
+    $R = (0.3/4)(1 - \sin 3.342/3.342) \approx 0.073$ m
+    $i = (0.02 \times 0.014 / (0.043 \times 0.073^{2/3}))^2 \approx 0.0019$
+    若 $v \in [0.6, 1.0]$ 且 $i \geq 0.003$，则该方案可行；否则降低 $h/D$ 重算。
+
+
+5. 高程计算与管道连接方式（LaTeX 公式）
+--------------------------------------------------------------------------------
+
+5.1 基本高程公式
+
+设管段长 $L$ (m)，坡度 $i$，管径 $D$ (m)，充满度 $h/D$：
+
+\[
+d = D \cdot (h/D) \qquad \text{(水深)}
+\]
+\[
+E_{\text{end}} = E_{\text{start}} - i \cdot L \qquad \text{(终点管内底标高)}
+\]
+\[
+W_{\text{start}} = E_{\text{start}} + d \qquad \text{(起点水面标高)}
+\]
+\[
+W_{\text{end}} = E_{\text{end}} + d \qquad \text{(终点水面标高)}
+\]
+\[
+C_{\text{start}} = G_{\text{start}} - E_{\text{start}} \qquad \text{(起点埋深)}
+\]
+\[
+C_{\text{end}} = G_{\text{end}} - E_{\text{end}} \qquad \text{(终点埋深)}
+\]
+\[
+C'_{\text{start}} = C_{\text{start}} - D \qquad \text{(起点覆土深度)}
+\]
+
+5.2 管道连接方式
+
+管段与上游管道的连接分为三种方式，由管径关系决定：
+
+(1) 水面平接（$D_{\text{up}} = D_{\text{down}}$）：
+\[
+E_{\text{start}} = W_{\text{up,end}} - D_{\text{down}} \cdot (h/D)_{\text{down}}
+\]
+保证上下游水面标高连续，水流平稳过渡。
+
+(2) 管顶平接（$D_{\text{up}} \neq D_{\text{down}}$）：
+\[
+E_{\text{start}} = (E_{\text{up,end}} + D_{\text{up}}) - D_{\text{down}}
+\]
+保证上下游管顶标高连续，避免管顶出现台阶。
+
+(3) 管底平接（上游为并联管）：
+\[
+E_{\text{start}} = E_{\text{up,end}}
+\]
+并联管道直接对齐管底。
+
+当存在多条上游管道时，取所有候选值的 $\min$，满足最不利条件控制。
+
+6. 提升泵站扬程与主动跌水计算（LaTeX 公式）
+--------------------------------------------------------------------------------
+
+这是本系统的核心特色功能。用户在输入表格第 8 列手动指定「污水提升」值
+（$H_{\text{lift}}$），表示提升后管道的期望覆土深度 (m)。设为 0 则不提升。
+
+(1) 正常起点管内底标高（无提升时）：
+\[
+E_{\text{start}}^{\text{original}} = \text{按连接方式计算}
+\]
+
+(2) 强制起点管内底标高（提升后）：
+\[
+E_{\text{start}}^{\text{forced}} = G_{\text{start}} - (H_{\text{lift}} + D)
+\]
+
+(3) 埋深差值：
+\[
+\Delta = E_{\text{start}}^{\text{forced}} - E_{\text{start}}^{\text{original}}
+\]
+
+(4) 判断与计算：
+\[
+\text{若 } \Delta > 0 \quad\Rightarrow\quad
+\text{需设提升泵站，扬程 } H_{\text{pump}} = |\Delta| \text{ (m)}
+\]
+\[
+\text{若 } \Delta < 0 \quad\Rightarrow\quad
+\text{主动跌水，跌水高度 } H_{\text{drop}} = |\Delta| \text{ (m)}
+\]
+\[
+\text{若 } \Delta = 0 \quad\Rightarrow\quad \text{无变化}
+\]
+
+应用场景：当管道埋深过大导致施工困难时，通过设置 $H_{\text{lift}}$ 将管道
+"提升"至更浅位置，并在管段起点设提升泵站，将上游污水提升 $\Delta$ 米
+后流入本段。
+
+7. 跌水井设计计算（LaTeX 公式）
+--------------------------------------------------------------------------------
+
+跌水井设置在管网汇流节点，当上游来水的水面标高显著高于下游管道起点
+水面标高时，需设置跌水井消能。
+
+\[
+H_{\text{fall}} = W_{\text{up,end}} - W_{\text{down,start}}
+\]
+
+\[
+\text{若 } H_{\text{fall}} > H_{\text{threshold}} \;(= 1.0\text{ m})
+\quad\Rightarrow\quad \text{设置跌水井}
+\]
+
+注意：跌水井仅在汇流节点（下游管道有多个上游时）才进行计算。
+
+
+                    第 二 部 分
+              程序迭代计算逻辑框架
+    （自动化计算流程，取代手工试算）
+================================================================================
+
+8. 整体程序架构
+--------------------------------------------------------------------------------
+
+系统的五个模块及其数据流：
+
+  data_loader.py        design_engine.py       task_manager.py
+  ┌─────────────┐      ┌──────────────┐       ┌──────────────┐
+  │ 读取Excel   │─────→│ 曼宁公式引擎 │←─────│ 逐管段调度   │
+  │ 构建拓扑   │      │ 水力设计     │      │ 高程计算     │
+  │ 拓扑排序   │      │ 约束检查     │      │ 提升泵站判断 │
+  └─────────────┘      └──────────────┘      └──────┬───────┘
+                                                     │
+                          result_writer.py            │
+                          ┌──────────────┐            │
+                          │ 结果输出     │←───────────┘
+                          │ 跌水井统计   │
+                          │ 管径统计     │
+                          └──────────────┘
+
+9. 数据读取与管网拓扑构建（data_loader.py）
+--------------------------------------------------------------------------------
+
+9.1 输入数据结构
+
+每行 8 列固定格式：
+  列 1: 起点编号     列 5: 终点地面标高(m)
+  列 2: 终点编号     列 6: 本段汇水面积(ha)
+  列 3: 长度(m)      列 7: 本段产生流量(L/s)
+  列 4: 起点地面标高(m) 列 8: 污水提升(m)  ← 控制埋深的核心参数
+
+9.2 上下游映射构建
+
+```
+for each pipe i:
+    start_to_pipes[pipe.start].append(i)
+    end_to_pipes[pipe.end].append(i)
+
+for each pipe i:
+    upstream[i] = end_to_pipes.get(pipe.start, [])   # 所有上游管道
+    downstream[i] = start_to_pipes.get(pipe.end, [])  # 所有下游管道
+    indegree[i] = len(upstream[i])
+```
+
+9.3 拓扑排序（Kahn 算法）
+
+```
+queue ← [i for i if indegree[i] == 0]   # 无上游的起始管道
+order ← []
+
+while queue 非空:
+    u ← queue.popleft()
+    order.append(u)
+    for v in downstream[u]:
+        indegree[v] -= 1
+        if indegree[v] == 0:
+            queue.append(v)
+
+if len(order) != len(pipes):
+    报错: "管网中存在环路"
+```
+
+10. 水力设计引擎迭代算法（design_engine.py / pipe_calculation.py）
+------------------------------------------------------------------------------
+
+这是整个系统的心脏——取代手工试算的自动化迭代算法。
+
+```
+输入: Q (L/s), pipe_type
+参数: D_min=300, D_max=1500, D_step=100, hD_step=0.01
+
+Q_m3s = Q / 1000
+feasible_solutions = []
+
+for D_mm = D_min to D_max step D_step:
+    if D_mm == 1300: continue          # 跳过淘汰管径
+    D_m = D_mm / 1000
+    max_hD = 查表(D_mm, pipe_type)     # 最大充满度
+    
+    # 有效最小充满度
+    if D_mm == 300:
+        effective_min_hD = 0.0
+    else:
+        effective_min_hD = max(0.1, 0.4)
+    
+    hD = max_hD                        # 从最大充满度开始搜索
+    while hD >= effective_min_hD:
+        h = hD * D_m
+        i = required_slope(D_m, h, Q_m3s)  # 反算坡度
+        
+        if i == ∞ or i == NaN:           # 不可行
+            hD -= hD_step
+            continue
+        
+        v = velocity(D_m, h, i)          # 计算流速
+        if v == NaN:
+            hD -= hD_step
+            continue
+        
+        # 约束校验
+        valid = True
+        if v < v_min or v > v_max:    valid = False
+        if i < min_slope(D_mm):       valid = False
+        
+        if valid:
+            记录方案 {D_mm, hD, i, v, Q}
+            break                        # 下一管径
+        else:
+            hD -= hD_step                # 降低充满度重试
+    
+    D_mm += D_step
+
+# 优化选择
+if optimization == "slope":
+    best = min(solutions, key=lambda x: (x.slope, x.D))
+else:
+    best = min(solutions, key=lambda x: (x.D, x.slope))
+```
+
+算法核心思想：
+  · 对每个管径，从最大充满度向下试探（降低 h/D → 需要更大 i → 流速增加）
+  · 第一个同时满足流速和最小坡度约束的 h/D 即为该管径最优解
+  · 最终按优化准则（坡度优先/管径优先）选出全局最优
+
+11. 逐管段调度与高程计算（task_manager.py）
+------------------------------------------------------------------------------
+
+11.1 流量累积
+
+```
+cum_flow = pipe.q_local                    # 本段自身产生流量
+for each upstream pipe u:
+    cum_flow += designs[u].Q_design        # 累加上游流量
+```
+
+11.2 水力设计调用
+
+```
+design = design_pipe(designer, cum_flow,
+                     min_diameter=upstream_max_diameter)
+```
+
+11.3 并联管道自动尝试
+
+```
+for parallel = 1 to MAX_ATTEMPTS(10):
+    per_pipe_Q = Q_lps / parallel
+    solutions = designer.design(Q=per_pipe_Q, return_all=True)
+    valid = [s for s in solutions if s.D >= min_diameter]
+    if valid 非空:
+        取最优解
+        return {..., parallel=parallel}
+return None   # 10根并联仍无解
+```
+
+11.4 提升泵站自动判断逻辑
+
+```
+original_start_invert = 按连接方式计算    # 正常设计值
+lift_cover = pipe.lift_cover               # 用户输入值（第8列）
+
+if lift_cover > 0:
+    forced_start_invert = ground_start - (lift_cover + D)
+    diff = forced_start_invert - original_start_invert
+    start_invert = forced_start_invert     # 取提升后值
+else:
+    diff = 0
+    start_invert = original_start_invert   # 取正常设计值
+
+# 结果记录
+if diff > 0:    泵站扬程 = diff
+if diff < 0:    主动跌水 = |diff|
+```
+
+12. 结果输出与跌水井统计（result_writer.py）
+------------------------------------------------------------------------------
+
+12.1 跌水井自动检测
+
+```
+# 仅在汇流节点（下游管道有多个上游时）计算
+for each pipe i:
+    找到唯一下游 j ← start_to_pipes[pipe.end][0]
+    if len(上游 of 管道j) > 1:           # 汇流点
+        drop_height = elev_i.end_water - elev_j.start_water
+        if drop_height > 1.0:            # 超过阈值
+            设置跌水井(i)
+            total_drop_wells += 1
+```
+
+12.2 管径统计
+
+```
+pipe_stats = {}
+for each pipe i:
+    total_length = pipe.length * designs[i].parallel
+    pipe_stats[designs[i].D] += total_length
+```
+
+13. 输入输出格式
+------------------------------------------------------------------------------
+
+13.1 输入 Excel 格式
+
+  工作表：可包含多张（自动跳过名为"计算结果"的）
+  行 1:      标题行（跳过）
+  行 2-N:    数据行，第一列为空时停止
+  固定 8 列: 起点编号 | 终点编号 | 长度(m) | 起点地面标高(m) |
+              终点地面标高(m) | 汇水面积(ha) | 本段流量(L/s) | 污水提升(m)
+
+13.2 输出 Excel 格式
+
+  "计算结果"工作表字段（22列）：
+    原始数据(5) + 上游汇入流量 + 设计流量 + 管径 + 充满度 + 坡度 +
+    流速 + 并联数 + 泵站扬程 + 主动跌水 + 末端跌水高度 +
+    是否设跌水井 + 起/终点管内底 + 起/终点水面 + 起/终点埋深 +
+    起/终点覆土深度 + 连接方式 + 来源
+
+  "管道统计"工作表（2列）：
+    管径(mm) | 总长度(m)
+
+
+================================================================================
+                          -- 文档结束 --
+================================================================================
