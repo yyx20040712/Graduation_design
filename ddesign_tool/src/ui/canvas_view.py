@@ -456,29 +456,39 @@ class NodeCanvas(tk.Frame):
         self._sync_text_fonts()
 
     def fit_view(self):
-        """重置视口到内容区域并居中 (v5.4-s7: 强制更新布局后居中)"""
-        # ── 强制完成所有待处理的几何计算 ──
-        self.canvas.update_idletasks()
-        bbox = self.canvas.bbox("all")
-        if bbox:
-            self.canvas.configure(scrollregion=bbox)
+        """重置视口 — 从节点 backend 坐标计算并居中 (v5.4-s7)
+
+        不依赖 canvas.bbox("all"), 避免 stray 临时图形干扰。
+        """
+        # ── 从 backend 坐标计算内容范围 ──
+        min_x = min_y = float("inf")
+        max_x = max_y = float("-inf")
+        for node in self.nodes.values():
+            if node.backend:
+                min_x = min(min_x, node.backend.x)
+                min_y = min(min_y, node.backend.y)
+                max_x = max(max_x, node.backend.x)
+                max_y = max(max_y, node.backend.y)
+
+        if min_x == float("inf"):
+            # 无节点
+            self.canvas.configure(scrollregion=(0, 0, 4000, 3000))
+            self.canvas.xview_moveto(0)
+            self.canvas.yview_moveto(0)
+            return
+
+        # ── 加 padding ──
+        pad = 200
+        bbox = (min_x - pad, min_y - pad, max_x + pad, max_y + pad)
+        self.canvas.configure(scrollregion=bbox)
+
+        # ── after_idle 确保布局完成 ──
+        def _center():
             cw = self.canvas.winfo_width()
             ch = self.canvas.winfo_height()
-            content_w = bbox[2] - bbox[0]
-            content_h = bbox[3] - bbox[1]
-            # ── 如果视口能容纳全部内容, 居中显示; 否则从左上角开始 ──
-            if cw >= content_w and ch >= content_h:
-                # 内容比视口小 → 居中
-                offset_x = (cw - content_w) / 2
-                offset_y = (ch - content_h) / 2
-                self.canvas.configure(scrollregion=(
-                    bbox[0] - offset_x, bbox[1] - offset_y,
-                    bbox[2] + offset_x, bbox[3] + offset_y
-                ))
-                self.canvas.xview_moveto(0)
-                self.canvas.yview_moveto(0)
-            elif cw > 1 and ch > 1:
-                # 视口尺寸有效 → 尝试居中
+            if cw > 1 and ch > 1:
+                content_w = bbox[2] - bbox[0]
+                content_h = bbox[3] - bbox[1]
                 cx = (bbox[0] + bbox[2]) / 2
                 cy = (bbox[1] + bbox[3]) / 2
                 tx = max(0.0, min(1.0, (cx - cw / 2) / max(content_w, 1)))
@@ -486,13 +496,10 @@ class NodeCanvas(tk.Frame):
                 self.canvas.xview_moveto(tx)
                 self.canvas.yview_moveto(ty)
             else:
-                # 视口尺寸未知 → 回退左上角
                 self.canvas.xview_moveto(0)
                 self.canvas.yview_moveto(0)
-        else:
-            self.canvas.configure(scrollregion=(0, 0, 4000, 3000))
-            self.canvas.xview_moveto(0)
-            self.canvas.yview_moveto(0)
+
+        self.canvas.after_idle(_center)
 
     # ═══════════════ 节点管理 ═══════════════
     def remove_node(self, node_id: str):

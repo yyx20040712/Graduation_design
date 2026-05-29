@@ -1843,16 +1843,16 @@ class MainWindow(tk.Tk):
             self._refresh_selected_result()
             self._update_all_node_statuses()
             # ── v5.4-s7: 水质 Tab 刷新 ──
-            # 冷启动时 quality_text frame 布局状态不稳定,
-            # 通过强制 tab 切换 (quality→params→quality) 触发完整
-            # pack/unpack 生命周期, 确保所有 frame 正确渲染
+            # 冷启动时 quality_text frame 的 pack 尚未被 tkinter 处理,
+            # 此时 build_full_quality_flow 创建的 canvas 尺寸为 1×1。
+            # after_idle 延迟到 tkinter 完成所有几何计算后执行。
             if self.tab_var.get() == "quality":
-                tab_was = self.tab_var.get()
-                self.tab_var.set("params")
-                self._result_panel._on_tab_changed()
-                self.update_idletasks()
-                self.tab_var.set(tab_was)
-                self._result_panel._on_tab_changed()
+                def _rebuild_quality():
+                    if self.tab_var.get() != "quality":
+                        return
+                    self._result_panel._on_tab_changed()
+
+                self.after_idle(_rebuild_quality)
             self.status_var.set("计算完成")
         except Exception as e:
             self.status_var.set(f"计算失败: {e}")
