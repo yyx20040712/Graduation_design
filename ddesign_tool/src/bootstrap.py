@@ -132,4 +132,8 @@ def extract_resources(force: bool = False, verbose: bool = True) -> int:
             except Exception as exc:
                 print(f"[bootstrap] ERROR {src_subpath}: {exc}")
 
+    # ── 预创建运行时目录 (output/logs/cache/projects) ──
+    for d in ["output", "logs", "cache", "projects"]:
+        os.makedirs(os.path.join(cwd, d), exist_ok=True)
+
     return copied
