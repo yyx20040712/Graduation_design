@@ -31,6 +31,11 @@ from src.bootstrap import extract_resources
 
 extract_resources()
 
+# ── 设置导入路径 (必须在任何 UI 导入之前) ──
+from src._paths import setup_import_paths
+
+setup_import_paths()
+
 # ── 尽早安装崩溃处理器 ──
 from crash_handler import install_crash_handler
 
