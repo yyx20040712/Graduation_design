@@ -254,10 +254,19 @@ class QualityPanel:
 
     def build_full_quality_flow(self, scroll_to_node_id=None):
         """全流程水质追踪 — 按水流顺序排列所有工艺节点的水质变化表."""
-        # ── v5.4-s7: 冷启动修复 — 确保父 frame 已完成几何布局 ──
-        # 第一次打开时 quality_text 可能尚未 mapped (尺寸 1×1),
-        # 导致内部 canvas 不可见。update_idletasks 强制完成布局。
+        # ── v5.4-s7: 冷启动修复 — 强制父 frame 获得正确几何尺寸 ──
+        # 第一次运行时 quality_text 可能未被 tkinter 分配实际像素
+        # (> 1x1)，导致内部 canvas 不可见。
+        # 手动读取 reqwidth/reqheight 并显式设置 config 强制分配。
         self.parent.update_idletasks()
+        pw = self.parent.winfo_width()
+        ph = self.parent.winfo_height()
+        if pw <= 1:
+            pw = self.parent.winfo_reqwidth()
+        if ph <= 1:
+            ph = self.parent.winfo_reqheight()
+        if pw > 1 and ph > 1:
+            self.parent.config(width=pw, height=ph)
         for w in self.parent.winfo_children():
             w.destroy()
 

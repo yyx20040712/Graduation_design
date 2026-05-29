@@ -1842,16 +1842,10 @@ class MainWindow(tk.Tk):
             self.executor.execute(force_all=False)
             self._refresh_selected_result()
             self._update_all_node_statuses()
-            self.status_var.set("计算完成")
-        except Exception as e:
-            self.status_var.set(f"计算失败: {e}")
-        # ── v5.4-s7: 水质面板刷新 — 在 try 外部执行, 避免被 except 吞掉 ──
-        # 冷启动问题根因: quality_text 在第一次 _on_tab_changed 时 pack,
-        # 但后续 _on_calc_rest 中的 after_idle 时机不可靠。
-        # 新方案: 设置 needs_refresh 标志, 由 _on_tab_changed 检查并重建。
+        self.status_var.set("计算完成")
+        # ── v5.4-s7: 水质面板内容刷新 (冷启动修复在 quality_panel.py) ──
         if self.tab_var.get() == "quality":
-            self._quality_needs_refresh = True
-            self._result_panel._on_tab_changed()
+            self._quality_panel.build_full_quality_flow()
 
     def _update_all_node_statuses(self):
         """Update canvas status lights for all nodes based on calculation results."""

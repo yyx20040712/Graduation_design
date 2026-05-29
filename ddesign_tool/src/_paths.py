@@ -42,9 +42,22 @@ def get_src_dir() -> str:
 
 
 def get_data_dir() -> str:
-    """获取数据目录 (data/)"""
+    """获取数据目录 (data/)
+
+    优先级:
+      1. CWD/data (bootstrap 拷贝目标, 用户可修改)
+      2. MEIPASS/data (PyInstaller 打包原始文件, 回退)
+      3. 源码 data/
+    """
     if is_frozen():
-        return os.path.join(os.getcwd(), "data")
+        cwd_data = os.path.join(os.getcwd(), "data")
+        if os.path.isdir(cwd_data) and os.listdir(cwd_data):
+            return cwd_data
+        # 回退: bootstrap 可能因权限问题未拷贝, 直接用 MEIPASS 原始文件
+        meipass_data = os.path.join(sys._MEIPASS, "data")
+        if os.path.isdir(meipass_data):
+            return meipass_data
+        return cwd_data
     return os.path.join(get_app_root(), "data")
 
 
