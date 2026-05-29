@@ -90,8 +90,10 @@ class SolutionBrowser(tk.Frame):
                 self._status_label.config(text=f"共 {len(solutions)} 个可行方案")
             else:
                 self._status_label.config(text="无可行方案")
-                # ── v5.4: 无可行解时在面板上显示诊断建议 ──
+                # ── v5.4-s7: 无可行解时在面板上显示增强诊断 ──
                 self._show_no_solution_hint(engine, flow, quality)
+                return  # ← v5.4-s7 fix: 跳过后续 _build_filter_ui,
+                # 否则 filter UI 会 destroy 诊断提示组件
         except NotImplementedError:
             self._status_label.config(text="该模块暂不支持方案浏览")
             self._build_filter_ui([])
