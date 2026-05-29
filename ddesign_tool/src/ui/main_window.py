@@ -1843,15 +1843,16 @@ class MainWindow(tk.Tk):
             self._refresh_selected_result()
             self._update_all_node_statuses()
             # ── v5.4-s7: 水质 Tab 刷新 ──
-            # 直接重建水质面板内容 (不依赖 _on_tab_changed 的 pack/unpack 链)
+            # 冷启动时 quality_text frame 布局状态不稳定,
+            # 通过强制 tab 切换 (quality→params→quality) 触发完整
+            # pack/unpack 生命周期, 确保所有 frame 正确渲染
             if self.tab_var.get() == "quality":
-                # 确保 quality_text frame 已 pack (可能在之前的操作中被 pack_forget)
-                if not self.quality_text.winfo_ismapped():
-                    self.quality_text.pack(
-                        side=tk.TOP, fill=tk.BOTH, expand=True, padx=5, pady=5
-                    )
-                self._quality_panel.build_full_quality_flow()
-                self.quality_text.update()
+                tab_was = self.tab_var.get()
+                self.tab_var.set("params")
+                self._result_panel._on_tab_changed()
+                self.update_idletasks()
+                self.tab_var.set(tab_was)
+                self._result_panel._on_tab_changed()
             self.status_var.set("计算完成")
         except Exception as e:
             self.status_var.set(f"计算失败: {e}")
