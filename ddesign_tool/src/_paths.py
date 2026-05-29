@@ -28,12 +28,22 @@ def get_app_root() -> str:
     """获取应用根目录
 
     源码: ddesign_tool/ (main.py 所在目录)
-    打包: sys._MEIPASS (PyInstaller 临时解压目录, 包含 src/, mods/, data/, config.ini)
+    打包: sys._MEIPASS (PyInstaller 临时解压目录)
     """
     if is_frozen():
         return sys._MEIPASS
-    # 源码: 此文件位于 src/_paths.py, 向上两级 = ddesign_tool/
     return os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+
+def _get_user_dir() -> str:
+    """获取用户数据根目录 (v5.4-s7)
+
+    打包: EXE 所在目录 (data/output/logs 放这里)
+    源码: 项目根目录
+    """
+    if is_frozen():
+        return os.path.dirname(sys.executable)
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
 def get_src_dir() -> str:
@@ -44,20 +54,18 @@ def get_src_dir() -> str:
 def get_data_dir() -> str:
     """获取数据目录 (data/)
 
-    优先级:
-      1. CWD/data (bootstrap 拷贝目标, 用户可修改)
-      2. MEIPASS/data (PyInstaller 打包原始文件, 回退)
-      3. 源码 data/
+    打包: EXE_dir/data (bootstrap 拷贝目标)
+         回退 MEIPASS/data (原始文件)
+    源码: 项目根目录 data/
     """
     if is_frozen():
-        cwd_data = os.path.join(os.getcwd(), "data")
-        if os.path.isdir(cwd_data) and os.listdir(cwd_data):
-            return cwd_data
-        # 回退: bootstrap 可能因权限问题未拷贝, 直接用 MEIPASS 原始文件
+        user_data = os.path.join(_get_user_dir(), "data")
+        if os.path.isdir(user_data) and os.listdir(user_data):
+            return user_data
         meipass_data = os.path.join(sys._MEIPASS, "data")
         if os.path.isdir(meipass_data):
             return meipass_data
-        return cwd_data
+        return user_data
     return os.path.join(get_app_root(), "data")
 
 
@@ -75,7 +83,14 @@ def get_mods_dir() -> str:
         return env_path
 
     if is_frozen():
-        return os.path.join(os.getcwd(), "mods")
+        user_mods = os.path.join(_get_user_dir(), "mods")
+        if os.path.isdir(user_mods) and os.listdir(user_mods):
+            return user_mods
+        # 回退: MEIPASS 原始文件 (只读)
+        meipass_mods = os.path.join(sys._MEIPASS, "mods")
+        if os.path.isdir(meipass_mods):
+            return meipass_mods
+        return user_mods
 
     # 开发模式: 优先使用项目根目录的 mods/
     project_root = os.path.abspath(os.path.join(get_app_root(), ".."))
@@ -110,48 +125,48 @@ def get_mods_search_paths() -> list:
 
 
 def get_config_path() -> str:
-    """获取配置文件路径 (config.ini)"""
+    """获取配置文件路径 (EXE_dir/config.ini)"""
     if is_frozen():
-        return os.path.join(os.getcwd(), "config.ini")
+        return os.path.join(_get_user_dir(), "config.ini")
     return os.path.join(get_app_root(), "config.ini")
 
 
 def get_knowledge_dir() -> str:
-    """获取知识库目录 (knowledge/)"""
+    """获取知识库目录 (EXE_dir/knowledge/)"""
     if is_frozen():
-        return os.path.join(os.getcwd(), "knowledge")
+        return os.path.join(_get_user_dir(), "knowledge")
     return os.path.join(get_app_root(), "knowledge")
 
 
 def get_template_dir() -> str:
-    """获取模板文件目录 (cwd 根目录)"""
-    return os.getcwd() if is_frozen() else get_app_root()
+    """获取模板文件目录"""
+    return _get_user_dir() if is_frozen() else get_app_root()
 
 
 def get_output_dir() -> str:
-    """获取输出目录 (output/), 在工作目录下创建"""
-    d = os.path.join(os.getcwd(), "output")
+    """获取输出目录 (EXE_dir/output/)"""
+    d = os.path.join(_get_user_dir(), "output")
     os.makedirs(d, exist_ok=True)
     return d
 
 
 def get_logs_dir() -> str:
-    """获取日志目录 (logs/), 在工作目录下创建"""
-    d = os.path.join(os.getcwd(), "logs")
+    """获取日志目录 (EXE_dir/logs/)"""
+    d = os.path.join(_get_user_dir(), "logs")
     os.makedirs(d, exist_ok=True)
     return d
 
 
 def get_cache_dir() -> str:
-    """获取缓存目录 (cache/), 在工作目录下创建"""
-    d = os.path.join(os.getcwd(), "cache")
+    """获取缓存目录 (EXE_dir/cache/)"""
+    d = os.path.join(_get_user_dir(), "cache")
     os.makedirs(d, exist_ok=True)
     return d
 
 
 def get_projects_dir() -> str:
-    """获取项目目录 (projects/), 在工作目录下创建"""
-    d = os.path.join(os.getcwd(), "projects")
+    """获取项目目录 (EXE_dir/projects/)"""
+    d = os.path.join(_get_user_dir(), "projects")
     os.makedirs(d, exist_ok=True)
     return d
 

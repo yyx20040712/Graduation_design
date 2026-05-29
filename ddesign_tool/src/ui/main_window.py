@@ -491,27 +491,12 @@ class MainWindow(tk.Tk):
 
     # ═══════════════════ 示例 ═══════════════════
     def _load_demo(self):
-        # 尝试自动恢复最近项目(静默,失败则加载示例)
+        """加载默认示例流程.
 
-        recent = ProjectManager.get_recent_files()
-        valid_recent = [r for r in recent if Path(r).exists()]
-        if valid_recent:
-            try:
-                executor = self._pm.load(Path(valid_recent[0]))
-                self.executor = executor
-                # v5.4-s7: 同步更新所有面板的 executor 引用
-                self._sync_executor_refs()
-                self._rebuild_canvas()
-                self._dirty = False
-                self.title(f"排水工程设计工具 v5.4-s7 — {Path(valid_recent[0]).name}")
-                self.status_var.set(
-                    f"已恢复: {Path(valid_recent[0]).name}  |  文件→最近文件 可切换"
-                )
-                return
-            except Exception as e:
-                log.warning(f"Failed to load recent: {e}")
-
-        # 回退:加载示例
+        v5.4-s7: 不再自动恢复最近项目 — 在 U 盘/跨机器场景下,
+        最近文件路径指向不存在的位置, 导致数据丢失和路径混乱.
+        用户可通过 文件→最近文件 手动恢复.
+        """
         self._load_default_demo()
 
     def _load_default_demo(self):

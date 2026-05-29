@@ -3,6 +3,7 @@
 from PyInstaller.utils.hooks import collect_all, collect_submodules
 
 datas = [
+    ("ddesign_tool/config.ini", "."),
     ("ddesign_tool/mods", "mods"),
     ("ddesign_tool/data", "data"),
     ("ddesign_tool/resources", "resources"),
