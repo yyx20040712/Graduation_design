@@ -57,5 +57,23 @@
   "constraint_types": {
     "渠内流速": "result",
     "紫外剂量": "result"
+  },
+  "constraint_hints": {
+    "紫外剂量 ≥ 20 mJ/cm²": {
+      "params": [
+        "n",
+        "D_UV"
+      ],
+      "adjust": "增大",
+      "hint": "增加灯管排数 (增大 n) 或提高设计剂量 D_UV"
+    },
+    "渠内流速 0.15~0.7 m/s": {
+      "params": [
+        "n",
+        "v_channel"
+      ],
+      "adjust": "调整",
+      "hint": "调整灯管排数 n 或渠道设计流速 v_channel"
+    }
   }
 }

@@ -62,5 +62,38 @@
     "停留时间 t": "result",
     "进水渠水深 h渠 ≥ 0.2": "result",
     "进水渠宽深比 B/h": "result"
+  },
+  "constraint_hints": {
+    "径深比 D/h2 1.5~5.0": {
+      "params": [
+        "n",
+        "q_surf"
+      ],
+      "adjust": "调整",
+      "hint": "调整池数 n 或表面负荷 q_surf 以改变池径和有效水深"
+    },
+    "停留时间 25~60s": {
+      "params": [
+        "n",
+        "q_surf"
+      ],
+      "adjust": "增大",
+      "hint": "增加池数 n (减小单池流量) 或降低表面负荷"
+    },
+    "有效水深 h2 1.5~3.5m": {
+      "params": [
+        "n"
+      ],
+      "adjust": "调整",
+      "hint": "调整池数 n 改变池径,进而影响有效水深"
+    },
+    "砂斗容积 ≥ 2d 储砂量": {
+      "params": [
+        "n",
+        "D_disk"
+      ],
+      "adjust": "增大",
+      "hint": "增大池径 (减小池数) 或检查 fixed 参数 X/T_clean"
+    }
   }
 }

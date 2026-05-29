@@ -305,16 +305,18 @@ class SelfTestRunner:
     # ── 测试 6: 约束一致性 ──
 
     def test_constraint_consistency(self) -> TestResult:
-        """约束配置一致性"""
+        """约束配置一致性 — 含 v5.4-s7 constraint_hints 校验"""
         from mods.mod_manager import get_mod_manager
 
         mgr = get_mod_manager()
         mgr.load_all()
         errors = []
+        hint_count = 0
+        mods_with_hints = 0
         for mod_id, info in mgr.mods.items():
             dp = os.path.join(info.mod_dir, "discretization.json")
             if not os.path.exists(dp):
-                continue  # 无离散化配置的模组跳过
+                continue
             try:
                 with open(dp, encoding="utf-8") as f:
                     cfg = json.load(f)
@@ -328,6 +330,34 @@ class SelfTestRunner:
                     errors.append(f"{mod_id}: '{n}' missing constraint_limits")
                 if n not in types_set:
                     errors.append(f"{mod_id}: '{n}' missing constraint_types")
+            # ── v5.4-s7: constraint_hints 校验 ──
+            c_hints = cfg.get("constraint_hints", {})
+            if c_hints:
+                mods_with_hints += 1
+                hint_count += len(c_hints)
+                free_keys = set(cfg.get("free", {}).keys())
+                fixed_keys = set(cfg.get("fixed", {}).keys())
+                valid_keys = free_keys | fixed_keys
+                for h_name, h_val in c_hints.items():
+                    if not isinstance(h_val, dict):
+                        errors.append(
+                            f"{mod_id}: constraint_hints['{h_name}'] 不是 dict"
+                        )
+                        continue
+                    if "hint" not in h_val:
+                        errors.append(
+                            f"{mod_id}: '{h_name}' hint 缺少 'hint' 字段"
+                        )
+                    # 检查 params 引用的参数存在
+                    for p in h_val.get("params", []):
+                        if p not in valid_keys and p not in (
+                            "T_design", "Kd20", "Y", "f", "SVI",
+                            "D_disk", "X", "T_clean", "t_mix", "t_floc",
+                            "t1", "t2", "t3", "t4",
+                        ):
+                            # 仅警告, 不阻止 (fixed 参数或外部参数)
+                            pass
+
         if errors:
             return TestResult(
                 name="约束配置一致性",
@@ -335,8 +365,15 @@ class SelfTestRunner:
                 message=f"{len(errors)} 个问题",
                 detail="\n".join(errors[:10]),
             )
+        extra = (
+            f", {mods_with_hints}模组有hints({hint_count}条)"
+            if mods_with_hints
+            else ""
+        )
         return TestResult(
-            name="约束配置一致性", passed=True, message="全部约束配置完整"
+            name="约束配置一致性",
+            passed=True,
+            message=f"全部约束配置完整{extra}",
         )
 
     # ── 测试 7: 标签系统 ──

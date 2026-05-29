@@ -97,5 +97,71 @@
     "总需氧量 > 0": "result",
     "堰口负荷 q_L 20~30 L/(s·m)": "result",
     "硝化污泥龄校核 θc'≥15d": "result"
+  },
+  "constraint_hints": {
+    "长宽比 L/B": {
+      "params": [
+        "n",
+        "H_max"
+      ],
+      "adjust": "调整",
+      "hint": "调整池数 n 或池深 H_max 以改变单池平面尺寸"
+    },
+    "宽高比 B/H": {
+      "params": [
+        "H_max"
+      ],
+      "adjust": "调整",
+      "hint": "调整池深 H_max — 池深增加则宽高比降低"
+    },
+    "充水比一致性 |λ_actual-λ_design|/λ_design < 15%": {
+      "params": [
+        "lam",
+        "H_max"
+      ],
+      "adjust": "调整",
+      "hint": "调整充水比 λ 或池深 H_max,使实际充水比接近设计值"
+    },
+    "安全距离 1.5~2.0m": {
+      "params": [
+        "H_max",
+        "lam",
+        "X_MLSS"
+      ],
+      "adjust": "增大",
+      "hint": "增大池深 H_max,或降低 MLSS 浓度,或减小充水比 λ"
+    },
+    "污泥龄校核 θc": {
+      "params": [
+        "theta_c",
+        "n",
+        "X_MLSS"
+      ],
+      "adjust": "增大",
+      "hint": "增大设计污泥龄 θc,或增加池数 n 增大总容积,或降低 MLSS"
+    },
+    "总需氧量 > 0": {
+      "params": [
+        "Ns",
+        "X_MLSS"
+      ],
+      "adjust": "调整",
+      "hint": "检查 BOD负荷 Ns 和 MLSS 浓度设置"
+    },
+    "堰口负荷 q_L 20~30 L/(s·m)": {
+      "params": [
+        "n"
+      ],
+      "adjust": "增大",
+      "hint": "增加池数 n 增大堰口总长度以降低堰口负荷"
+    },
+    "硝化污泥龄校核 θc≥15d": {
+      "params": [
+        "theta_c",
+        "T_design"
+      ],
+      "adjust": "增大",
+      "hint": "增大设计污泥龄 θc,或确保设计水温 T_design 不低于 12°C"
+    }
   }
 }

@@ -73,5 +73,52 @@
     "刮泥机线速": "result",
     "堰负荷": "result"
   },
-  "display_name": ""
+  "display_name": "",
+  "constraint_hints": {
+    "表面负荷 q 1.5~4.5 m³/(m²·h)": {
+      "params": [
+        "n",
+        "q_prime"
+      ],
+      "adjust": "降低",
+      "hint": "增加池数 n 增大总沉淀面积,或降低设计表面负荷"
+    },
+    "堰口负荷 ≤ 2.9 L/(s·m)": {
+      "params": [
+        "n"
+      ],
+      "adjust": "增大",
+      "hint": "增加池数 n 增大堰口总长度"
+    },
+    "固体通量 ≤ 150 kg/(m²·d)": {
+      "params": [
+        "n",
+        "q_prime"
+      ],
+      "adjust": "降低",
+      "hint": "增加池数 n 增大沉淀面积"
+    },
+    "径深比 D/h2 4~15": {
+      "params": [
+        "n",
+        "q_prime"
+      ],
+      "adjust": "调整",
+      "hint": "调整池数 n 或表面负荷以改变池径和有效水深"
+    },
+    "有效水深 h2 2.0~3.5m": {
+      "params": [
+        "q_prime"
+      ],
+      "adjust": "调整",
+      "hint": "调整设计表面负荷 — 负荷越大有效水深需越大"
+    },
+    "长宽比校核": {
+      "params": [
+        "n"
+      ],
+      "adjust": "调整",
+      "hint": "调整池数 n 以改变池体长宽比"
+    }
+  }
 }

@@ -298,16 +298,26 @@ class SolutionBrowser(tk.Frame):
             padx=2,
         )
 
-    # ═══════════════ 无可行解诊断 ═══════════════
+    # ═══════════════ 无可行解诊断 (v5.4-s7 增强) ═══════════════
 
     def _show_no_solution_hint(self, engine, flow, quality):
-        """当无可行方案时, 在面板上显示诊断建议 (v5.4)"""
+        """当无可行方案时, 在面板上显示增强诊断 (v5.4-s7)
+
+        包含三个模块:
+          1. 最小冲突集 — 无法同时满足的约束子集
+          2. 每约束提示 — 具体调整哪个参数的哪个方向
+          3. 通过率条 — 可视化每约束的通过比例
+        """
         from models.discretization import get_config
 
         cfg = get_config(self._node_type)
         constraint_keys = cfg.get("constraint_keys", [])
         constraint_names = cfg.get("constraint_names", [])
         free_keys = list(cfg.get("free", {}).keys())
+
+        if not constraint_keys:
+            self._status_label.config(text="无可行方案 (无约束可诊断)")
+            return
 
         # 用全量 free 值枚举一次以获得结果数组进行诊断
         free_vals = [cfg["free"][k] for k in free_keys]
@@ -318,50 +328,127 @@ class SolutionBrowser(tk.Frame):
             self._node_type, grid, flow, quality, fixed
         )
         engine._filter_feasible(
-            results, constraint_keys, constraint_names,
-            cfg.get("constraint_limits"), self._node_type,
+            results,
+            constraint_keys,
+            constraint_names,
+            cfg.get("constraint_limits"),
+            self._node_type,
         )
-        suggestion = engine._suggest_relaxation(
+        diag = engine._diagnose_infeasibility(
             results, constraint_keys, constraint_names, cfg
         )
 
-        # 在面板中显示建议
+        # ── 清除旧内容 ──
+        for w in self._filter_frame.winfo_children():
+            w.destroy()
+
         hint = tk.Frame(self._filter_frame, bg=self._bg)
-        hint.pack(fill=tk.X, pady=20, padx=10)
+        hint.pack(fill=tk.X, pady=8, padx=10)
+
+        # ── 标题 ──
         tk.Label(
             hint,
-            text="💡 诊断建议",
-            bg=self._bg, fg="#ffaa44",
+            text="⚠ 无可行方案 — 诊断报告",
+            bg=self._bg,
+            fg="#ff6644",
             font=("Microsoft YaHei", 11, "bold"),
         ).pack(anchor="w")
-        if suggestion:
+
+        # ── 1. 最小冲突集 ──
+        conflict_set = diag.get("conflict_set", [])
+        if conflict_set:
+            cf_frame = tk.Frame(hint, bg="#3a1a1a", bd=1, relief=tk.GROOVE)
+            cf_frame.pack(fill=tk.X, pady=(6, 4), ipady=4)
             tk.Label(
-                hint,
-                text=suggestion,
-                bg=self._bg, fg="#ccc",
-                font=("Microsoft YaHei", 9),
-                wraplength=350, justify="left",
-            ).pack(anchor="w", pady=(6, 0))
-        # 逐约束显示通过率
-        detail = tk.Frame(hint, bg=self._bg)
-        detail.pack(fill=tk.X, pady=(8, 0))
-        for i, ckey in enumerate(constraint_keys):
-            ok_field = "ok_" + ckey
-            if ok_field in results.dtype.names:
-                total = len(results)
-                passed = int(results[ok_field].sum())
-                name = constraint_names[i] if i < len(constraint_names) else ckey
-                color = "#55cc55" if passed == total else "#cc5555"
+                cf_frame,
+                text=f"⚡ 最小冲突集: 以下 {len(conflict_set)} 个约束无法同时满足",
+                bg="#3a1a1a",
+                fg="#ff9966",
+                font=("Microsoft YaHei", 9, "bold"),
+                wraplength=360,
+            ).pack(anchor="w", padx=8, pady=(4, 0))
+            tk.Label(
+                cf_frame,
+                text="放宽其中任一约束即可使方案可行",
+                bg="#3a1a1a",
+                fg="#cc8866",
+                font=("Microsoft YaHei", 8),
+                wraplength=360,
+            ).pack(anchor="w", padx=8)
+            for cname in conflict_set:
+                hint_text = diag.get("hints", {}).get(cname, "")
+                line = f"  • {cname}"
+                if hint_text:
+                    line += f" → {hint_text}"
                 tk.Label(
-                    detail, text=f"  {name}: ", bg=self._bg, fg="#888",
-                    font=("Consolas", 8),
-                ).pack(anchor="w")
+                    cf_frame,
+                    text=line,
+                    bg="#3a1a1a",
+                    fg="#ff8866",
+                    font=("Microsoft YaHei", 8),
+                    wraplength=360,
+                    justify="left",
+                ).pack(anchor="w", padx=12)
+
+        # ── 2. 逐约束提示 + 通过率 ──
+        constraint_rates = diag.get("constraint_rates", [])
+        if constraint_rates:
+            detail = tk.Frame(hint, bg=self._bg)
+            detail.pack(fill=tk.X, pady=(4, 0))
+            tk.Label(
+                detail,
+                text="▎逐约束分析",
+                bg=self._bg,
+                fg="#ffaa44",
+                font=("Microsoft YaHei", 9, "bold"),
+            ).pack(anchor="w")
+
+            for cname, passed, total in constraint_rates:
+                ratio = passed / total if total > 0 else 0
+                color = "#55cc55" if ratio >= 1.0 else "#cc9955" if ratio > 0.5 else "#cc5555"
+                bar_len = int(ratio * 15)
+                bar = "█" * bar_len + "░" * (15 - bar_len)
+
+                row = tk.Frame(detail, bg=self._bg)
+                row.pack(fill=tk.X, pady=1)
+
                 tk.Label(
-                    detail,
-                    text=f"    {passed}/{total} 通过 ({100*passed//total}%)",
-                    bg=self._bg, fg=color,
-                    font=("Consolas", 8),
-                ).pack(anchor="w")
+                    row,
+                    text=f"  {cname}",
+                    bg=self._bg,
+                    fg="#888",
+                    font=("Microsoft YaHei", 8),
+                    width=24,
+                    anchor="w",
+                ).pack(side=tk.LEFT)
+                tk.Label(
+                    row,
+                    text=f"{bar}",
+                    bg=self._bg,
+                    fg=color,
+                    font=("Consolas", 7),
+                ).pack(side=tk.LEFT)
+                tk.Label(
+                    row,
+                    text=f" {ratio:.0%}",
+                    bg=self._bg,
+                    fg=color,
+                    font=("Consolas", 8, "bold"),
+                    width=5,
+                    anchor="w",
+                ).pack(side=tk.LEFT)
+
+                hint_text = diag.get("hints", {}).get(cname, "")
+                if hint_text and ratio < 1.0:
+                    tk.Label(
+                        row,
+                        text=f"→ {hint_text}",
+                        bg=self._bg,
+                        fg="#aaa",
+                        font=("Microsoft YaHei", 8),
+                        wraplength=200,
+                        justify="left",
+                    ).pack(side=tk.LEFT)
 
     # ═══════════════ 筛选器 UI ═══════════════
 

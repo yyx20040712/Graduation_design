@@ -73,5 +73,55 @@
     "回流污泥浓度 X_r ≥ 0 g/L": "result",
     "堰负荷 1.5~2.9 L/(s·m)": "result"
   },
-  "display_name": ""
+  "display_name": "",
+  "constraint_hints": {
+    "混合区 G_mix 500~1000 s⁻¹": {
+      "params": [
+        "n",
+        "t_mix"
+      ],
+      "adjust": "调整",
+      "hint": "调整混合时间 t_mix 或池数 n 影响混合区容积和 G 值"
+    },
+    "絮凝区 G_floc 50~100 s⁻¹": {
+      "params": [
+        "n",
+        "t_floc"
+      ],
+      "adjust": "调整",
+      "hint": "调整絮凝时间 t_floc 或池数 n"
+    },
+    "混合区停留时间 ≥ 60s": {
+      "params": [
+        "n",
+        "t_mix"
+      ],
+      "adjust": "增大",
+      "hint": "增大混合时间 t_mix 或减小池数 n"
+    },
+    "絮凝区停留时间 10~30min": {
+      "params": [
+        "n",
+        "t_floc"
+      ],
+      "adjust": "增大",
+      "hint": "增大絮凝时间 t_floc 或减小池数 n"
+    },
+    "沉淀区表面负荷 5~12 m³/(m²·h)": {
+      "params": [
+        "n",
+        "q_surf"
+      ],
+      "adjust": "降低",
+      "hint": "降低设计表面负荷 q_surf 或增加池数 n"
+    },
+    "沉淀区固体通量 ≤ 150 kg/(m²·d)": {
+      "params": [
+        "n",
+        "q_surf"
+      ],
+      "adjust": "降低",
+      "hint": "增加沉淀面积 (降负荷或增池数)"
+    }
+  }
 }

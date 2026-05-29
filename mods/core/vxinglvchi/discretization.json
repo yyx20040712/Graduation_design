@@ -87,5 +87,69 @@
     "过滤水头损失 2~3 m": "result",
     "扫洗孔数 ≥ 20 个/侧": "result"
   },
-  "display_name": ""
+  "display_name": "",
+  "constraint_hints": {
+    "强制滤速 v_q ≤ 限值": {
+      "params": [
+        "n",
+        "v_filter"
+      ],
+      "adjust": "降低",
+      "hint": "增加滤池格数 n 减小单格过滤面积,或降低设计滤速 v_filter"
+    },
+    "冲洗水占比 η_w < 5%": {
+      "params": [
+        "n",
+        "v_filter",
+        "T_filter"
+      ],
+      "adjust": "降低",
+      "hint": "降低设计滤速 v_filter 延长过滤周期,或增加格数 n"
+    },
+    "单格宽度 B ≤ 5m": {
+      "params": [
+        "n"
+      ],
+      "adjust": "增大",
+      "hint": "增加格数 n 以减小单格平面尺寸"
+    },
+    "长宽比 L/B 1~3": {
+      "params": [
+        "n",
+        "v_filter"
+      ],
+      "adjust": "调整",
+      "hint": "调整格数 n 或设计滤速 v_filter 影响单格长宽比"
+    },
+    "滤头密度 48~56 个/m²": {
+      "params": [
+        "n"
+      ],
+      "adjust": "调整",
+      "hint": "调整格数 n 以改变单格面积,或检查 fixed 参数滤头密度"
+    },
+    "V型槽流速 ≤ 0.6 m/s": {
+      "params": [
+        "n",
+        "v_filter"
+      ],
+      "adjust": "降低",
+      "hint": "增加格数 n 降低单格流量,或降低设计滤速"
+    },
+    "过滤水头损失 2~3 m": {
+      "params": [
+        "n",
+        "v_filter"
+      ],
+      "adjust": "降低",
+      "hint": "降低设计滤速 v_filter 或增加格数 n 降低过滤速度"
+    },
+    "扫洗孔数 ≥ 20 个/侧": {
+      "params": [
+        "n"
+      ],
+      "adjust": "增大",
+      "hint": "增加格数 n 减小单格长度,检查 fixed 参数 d_hole"
+    }
+  }
 }

@@ -63,5 +63,39 @@
     "积泥坑容积足够": "result",
     "堰口负荷 ≤ 5.0 L/(s·m)": "result"
   },
-  "display_name": ""
+  "display_name": "",
+  "constraint_hints": {
+    "长宽比 L/B": {
+      "params": [
+        "n",
+        "ratio_LB"
+      ],
+      "adjust": "调整",
+      "hint": "增加池数 n 减小单池面积,或调整长宽比 ratio_LB"
+    },
+    "实际 HRT": {
+      "params": [
+        "n",
+        "HRT",
+        "h_eff"
+      ],
+      "adjust": "增大",
+      "hint": "增加池数 n,或增大设计 HRT,或增加有效水深 h_eff"
+    },
+    "有效水深 h2": {
+      "params": [
+        "h_eff"
+      ],
+      "adjust": "调整",
+      "hint": "调整有效水深 h_eff 使其落入规范范围"
+    },
+    "宽高比 B/H": {
+      "params": [
+        "ratio_LB",
+        "h_eff"
+      ],
+      "adjust": "调整",
+      "hint": "调整长宽比 ratio_LB 或有效水深 h_eff"
+    }
+  }
 }

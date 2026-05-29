@@ -23,6 +23,7 @@ from _logging import get_logger
 
 _log = get_logger(__name__)
 from dataclasses import dataclass, field
+from itertools import combinations
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -477,15 +478,229 @@ class SolutionSpace:
                 _log.error("  ❌ 约束字段缺失: %s (dtype中没有 %s)", name, ok_field)
                 _log.error("     dtype 实际字段: %s", list(results.dtype.names))
 
-        # ── v5.4: 计算最紧约束并给出建议 ──
-        suggestion = self._suggest_relaxation(
+        # ── v5.4-s7: 增强诊断 — 最小冲突集 + 约束提示 ──
+        diag = self._diagnose_infeasibility(
             results, constraint_keys, constraint_names, cfg
         )
-        if suggestion:
-            _log.warning("  💡 建议: %s", suggestion)
-
+        conflict_set = diag.get("conflict_set", [])
+        if conflict_set:
+            _log.warning("  ⚡ 最小冲突集 (%d个约束无法同时满足):", len(conflict_set))
+            for cname in conflict_set:
+                hint = diag.get("hints", {}).get(cname, "")
+                hint_str = f" → {hint}" if hint else ""
+                _log.warning("    • %s%s", cname, hint_str)
         _log.warning("=== 诊断结束 ===")
 
+    # ═══════════════ 无可行解诊断 (v5.4-s7 增强) ═══════════════
+
+    def _diagnose_infeasibility(
+        self,
+        results: np.ndarray,
+        constraint_keys: List[str],
+        constraint_names: List[str],
+        cfg: dict,
+    ) -> dict:
+        """无可行解时返回结构化诊断数据 (替代旧版 _suggest_relaxation)
+
+        Returns:
+            {
+                "constraint_rates": [(name, passed, total), ...],  # 逐约束通过率
+                "conflict_set": [name, ...],      # 最小冲突集
+                "hints": {name: str, ...},         # 每约束的调整建议
+            }
+        """
+        n_total = len(results)
+        name_map = {
+            ckey: constraint_names[i] if i < len(constraint_names) else ckey
+            for i, ckey in enumerate(constraint_keys)
+        }
+        # 键名→中文名映射
+
+        # ── 1. 逐约束通过率 ──
+        constraint_rates = []
+        for ckey in constraint_keys:
+            ok_field = "ok_" + ckey
+            if ok_field in results.dtype.names:
+                passed = int(results[ok_field].sum())
+                constraint_rates.append((name_map[ckey], passed, n_total))
+
+        # ── 2. 最小冲突集 ──
+        conflict_set_keys = self._find_minimal_conflict_set(
+            results, constraint_keys
+        )
+        conflict_set = [name_map.get(ck, ck) for ck in conflict_set_keys]
+
+        # ── 3. 约束提示 ──
+        hints = self._build_constraint_hints(
+            constraint_keys, constraint_names, results, cfg
+        )
+
+        return {
+            "constraint_rates": constraint_rates,
+            "conflict_set": conflict_set,
+            "hints": hints,
+        }
+
+    def _find_minimal_conflict_set(
+        self,
+        results: np.ndarray,
+        constraint_keys: List[str],
+    ) -> List[str]:
+        """找到最小的约束子集，去掉其中任意一个即可使方案可行
+
+        贪心+枚举策略:
+        1. 先尝试移除单个约束 (k=1)
+        2. 无解则尝试移除 2 个
+        3. 直到找到第一个可行组合
+
+        复杂度: O(2^n) n≤10 完全可控
+        """
+        n_total = len(results)
+        n_constraints = len(constraint_keys)
+
+        # 预计算每个约束的 ok 布尔数组
+        ok_arrays = {}
+        for ckey in constraint_keys:
+            ok_field = "ok_" + ckey
+            if ok_field in results.dtype.names:
+                ok_arrays[ckey] = results[ok_field].astype(bool)
+
+        if not ok_arrays:
+            return list(constraint_keys)
+
+        # 从 k=1 开始尝试
+        for k in range(1, n_constraints + 1):
+            for combo in combinations(range(n_constraints), k):
+                mask = np.ones(n_total, dtype=bool)
+                for i, ckey in enumerate(constraint_keys):
+                    if i in combo:
+                        continue  # 跳过此约束
+                    if ckey in ok_arrays:
+                        mask &= ok_arrays[ckey]
+                if mask.any():
+                    return [constraint_keys[i] for i in combo]
+
+        return list(constraint_keys)  # 所有约束都必须去掉
+
+    def _build_constraint_hints(
+        self,
+        constraint_keys: List[str],
+        constraint_names: List[str],
+        results: np.ndarray,
+        cfg: dict,
+    ) -> dict:
+        """为每个约束构建调整建议
+
+        优先级:
+          1. discretization.json 中的 constraint_hints 字段 (精确建议)
+          2. 基于约束名和参数名的启发式推断
+          3. 通用回退建议
+        """
+        hints = {}
+        limits = cfg.get("constraint_limits", {})
+
+        # 加载用户自定义的 constraint_hints
+        user_hints = cfg.get("constraint_hints", {})
+
+        for i, ckey in enumerate(constraint_keys):
+            cname = constraint_names[i] if i < len(constraint_names) else ckey
+
+            # 优先使用用户自定义提示
+            if cname in user_hints:
+                hints[cname] = user_hints[cname].get(
+                    "hint", "请调整相关设计参数"
+                )
+                continue
+
+            # 启发式推断: 从约束名提取关键词, 匹配 free 参数
+            ok_field = "ok_" + ckey
+            val_field = "val_" + ckey
+
+            if ok_field not in results.dtype.names:
+                hints[cname] = "建议检查约束配置或放宽限值"
+                continue
+
+            passed = int(results[ok_field].sum())
+            n_total = len(results)
+            if passed == n_total:
+                hints[cname] = "✓ 通过"
+                continue
+
+            # 分析失败方向
+            if val_field in results.dtype.names:
+                median_val = float(np.median(results[val_field]))
+                limit_str = limits.get(cname, "")
+                lo, hi = _parse_limit(limit_str) if limit_str else (None, None)
+
+                # 根据约束名和失败方向推断
+                hint = self._infer_hint_from_name(
+                    cname, median_val, lo, hi, cfg
+                )
+                hints[cname] = hint
+            else:
+                hints[cname] = "建议调整对应参数或放宽约束限值"
+
+        return hints
+
+    @staticmethod
+    def _infer_hint_from_name(
+        cname: str, median_val: float, lo, hi, cfg: dict
+    ) -> str:
+        """从约束中文名推断调整建议 (启发式)"""
+        free_keys = list(cfg.get("free", {}).keys())
+        fixed_keys = list(cfg.get("fixed", {}).keys())
+        all_params = free_keys + fixed_keys
+
+        # ── 通用模式: 根据约束名中的关键词匹配参数 ──
+        HINT_PATTERNS = [
+            # (约束关键词, 参数匹配词, 调整方向, 建议模板)
+            (["长宽比", "L/B"], ["n", "ratio_LB"], "调整池数或长宽比参数"),
+            (["宽高比", "B/H"], ["n", "H_max", "h_eff"], "调整池数或水深"),
+            (["径深比", "D/h"], ["n", "h_eff", "h2"], "增大池径或减小水深"),
+            (["HRT", "停留时间"], ["n", "HRT", "h_eff"], "增大池数或水深"),
+            (["滤速", "v_q"], ["n", "v_filter"], "增加格数或降低设计滤速"),
+            (["堰负荷", "堰口"], ["n", "L_out", "L_in"], "增加堰长或池数"),
+            (["表面负荷", "q_surf"], ["n", "q_surf"], "增大池面积"),
+            (["固体通量", "固体负荷"], ["n", "q_solid"], "增大沉淀面积"),
+            (["污泥龄", "θc", "SRT"], ["n", "theta_c", "X_MLSS"], "增大池数或污泥龄"),
+            (["充水比", "λ"], ["lam", "H_max"], "调整充水比或池深"),
+            (["安全距离"], ["H_max", "X_MLSS"], "增大池深或降低MLSS"),
+            (["需氧量", "O2"], ["n", "Ns", "X_MLSS"], "检查负荷参数"),
+            (["砂斗", "容积"], ["n", "D", "dr"], "增大池径或砂斗尺寸"),
+            (["过栅流速", "v_grate"], ["n", "b"], "增加栅条间隙或格数"),
+            (["紫外剂量", "D_UV"], ["n", "D_UV"], "增加灯管排数"),
+            (["冲洗水", "η_w"], ["n", "v_filter", "T_filter"], "减少滤速或增加格数"),
+            (["水头损失", "H_loss"], ["n"], "增加格数降低单格流速"),
+            (["硝化"], ["n", "theta_c", "T_design"], "增大污泥龄"),
+            (["浓度"], ["PAC_dose", "PAM_dose", "D_PAC"], "调整药剂投加量"),
+        ]
+
+        for keywords, param_hints, general in HINT_PATTERNS:
+            if any(kw in cname for kw in keywords):
+                # 尝试精确匹配参数名
+                matched = [p for p in all_params if any(ph in p for ph in param_hints)]
+                if matched:
+                    params_str = "、".join(matched[:3])
+                    hint = general.replace(
+                        "调整", f"调整 {params_str}"
+                    ) if "调整" in general else f"尝试调整 {params_str}"
+                else:
+                    hint = general
+                # 附加数值信息
+                if lo is not None and median_val < lo:
+                    hint += f" (当前 {median_val:.1f} < 下限 {lo})"
+                elif hi is not None and median_val > hi:
+                    hint += f" (当前 {median_val:.1f} > 上限 {hi})"
+                return hint
+
+        # 无法推断
+        if lo is not None and median_val < lo:
+            return f"当前值 {median_val:.1f} 低于下限 {lo}, 建议调大相关参数"
+        elif hi is not None and median_val > hi:
+            return f"当前值 {median_val:.1f} 超过上限 {hi}, 建议调小相关参数"
+        return "建议调整对应设计参数或放宽约束限值"
+
+    # ── 保留旧接口兼容 ──
     def _suggest_relaxation(
         self,
         results: np.ndarray,
@@ -493,51 +708,19 @@ class SolutionSpace:
         constraint_names: List[str],
         cfg: dict,
     ) -> str:
-        """当无可行解时, 计算最紧约束并建议调整方向"""
-        tightest_name = ""
-        tightest_ratio = 1.1  # 通过率 < 10% 即为最紧
-        tightest_median = 0.0
-        tightest_limit = ""
-
-        for i, ckey in enumerate(constraint_keys):
-            ok_field = "ok_" + ckey
-            val_field = "val_" + ckey
-            if ok_field not in results.dtype.names:
-                continue
-            if val_field not in results.dtype.names:
-                continue
-
-            total = len(results)
-            passed = int(results[ok_field].sum())
-            ratio = passed / total if total > 0 else 0
-
-            if ratio < tightest_ratio:
-                tightest_ratio = ratio
-                tightest_name = constraint_names[i] if i < len(constraint_names) else ckey
-                tightest_median = float(np.median(results[val_field]))
-                limits = cfg.get("constraint_limits", {})
-                tightest_limit = limits.get(tightest_name, "")
-
-        if not tightest_name:
-            return ""
-
-        # 解析限值, 给出调整建议
-        lo, hi = _parse_limit(tightest_limit) if tightest_limit else (None, None)
-        if lo is not None and tightest_median < lo:
-            return (
-                f"最紧约束「{tightest_name}」中位数 {tightest_median:.2f} "
-                f"低于下限 {lo}, 建议调大相关参数或放宽约束限值"
-            )
-        elif hi is not None and tightest_median > hi:
-            return (
-                f"最紧约束「{tightest_name}」中位数 {tightest_median:.2f} "
-                f"超过上限 {hi}, 建议调小相关参数或放宽约束限值"
-            )
-        else:
-            return (
-                f"最紧约束「{tightest_name}」通过率仅 {tightest_ratio:.0%}, "
-                f"建议调整对应参数"
-            )
+        """旧接口 — 委托给 _diagnose_infeasibility"""
+        diag = self._diagnose_infeasibility(
+            results, constraint_keys, constraint_names, cfg
+        )
+        conflict = diag.get("conflict_set", [])
+        if conflict:
+            parts = [f"最小冲突集: {', '.join(conflict)}"]
+            for cname in conflict[:2]:
+                hint = diag.get("hints", {}).get(cname, "")
+                if hint:
+                    parts.append(f"「{cname}」{hint}")
+            return "; ".join(parts)
+        return ""
 
     def _estimate_cost(
         self,

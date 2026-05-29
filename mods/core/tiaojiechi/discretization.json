@@ -45,5 +45,24 @@
     "长宽比 L/B": "result",
     "实际 HRT": "result"
   },
-  "display_name": ""
+  "display_name": "",
+  "constraint_hints": {
+    "长宽比 L/B": {
+      "params": [
+        "n",
+        "ratio_LB"
+      ],
+      "adjust": "调整",
+      "hint": "增加池数 n 减小单池面积,或调整长宽比 ratio_LB 使 L/B 落入 1~2 范围"
+    },
+    "实际 HRT": {
+      "params": [
+        "n",
+        "HRT",
+        "h_eff"
+      ],
+      "adjust": "增大",
+      "hint": "增加池数 n 降低单池流量,或增大设计 HRT,或增加有效水深 h_eff 以增大池容"
+    }
+  }
 }
