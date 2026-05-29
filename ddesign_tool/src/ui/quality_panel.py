@@ -379,6 +379,17 @@ class QualityPanel:
                 font=("Microsoft YaHei", 10),
             ).pack(pady=40)
 
+        # ── 递归滚轮绑定: 确保鼠标在任何子组件上滚轮都生效 ──
+        def _bind_wheel(widget, canvas_ref):
+            widget.bind(
+                "<MouseWheel>",
+                lambda e: canvas_ref.yview_scroll(int(-e.delta / 120), "units"),
+            )
+            for child in widget.winfo_children():
+                _bind_wheel(child, canvas_ref)
+
+        _bind_wheel(flow_frame, canvas)
+
         if scroll_to_node_id and scroll_to_node_id in self._quality_sections:
             self._quality_canvas = canvas
             self.parent.after(100, lambda: self._scroll_to(scroll_to_node_id))

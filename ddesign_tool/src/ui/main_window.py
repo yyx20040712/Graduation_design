@@ -1843,9 +1843,11 @@ class MainWindow(tk.Tk):
             self.executor.execute(force_all=False)
             self._refresh_selected_result()
             self._update_all_node_statuses()
-            # ── v5.4-s7: 如果水质 Tab 当前可见, 刷新全流程水质追踪 ──
+            # ── v5.4-s7: 如果水质 Tab 当前可见, 直接刷新全流程水质追踪 ──
+            # 绕过 _on_tab_changed 的 pack/unpack 链条, 避免
+            # frame 重建竞争条件导致面板不刷新
             if self.tab_var.get() == "quality":
-                self._result_panel._on_tab_changed()
+                self._quality_panel.build_full_quality_flow()
             self.status_var.set("计算完成")
         except Exception as e:
             self.status_var.set(f"计算失败: {e}")
